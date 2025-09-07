@@ -2,7 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import ffmpeg from "fluent-ffmpeg";
 import { randomUUID } from "crypto";
 import { progressEmitter } from "./progress-emitter";
@@ -336,7 +336,6 @@ export class DownloadService {
       
       console.log("Python command:", command);
       
-      const { spawn } = require('child_process');
       const child = spawn('python3', [pythonScript, url, this.uploadsDir]);
       
       let stdout = '';
@@ -596,7 +595,6 @@ export class DownloadService {
       
       console.log("spotDL command for:", url);
       
-      const { spawn } = require('child_process');
       const child = spawn('python3', ['-m', 'spotdl', url, '--output', outputTemplate, '--format', 'mp3', '--bitrate', '320k', '--print-errors', '--overwrite', 'skip']);
       
       let stdout = '';
