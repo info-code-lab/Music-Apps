@@ -86,15 +86,16 @@ export default function UploadSection() {
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!urlData.url || !urlData.title || !urlData.artist || !urlData.category) {
+    if (!urlData.url) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
+        title: "Missing URL",
+        description: "Please enter a music URL",
         variant: "destructive",
       });
       return;
     }
-    urlUploadMutation.mutate(urlData);
+    // Only send the URL - backend will auto-extract metadata
+    urlUploadMutation.mutate({ url: urlData.url });
   };
 
   const handleFileSubmit = (e: React.FormEvent) => {
@@ -171,40 +172,17 @@ export default function UploadSection() {
           <form onSubmit={handleUrlSubmit} className="space-y-4">
             <Input
               type="url"
-              placeholder="Enter music URL (SoundCloud, YouTube, etc.)"
+              placeholder="Enter music URL (YouTube, SoundCloud, etc.)"
               value={urlData.url}
               onChange={(e) => setUrlData({ ...urlData, url: e.target.value })}
               className="bg-input border-border font-serif"
               data-testid="input-url"
             />
-            <Input
-              type="text"
-              placeholder="Track title"
-              value={urlData.title}
-              onChange={(e) => setUrlData({ ...urlData, title: e.target.value })}
-              className="bg-input border-border font-serif"
-              data-testid="input-url-title"
-            />
-            <Input
-              type="text"
-              placeholder="Artist name"
-              value={urlData.artist}
-              onChange={(e) => setUrlData({ ...urlData, artist: e.target.value })}
-              className="bg-input border-border font-serif"
-              data-testid="input-url-artist"
-            />
-            <Select value={urlData.category} onValueChange={(value) => setUrlData({ ...urlData, category: value })}>
-              <SelectTrigger className="bg-input border-border" data-testid="select-url-category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="p-3 bg-muted/50 rounded-lg border border-muted">
+              <p className="text-sm text-muted-foreground font-serif text-center">
+                🎵 Song details will be automatically extracted from the URL
+              </p>
+            </div>
             <Button 
               type="submit"
               disabled={urlUploadMutation.isPending}
