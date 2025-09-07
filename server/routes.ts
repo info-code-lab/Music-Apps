@@ -958,14 +958,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new genre (Admin only)
   app.post("/api/genres", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
+      console.log("Received genre creation request:", req.body);
       const genreData = insertGenreSchema.parse(req.body);
+      console.log("Parsed genre data:", genreData);
       const newGenre = await storage.createGenre(genreData);
+      console.log("Created genre:", newGenre);
       res.status(201).json(newGenre);
     } catch (error) {
+      console.error("Genre creation error:", error);
       if (error instanceof Error && error.message.includes('validation')) {
-        return res.status(400).json({ message: "Invalid genre data" });
+        return res.status(400).json({ message: "Invalid genre data", error: error.message });
       }
-      res.status(500).json({ message: "Failed to create genre" });
+      res.status(500).json({ message: "Failed to create genre", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
