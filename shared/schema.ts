@@ -86,6 +86,13 @@ export const albums = pgTable("albums", {
 export const genres = pgTable("genres", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }).default("Music"), // Lucide icon name
+  color: varchar("color", { length: 7 }).default("#8B5CF6"), // Hex color code
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const songs = pgTable("songs", {
@@ -251,6 +258,13 @@ export const insertAlbumSchema = createInsertSchema(albums).omit({
   createdAt: true,
 });
 
+// Genre Schemas
+export const insertGenreSchema = createInsertSchema(genres).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Song Schemas
 export const insertSongSchema = createInsertSchema(songs).omit({
   id: true,
@@ -290,6 +304,9 @@ export type Artist = typeof artists.$inferSelect;
 
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
 export type Album = typeof albums.$inferSelect;
+
+export type InsertGenre = z.infer<typeof insertGenreSchema>;
+export type Genre = typeof genres.$inferSelect;
 
 export type InsertSong = z.infer<typeof insertSongSchema>;
 export type Song = typeof songs.$inferSelect;
