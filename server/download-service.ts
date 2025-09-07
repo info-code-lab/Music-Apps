@@ -136,59 +136,65 @@ export class DownloadService {
   }
 
   private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
-    return new Promise((resolve, reject) => {
-      const filename = `${randomUUID()}.%(ext)s`;
-      const outputTemplate = path.join(this.uploadsDir, filename);
+    const filename = `${randomUUID()}.%(ext)s`;
+    const outputTemplate = path.join(this.uploadsDir, filename);
+    
+    // Try multiple approaches to bypass YouTube restrictions
+    const attempts = [
+      // Attempt 1: Basic approach with minimal options
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 -f "bestaudio[ext=m4a]/bestaudio/best" --no-warnings -o "${outputTemplate}" "${url}"`,
       
-      // Use yt-dlp to download audio with options to avoid bot detection
-      const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 --no-check-certificate --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" --add-header "Accept-Language:en-US,en;q=0.9" --add-header "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" --extractor-retries 5 --fragment-retries 10 --retry-sleep 5 --sleep-interval 1 --max-sleep-interval 5 --no-warnings -o "${outputTemplate}" "${url}"`;
+      // Attempt 2: Android client approach (often works better)
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --no-warnings -o "${outputTemplate}" "${url}"`,
       
-      console.log(`Running: ${command}`);
+      // Attempt 3: With browser cookies if available
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --cookies-from-browser chrome --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" --referer "https://www.youtube.com/" --no-warnings -o "${outputTemplate}" "${url}"`,
       
-      exec(command, { timeout: 120000 }, (error, stdout, stderr) => {
-        if (error) {
-          console.error('yt-dlp error:', error);
-          console.error('stderr:', stderr);
-          
-          // Provide more helpful error messages based on the specific error
-          let errorMessage = "Failed to download from streaming platform";
-          if (stderr.includes("Sign in to confirm you're not a bot") || stderr.includes("bot")) {
-            errorMessage = "YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.";
-          } else if (stderr.includes("403") || stderr.includes("Forbidden")) {
-            errorMessage = "Access to this video is restricted. The video may be private, geo-blocked, or have copyright protection.";
-          } else if (stderr.includes("404") || stderr.includes("not found")) {
-            errorMessage = "Video not found. Please check the URL and try again.";
-          } else if (stderr.includes("nsig extraction failed")) {
-            errorMessage = "Video format not supported. Try a different video or check if the URL is correct.";
-          }
-          
-          reject(new Error(errorMessage));
-          return;
-        }
-        
-        console.log('yt-dlp output:', stdout);
-        
-        // Find the downloaded file
-        const files = fs.readdirSync(this.uploadsDir);
-        const downloadedFile = files.find(file => 
-          file.startsWith(filename.replace('.%(ext)s', '')) && 
-          file.endsWith('.mp3')
-        );
-        
-        if (!downloadedFile) {
-          reject(new Error('Downloaded file not found'));
-          return;
-        }
-        
-        const localPath = path.join(this.uploadsDir, downloadedFile);
-        console.log(`File downloaded to: ${localPath}`);
-        
-        resolve({
-          localPath,
-          filename: downloadedFile
+      // Attempt 4: Mobile user agent with sleep intervals
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --user-agent "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36" --sleep-interval 2 --max-sleep-interval 5 --no-warnings -o "${outputTemplate}" "${url}"`
+    ];
+    
+    for (let i = 0; i < attempts.length; i++) {
+      const command = attempts[i];
+      console.log(`Attempt ${i + 1}: ${command}`);
+      
+      try {
+        const result = await new Promise<{success: boolean, stdout?: string, stderr?: string}>((resolve) => {
+          exec(command, { timeout: 120000 }, (error, stdout, stderr) => {
+            if (error) {
+              resolve({success: false, stderr});
+            } else {
+              resolve({success: true, stdout});
+            }
+          });
         });
-      });
-    });
+        
+        if (result.success) {
+          console.log(`Success on attempt ${i + 1}`);
+          console.log('yt-dlp output:', result.stdout);
+          
+          // Find the downloaded file
+          const files = fs.readdirSync(this.uploadsDir);
+          const downloadedFile = files.find(file => 
+            file.startsWith(filename.replace('.%(ext)s', '')) && 
+            file.endsWith('.mp3')
+          );
+          
+          if (downloadedFile) {
+            const localPath = path.join(this.uploadsDir, downloadedFile);
+            console.log(`File downloaded to: ${localPath}`);
+            return { localPath, filename: downloadedFile };
+          }
+        } else {
+          console.log(`Attempt ${i + 1} failed:`, result.stderr);
+        }
+      } catch (attemptError) {
+        console.log(`Attempt ${i + 1} error:`, attemptError);
+      }
+    }
+    
+    // All attempts failed
+    throw new Error("YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.");
   }
 
   private async downloadDirectFile(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
