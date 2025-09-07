@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTrackSchema, insertArtistSchema, insertAlbumSchema, insertSongSchema, insertPlaylistSchema, insertCommentSchema, insertRatingSchema } from "@shared/schema";
+import { insertTrackSchema, insertArtistSchema, insertAlbumSchema, insertSongSchema, insertPlaylistSchema, insertCommentSchema, insertRatingSchema, insertGenreSchema } from "@shared/schema";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
 import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
@@ -924,6 +924,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({ message: "Search logged successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to log search" });
+    }
+  });
+
+  // ========================
+  // GENRE/CATEGORY MANAGEMENT ROUTES
+  // ========================
+
+  // Get all genres
+  app.get("/api/genres", async (req, res) => {
+    try {
+      const genres = await storage.getAllGenres();
+      res.json(genres);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch genres" });
+    }
+  });
+
+  // Get genre by ID
+  app.get("/api/genres/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const genre = await storage.getGenre(id);
+      if (!genre) {
+        return res.status(404).json({ message: "Genre not found" });
+      }
+      res.json(genre);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch genre" });
+    }
+  });
+
+  // Create new genre (Admin only)
+  app.post("/api/genres", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const genreData = insertGenreSchema.parse(req.body);
+      const newGenre = await storage.createGenre(genreData);
+      res.status(201).json(newGenre);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('validation')) {
+        return res.status(400).json({ message: "Invalid genre data" });
+      }
+      res.status(500).json({ message: "Failed to create genre" });
+    }
+  });
+
+  // Update genre (Admin only)
+  app.put("/api/genres/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const genreData = insertGenreSchema.parse(req.body);
+      const updatedGenre = await storage.updateGenre(id, genreData);
+      if (!updatedGenre) {
+        return res.status(404).json({ message: "Genre not found" });
+      }
+      res.json(updatedGenre);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('validation')) {
+        return res.status(400).json({ message: "Invalid genre data" });
+      }
+      res.status(500).json({ message: "Failed to update genre" });
+    }
+  });
+
+  // Delete genre (Admin only)
+  app.delete("/api/genres/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteGenre(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Genre not found" });
+      }
+      res.json({ message: "Genre deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete genre" });
     }
   });
 

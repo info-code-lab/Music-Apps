@@ -3,7 +3,7 @@ import {
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
   type Album, type InsertAlbum, type Song, type InsertSong, type Playlist, type InsertPlaylist,
-  type Comment, type InsertComment, type Rating, type InsertRating
+  type Comment, type InsertComment, type Rating, type InsertRating, type Genre, type InsertGenre
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, ilike, or, desc, and, inArray } from "drizzle-orm";
@@ -55,8 +55,11 @@ export interface IStorage {
   incrementPlayCount(songId: string): Promise<void>;
 
   // Genre operations
-  getAllGenres(): Promise<{ id: string; name: string }[]>;
-  getGenre(id: string): Promise<{ id: string; name: string } | undefined>;
+  getAllGenres(): Promise<Genre[]>;
+  getGenre(id: string): Promise<Genre | undefined>;
+  createGenre(genre: InsertGenre): Promise<Genre>;
+  updateGenre(id: string, updates: Partial<InsertGenre>): Promise<Genre | undefined>;
+  deleteGenre(id: string): Promise<boolean>;
 
   // Playlist operations
   getPlaylistsByUser(userId: string): Promise<Playlist[]>;
@@ -407,13 +410,37 @@ export class DatabaseStorage implements IStorage {
   // GENRE OPERATIONS
   // ========================
 
-  async getAllGenres(): Promise<{ id: string; name: string }[]> {
-    return await db.select().from(genres).orderBy(genres.name);
+  async getAllGenres(): Promise<Genre[]> {
+    return await db.select().from(genres).orderBy(genres.displayOrder, genres.name);
   }
 
-  async getGenre(id: string): Promise<{ id: string; name: string } | undefined> {
+  async getGenre(id: string): Promise<Genre | undefined> {
     const [genre] = await db.select().from(genres).where(eq(genres.id, id));
     return genre || undefined;
+  }
+
+  async createGenre(insertGenre: InsertGenre): Promise<Genre> {
+    const [genre] = await db
+      .insert(genres)
+      .values(insertGenre)
+      .returning();
+    return genre;
+  }
+
+  async updateGenre(id: string, updates: Partial<InsertGenre>): Promise<Genre | undefined> {
+    const [genre] = await db
+      .update(genres)
+      .set({ ...updates, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(genres.id, id))
+      .returning();
+    return genre || undefined;
+  }
+
+  async deleteGenre(id: string): Promise<boolean> {
+    const result = await db
+      .delete(genres)
+      .where(eq(genres.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   // ========================
