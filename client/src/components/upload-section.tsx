@@ -141,8 +141,10 @@ export default function UploadSection() {
     }
   };
 
-  // Allow all authenticated users to upload
-  // Removed admin restriction - regular users can now upload music
+  // Admin-only upload interface
+  if (!isAdmin) {
+    return null; // Hide upload section for non-admin users
+  }
 
   return (
     <section className="p-6">
