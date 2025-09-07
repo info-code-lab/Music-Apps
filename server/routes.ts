@@ -1,10 +1,12 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTrackSchema } from "@shared/schema";
 import { downloadService } from "./download-service";
+import { progressEmitter } from "./progress-emitter";
 import multer from "multer";
 import path from "path";
+import { randomUUID } from "crypto";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -24,6 +26,26 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // SSE endpoint for progress updates
+  app.get("/api/upload-progress/:sessionId", (req, res) => {
+    const { sessionId } = req.params;
+    
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    });
+    
+    // Add connection to progress emitter
+    progressEmitter.addConnection(sessionId, res);
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      progressEmitter.removeConnection(sessionId);
+    });
+  });
   // Get all tracks
   app.get("/api/tracks", async (req, res) => {
     try {
@@ -62,6 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Upload track via URL
   app.post("/api/tracks/upload-url", async (req, res) => {
+    const sessionId = randomUUID();
+    
     try {
       const { url, title, artist, category } = req.body;
       
@@ -72,32 +96,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Starting URL upload for: ${url}`);
       
-      // Download file and extract metadata
-      const metadata = await downloadService.downloadAndExtractMetadata(url);
+      // Return session ID immediately for progress tracking
+      res.status(200).json({ sessionId, message: "Upload started" });
       
-      const trackData = {
-        title: title || metadata.title || "Unknown Title",
-        artist: artist || metadata.artist || "Unknown Artist", 
-        category: category || "Electronic", // Default category if not provided
-        duration: metadata.duration,
-        url: `/uploads/${metadata.filename}`, // Use local file path
-        artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
-        isFavorite: false,
-        uploadType: "url" as const
-      };
+      // Process upload asynchronously
+      setImmediate(async () => {
+        try {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Starting upload...',
+            progress: 5,
+            stage: 'starting'
+          });
+          
+          // Download file and extract metadata
+          const metadata = await downloadService.downloadAndExtractMetadata(url, sessionId);
+          
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Creating track record...',
+            progress: 90,
+            stage: 'finalizing'
+          });
+          
+          const trackData = {
+            title: title || metadata.title || "Unknown Title",
+            artist: artist || metadata.artist || "Unknown Artist", 
+            category: category || "Electronic", // Default category if not provided
+            duration: metadata.duration,
+            url: `/uploads/${metadata.filename}`, // Use local file path
+            artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
+            isFavorite: false,
+            uploadType: "url" as const
+          };
 
-      const validatedData = insertTrackSchema.parse(trackData);
-      const track = await storage.createTrack(validatedData);
-      
-      console.log(`Successfully created track: ${track.title} by ${track.artist}`);
-      res.status(201).json(track);
+          const validatedData = insertTrackSchema.parse(trackData);
+          const track = await storage.createTrack(validatedData);
+          
+          console.log(`Successfully created track: ${track.title} by ${track.artist}`);
+          
+          progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}" by ${track.artist}`);
+        } catch (error) {
+          console.error("URL upload error:", error);
+          const errorMessage = error instanceof Error ? error.message : "Failed to upload track via URL";
+          progressEmitter.emitError(sessionId, errorMessage);
+        }
+      });
     } catch (error) {
-      console.error("URL upload error:", error);
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: "Failed to upload track via URL" });
-      }
+      console.error("URL upload setup error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start upload";
+      progressEmitter.emitError(sessionId, errorMessage);
+      res.status(500).json({ message: errorMessage });
     }
   });
 

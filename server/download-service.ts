@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { exec } from "child_process";
 import ffmpeg from "fluent-ffmpeg";
 import { randomUUID } from "crypto";
+import { progressEmitter } from "./progress-emitter";
 
 const writeFile = promisify(fs.writeFile);
 const mkdir = promisify(fs.mkdir);
@@ -61,13 +62,24 @@ export class DownloadService {
     }
   }
 
-  async downloadAndExtractMetadata(url: string): Promise<AudioMetadata> {
+  async downloadAndExtractMetadata(url: string, sessionId?: string): Promise<AudioMetadata> {
     try {
       console.log(`Processing URL: ${url}`);
       
+      if (sessionId) {
+        progressEmitter.emit(sessionId, {
+          type: 'status',
+          message: 'Analyzing URL...',
+          progress: 10,
+          stage: 'analyzing'
+        });
+      }
+      
       // Check if it's Spotify (not supported)
       if (this.isSpotifyUrl(url)) {
-        throw new Error('Spotify URLs are not supported due to copyright restrictions. Please use YouTube, SoundCloud, or direct file URLs instead.');
+        const error = 'Spotify URLs are not supported due to copyright restrictions. Please use YouTube, SoundCloud, or direct file URLs instead.';
+        if (sessionId) progressEmitter.emitError(sessionId, error);
+        throw new Error(error);
       }
       
       let localPath: string;
@@ -75,17 +87,41 @@ export class DownloadService {
       
       if (this.isStreamingPlatformUrl(url)) {
         // Use yt-dlp for streaming platforms
-        const result = await this.downloadFromStreamingPlatform(url);
+        if (sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Downloading from streaming platform...',
+            progress: 20,
+            stage: 'downloading'
+          });
+        }
+        const result = await this.downloadFromStreamingPlatform(url, sessionId);
         localPath = result.localPath;
         filename = result.filename;
       } else {
         // Direct download for regular file URLs
-        const result = await this.downloadDirectFile(url);
+        if (sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Downloading file...',
+            progress: 20,
+            stage: 'downloading'
+          });
+        }
+        const result = await this.downloadDirectFile(url, sessionId);
         localPath = result.localPath;
         filename = result.filename;
       }
 
       // Extract metadata
+      if (sessionId) {
+        progressEmitter.emit(sessionId, {
+          type: 'status',
+          message: 'Extracting metadata...',
+          progress: 80,
+          stage: 'metadata'
+        });
+      }
       const metadata = await this.extractMetadata(localPath);
       
       return {
@@ -99,7 +135,7 @@ export class DownloadService {
     }
   }
 
-  private async downloadFromStreamingPlatform(url: string): Promise<{localPath: string, filename: string}> {
+  private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
     return new Promise((resolve, reject) => {
       const filename = `${randomUUID()}.%(ext)s`;
       const outputTemplate = path.join(this.uploadsDir, filename);
@@ -142,7 +178,7 @@ export class DownloadService {
     });
   }
 
-  private async downloadDirectFile(url: string): Promise<{localPath: string, filename: string}> {
+  private async downloadDirectFile(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
     const response = await axios({
       method: 'GET',
       url: url,
@@ -159,6 +195,15 @@ export class DownloadService {
 
     await writeFile(localPath, Buffer.from(response.data));
     console.log(`Direct file saved to: ${localPath}`);
+    
+    if (sessionId) {
+      progressEmitter.emit(sessionId, {
+        type: 'status',
+        message: 'File downloaded successfully',
+        progress: 70,
+        stage: 'processing'
+      });
+    }
     
     return { localPath, filename };
   }
