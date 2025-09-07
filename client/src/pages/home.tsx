@@ -1,0 +1,121 @@
+import { useState } from "react";
+import Sidebar from "@/components/sidebar";
+import MusicPlayer from "@/components/music-player";
+import MusicLibrary from "@/components/music-library";
+import UploadSection from "@/components/upload-section";
+import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, Bell, User } from "lucide-react";
+import type { Track } from "@shared/schema";
+
+export default function Home() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const { data: tracks = [], isLoading } = useQuery({
+    queryKey: ["/api/tracks"],
+    enabled: selectedCategory === "All Categories" && !searchQuery,
+  });
+
+  const { data: filteredTracks = [] } = useQuery({
+    queryKey: ["/api/tracks/category", selectedCategory],
+    enabled: selectedCategory !== "All Categories" && !searchQuery,
+  });
+
+  const { data: searchResults = [] } = useQuery({
+    queryKey: ["/api/tracks/search", { q: searchQuery }],
+    enabled: !!searchQuery,
+  });
+
+  const displayTracks = searchQuery 
+    ? searchResults 
+    : selectedCategory === "All Categories" 
+      ? tracks 
+      : filteredTracks;
+
+  const handlePlayTrack = (track: Track) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex flex-1">
+        <Sidebar 
+          onCategorySelect={setSelectedCategory}
+          selectedCategory={selectedCategory}
+          recentTracks={tracks.slice(0, 2)}
+        />
+
+        <main className="flex-1 overflow-auto pb-32 custom-scrollbar">
+          {/* Header with Search */}
+          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search songs, artists, or albums..."
+                    className="pl-10 bg-input border-border font-serif"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    data-testid="input-search"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-4 ml-6">
+                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
+                  <Bell className="w-4 h-4 text-muted-foreground" />
+                </Button>
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary-foreground" />
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <UploadSection />
+
+          <MusicLibrary
+            tracks={displayTracks}
+            isLoading={isLoading}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            onPlayTrack={handlePlayTrack}
+            searchQuery={searchQuery}
+          />
+        </main>
+      </div>
+
+      {currentTrack && (
+        <MusicPlayer
+          track={currentTrack}
+          isPlaying={isPlaying}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          onNext={() => {
+            const currentIndex = displayTracks.findIndex(t => t.id === currentTrack.id);
+            const nextTrack = displayTracks[currentIndex + 1];
+            if (nextTrack) {
+              setCurrentTrack(nextTrack);
+            }
+          }}
+          onPrevious={() => {
+            const currentIndex = displayTracks.findIndex(t => t.id === currentTrack.id);
+            const prevTrack = displayTracks[currentIndex - 1];
+            if (prevTrack) {
+              setCurrentTrack(prevTrack);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
