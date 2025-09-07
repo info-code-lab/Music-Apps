@@ -141,13 +141,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const trackData = {
             title: title || metadata.title || "Unknown Title",
-            artist: artist || metadata.artist || "Unknown Artist", 
-            category: category || detectCategory(metadata.title || "", metadata.artist || ""),
             duration: metadata.duration,
-            url: `/uploads/${metadata.filename}`, // Use local file path
-            artwork: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
-            isFavorite: false,
-            uploadType: "url" as const
+            filePath: `/uploads/${metadata.filename}`, // Updated field name for songs table
+            coverArt: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
           };
 
           const validatedData = insertTrackSchema.parse(trackData);
@@ -191,14 +187,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const trackData = {
         title,
-        artist,
-        category,
         duration: estimatedDuration,
-        url: `/uploads/${multerReq.file.filename}`,
-        fileName: multerReq.file.filename,
-        artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
-        isFavorite: false,
-        uploadType: "file" as const
+        filePath: `/uploads/${multerReq.file.filename}`, // Updated field name for songs table
+        coverArt: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
       };
 
       const validatedData = insertTrackSchema.parse(trackData);
