@@ -591,11 +591,15 @@ export class DownloadService {
 
     return new Promise((resolve, reject) => {
       const fileId = randomUUID();
-      const outputTemplate = path.join(this.uploadsDir, `${fileId}.%(ext)s`);
+      // Let spotDL use its default naming, we'll find the file afterwards
+      const outputDir = this.uploadsDir;
       
       console.log("spotDL command for:", url);
       
-      const child = spawn('python3', ['-m', 'spotdl', url, '--output', outputTemplate, '--format', 'mp3', '--bitrate', '320k', '--print-errors', '--overwrite', 'skip']);
+      // Record files before download to identify new ones
+      const filesBefore = new Set(fs.readdirSync(this.uploadsDir));
+      
+      const child = spawn('python3', ['-m', 'spotdl', url, '--output', outputDir, '--format', 'mp3', '--bitrate', '320k', '--print-errors', '--overwrite', 'force']);
       
       let stdout = '';
       let stderr = '';
@@ -646,17 +650,46 @@ export class DownloadService {
         }
 
         try {
-          // Find the downloaded file
-          const files = fs.readdirSync(this.uploadsDir);
-          const downloadedFile = files.find(file => 
-            file.startsWith(fileId) && 
-            (file.endsWith('.mp3') || file.endsWith('.m4a'))
+          // Find the newly downloaded file by comparing before/after
+          const filesAfter = fs.readdirSync(this.uploadsDir);
+          const newFiles = filesAfter.filter(file => !filesBefore.has(file));
+          console.log('New files after spotDL:', newFiles);
+          
+          // Look for new audio files
+          const newAudioFiles = newFiles.filter(file => 
+            file.endsWith('.mp3') || file.endsWith('.m4a') || file.endsWith('.flac')
           );
           
-          if (!downloadedFile) {
-            reject(new Error('No file found after spotDL download'));
-            return;
+          if (newAudioFiles.length === 0) {
+            console.log('No new audio files found, looking for most recent...');
+            // Fallback: find most recently modified audio file
+            const allAudioFiles = filesAfter.filter(file => 
+              file.endsWith('.mp3') || file.endsWith('.m4a') || file.endsWith('.flac')
+            );
+            
+            if (allAudioFiles.length === 0) {
+              reject(new Error('No audio file found after spotDL download'));
+              return;
+            }
+            
+            // Get the most recently modified audio file
+            let mostRecentFile = allAudioFiles[0];
+            let mostRecentTime = 0;
+            
+            for (const file of allAudioFiles) {
+              const filePath = path.join(this.uploadsDir, file);
+              const stats = fs.statSync(filePath);
+              if (stats.mtimeMs > mostRecentTime) {
+                mostRecentTime = stats.mtimeMs;
+                mostRecentFile = file;
+              }
+            }
+            
+            newAudioFiles.push(mostRecentFile);
           }
+          
+          const downloadedFile = newAudioFiles[0];
+          console.log('Downloaded file found:', downloadedFile);
           
           const localPath = path.join(this.uploadsDir, downloadedFile);
           console.log(`spotDL download successful: ${localPath}`);
