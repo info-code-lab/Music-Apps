@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link2, Upload, CloudUpload, Shield, Lock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link2, Upload, CloudUpload, Shield, Lock, FileAudio } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -147,72 +148,57 @@ export default function UploadSection() {
   }
 
   return (
-    <section className="p-6">
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-2xl font-bold text-foreground font-sans">Upload Music</h2>
-          <Shield className="w-5 h-5 text-green-600" />
+    <section className="max-w-2xl mx-auto p-6 bg-card rounded-lg border border-border">
+      {/* Header */}
+      <div className="mb-6 text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Upload className="w-6 h-6 text-amber-600" />
+          <h2 className="text-xl font-semibold text-foreground">Upload Content</h2>
         </div>
-        <p className="text-muted-foreground font-serif">Add new tracks to your library via URL or direct upload</p>
+        <p className="text-muted-foreground text-sm">Add new tracks to your music library</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {/* URL Upload */}
-        <div className="bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center space-x-3 mb-4">
-            <Link2 className="text-accent text-xl w-6 h-6" />
-            <h3 className="text-lg font-semibold font-sans">Upload via URL</h3>
-          </div>
-          <form onSubmit={handleUrlSubmit} className="space-y-4">
-            <Input
-              type="url"
-              placeholder="Enter music URL (YouTube, SoundCloud, etc.)"
-              value={urlData.url}
-              onChange={(e) => setUrlData({ ...urlData, url: e.target.value })}
-              className="bg-input border-border font-serif"
-              data-testid="input-url"
-            />
-            <div className="p-3 bg-muted/50 rounded-lg border border-muted">
-              <p className="text-sm text-muted-foreground font-serif text-center">
-                🎵 Song details will be automatically extracted from the URL
-              </p>
-            </div>
-            <Button 
-              type="submit"
-              disabled={urlUploadMutation.isPending}
-              className="w-full bg-primary text-primary-foreground py-3 font-mono font-medium hover:opacity-90 transition-opacity"
-              data-testid="button-upload-url"
-            >
-              <CloudUpload className="w-4 h-4 mr-2" />
-              {urlUploadMutation.isPending ? "Uploading..." : "Upload from URL"}
-            </Button>
-          </form>
-        </div>
+      <Tabs defaultValue="file" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="file" className="flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            File Upload
+          </TabsTrigger>
+          <TabsTrigger value="url" className="flex items-center gap-2">
+            <Link2 className="w-4 h-4" />
+            URL Import
+          </TabsTrigger>
+        </TabsList>
 
-        {/* File Upload */}
-        <div className="bg-card rounded-lg p-6 border border-border">
-          <div className="flex items-center space-x-3 mb-4">
-            <Upload className="text-accent text-xl w-6 h-6" />
-            <h3 className="text-lg font-semibold font-sans">Direct Upload</h3>
-          </div>
+        {/* File Upload Tab */}
+        <TabsContent value="file" className="space-y-4">
           <form onSubmit={handleFileSubmit} className="space-y-4">
+            {/* Drop Zone */}
             <div
-              className={`upload-zone border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
-                dragOver ? "drag-over border-primary bg-primary/10" : "border-border"
-              }`}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+              } ${selectedFile ? "bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-700" : ""}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => document.getElementById('file-input')?.click()}
               data-testid="drop-zone"
             >
-              <CloudUpload className="w-12 h-12 text-muted-foreground mb-4 mx-auto" />
-              <p className="text-foreground font-mono font-medium mb-2">
-                {selectedFile ? selectedFile.name : "Drop files here or click to browse"}
+              <FileAudio className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-foreground font-medium mb-2">
+                {selectedFile ? selectedFile.name : "Drop your audio file here"}
               </p>
-              <p className="text-sm text-muted-foreground font-serif">
-                Support for MP3, WAV, FLAC files up to 50MB
+              <p className="text-sm text-muted-foreground mb-4">
+                Supports MP3, WAV, FLAC (Max 50MB)
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-background"
+                onClick={() => document.getElementById('file-input')?.click()}
+              >
+                Choose File
+              </Button>
               <input
                 id="file-input"
                 type="file"
@@ -222,48 +208,94 @@ export default function UploadSection() {
                 data-testid="input-file"
               />
             </div>
-            
-            <Input
-              type="text"
-              placeholder="Track title"
-              value={fileData.title}
-              onChange={(e) => setFileData({ ...fileData, title: e.target.value })}
-              className="bg-input border-border font-serif"
-              data-testid="input-file-title"
-            />
-            <Input
-              type="text"
-              placeholder="Artist name"
-              value={fileData.artist}
-              onChange={(e) => setFileData({ ...fileData, artist: e.target.value })}
-              className="bg-input border-border font-serif"
-              data-testid="input-file-artist"
-            />
-            <Select value={fileData.category} onValueChange={(value) => setFileData({ ...fileData, category: value })}>
-              <SelectTrigger className="bg-input border-border" data-testid="select-file-category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
+
+            {/* Form Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Track Title</label>
+                <Input
+                  type="text"
+                  placeholder="Enter track title"
+                  value={fileData.title}
+                  onChange={(e) => setFileData({ ...fileData, title: e.target.value })}
+                  className="bg-background border-input"
+                  data-testid="input-file-title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Artist</label>
+                <Input
+                  type="text"
+                  placeholder="Enter artist name"
+                  value={fileData.artist}
+                  onChange={(e) => setFileData({ ...fileData, artist: e.target.value })}
+                  className="bg-background border-input"
+                  data-testid="input-file-artist"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Category</label>
+              <Select value={fileData.category} onValueChange={(value) => setFileData({ ...fileData, category: value })}>
+                <SelectTrigger className="bg-background border-input" data-testid="select-file-category">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <Button 
               type="submit"
-              disabled={fileUploadMutation.isPending}
-              className="w-full bg-primary text-primary-foreground py-3 font-mono font-medium hover:opacity-90 transition-opacity"
+              disabled={fileUploadMutation.isPending || !selectedFile}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 font-medium"
               data-testid="button-upload-file"
             >
               <Upload className="w-4 h-4 mr-2" />
-              {fileUploadMutation.isPending ? "Uploading..." : "Upload File"}
+              {fileUploadMutation.isPending ? "Uploading..." : "Upload Track"}
             </Button>
           </form>
-        </div>
-      </div>
+        </TabsContent>
+
+        {/* URL Import Tab */}
+        <TabsContent value="url" className="space-y-4">
+          <form onSubmit={handleUrlSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Music URL</label>
+              <Input
+                type="url"
+                placeholder="Enter music URL (YouTube, SoundCloud, etc.)"
+                value={urlData.url}
+                onChange={(e) => setUrlData({ ...urlData, url: e.target.value })}
+                className="bg-background border-input"
+                data-testid="input-url"
+              />
+            </div>
+            
+            <div className="p-3 bg-muted/50 rounded-lg border border-muted">
+              <p className="text-sm text-muted-foreground text-center">
+                🎵 Song details will be automatically extracted from the URL
+              </p>
+            </div>
+            
+            <Button 
+              type="submit"
+              disabled={urlUploadMutation.isPending || !urlData.url}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 font-medium"
+              data-testid="button-upload-url"
+            >
+              <CloudUpload className="w-4 h-4 mr-2" />
+              {urlUploadMutation.isPending ? "Uploading..." : "Upload Track"}
+            </Button>
+          </form>
+        </TabsContent>
+      </Tabs>
 
       {/* Progress Modal */}
       <UploadProgressModal
