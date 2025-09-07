@@ -60,6 +60,9 @@ type UrlUploadData = z.infer<typeof urlUploadSchema>;
 export default function UploadManagement() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [urlProgress, setUrlProgress] = useState(0);
+  const [isUrlUploading, setIsUrlUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const queryClient = useQueryClient();
 
   const fileForm = useForm<FileUploadData>({
@@ -103,10 +106,10 @@ export default function UploadManagement() {
         formData.append("artist", data.artist);
         formData.append("category", data.category);
         if (data.file) {
-          formData.append("file", data.file[0]);
+          formData.append("audio", data.file[0]);
         }
 
-        await apiRequest("POST", "/api/tracks/upload", formData);
+        await apiRequest("POST", "/api/tracks/upload-file", formData);
         setUploadProgress(100);
         clearInterval(progressInterval);
       } catch (error) {
@@ -130,15 +133,56 @@ export default function UploadManagement() {
 
   const urlUploadMutation = useMutation({
     mutationFn: async (data: UrlUploadData) => {
-      await apiRequest("POST", "/api/tracks/url", data);
+      setIsUrlUploading(true);
+      setUrlProgress(0);
+      
+      try {
+        const response = await apiRequest("POST", "/api/tracks/upload-url", data);
+        const { sessionId } = response;
+        
+        // Set up progress tracking
+        if (sessionId) {
+          return new Promise((resolve, reject) => {
+            const eventSource = new EventSource(`/api/upload-progress/${sessionId}`);
+            
+            eventSource.onmessage = (event) => {
+              const data = JSON.parse(event.data);
+              
+              if (data.type === 'status') {
+                setUrlProgress(data.progress || 0);
+              } else if (data.type === 'complete') {
+                eventSource.close();
+                setUrlProgress(100);
+                resolve(data);
+              } else if (data.type === 'error') {
+                eventSource.close();
+                reject(new Error(data.message));
+              }
+            };
+            
+            eventSource.onerror = () => {
+              eventSource.close();
+              reject(new Error('Upload failed'));
+            };
+          });
+        }
+        
+        return response;
+      } catch (error) {
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
       toast.success("Track added from URL successfully");
       urlForm.reset();
+      setIsUrlUploading(false);
+      setUrlProgress(0);
     },
     onError: () => {
       toast.error("Failed to add track from URL");
+      setIsUrlUploading(false);
+      setUrlProgress(0);
     },
   });
 
