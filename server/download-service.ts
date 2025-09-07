@@ -604,10 +604,19 @@ export class DownloadService {
       let stdout = '';
       let stderr = '';
       
+      let youtubeUrl: string | undefined;
+      
       child.stdout.on('data', (data: Buffer) => {
         const output = data.toString();
         stdout += output;
         console.log('spotDL stdout:', output.trim());
+        
+        // Extract YouTube URL from spotDL output for thumbnail download
+        const urlMatch = output.match(/https:\/\/(?:music\.)?youtube\.com\/watch\?v=[A-Za-z0-9_-]+/);
+        if (urlMatch) {
+          youtubeUrl = urlMatch[0];
+          console.log('Found YouTube URL for thumbnail:', youtubeUrl);
+        }
         
         // Parse progress updates from spotDL output
         if (output.includes('Downloaded') && sessionId) {
@@ -694,9 +703,35 @@ export class DownloadService {
           const localPath = path.join(this.uploadsDir, downloadedFile);
           console.log(`spotDL download successful: ${localPath}`);
           
-          // Try to extract metadata from the downloaded file
-          this.extractMetadata(localPath)
-            .then(metadata => {
+          // Download thumbnail from YouTube if we found the URL (async operation)
+          const downloadThumbnail = async (): Promise<string | undefined> => {
+            if (!youtubeUrl) return undefined;
+            
+            if (sessionId) {
+              progressEmitter.emit(sessionId, {
+                type: 'status',
+                message: 'Downloading thumbnail...',
+                progress: 75,
+                stage: 'processing'
+              });
+            }
+            
+            try {
+              const thumb = await this.downloadThumbnailWithYtDlp(youtubeUrl, fileId);
+              console.log('Thumbnail downloaded for Spotify track:', thumb);
+              return thumb;
+            } catch (thumbError) {
+              console.log('Thumbnail download failed for Spotify track:', thumbError);
+              return undefined;
+            }
+          };
+          
+          // Try to extract metadata and download thumbnail
+          Promise.all([
+            this.extractMetadata(localPath),
+            downloadThumbnail()
+          ])
+            .then(([metadata, thumbnailFilename]) => {
               if (sessionId) {
                 progressEmitter.emit(sessionId, {
                   type: 'status',
@@ -709,7 +744,7 @@ export class DownloadService {
               resolve({ 
                 localPath, 
                 filename: downloadedFile,
-                thumbnail: undefined, // spotDL usually embeds artwork in the file
+                thumbnail: thumbnailFilename,
                 metadata: {
                   title: metadata.title,
                   artist: metadata.artist,
@@ -718,13 +753,21 @@ export class DownloadService {
                 }
               });
             })
-            .catch(metaError => {
-              console.log('Metadata extraction failed, using basic info:', metaError);
+            .catch(async (error) => {
+              console.log('Metadata or thumbnail extraction failed, using basic info:', error);
+              // Still try to get thumbnail even if metadata fails
+              let thumbnailFilename: string | undefined;
+              try {
+                thumbnailFilename = await downloadThumbnail();
+              } catch {
+                thumbnailFilename = undefined;
+              }
+              
               // Fallback with basic info
               resolve({ 
                 localPath, 
                 filename: downloadedFile,
-                thumbnail: undefined,
+                thumbnail: thumbnailFilename,
                 metadata: {
                   title: downloadedFile.replace(/\.[^/.]+$/, ''), // Remove extension
                   artist: 'Unknown Artist',
