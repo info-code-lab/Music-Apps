@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music, Users, Disc, Upload, TrendingUp, Activity } from "lucide-react";
+import type { Track } from "@shared/schema";
 
 export default function AdminDashboard() {
-  const { data: tracks = [] } = useQuery({
+  const { data: tracks = [] } = useQuery<Track[]>({
     queryKey: ["/api/tracks"],
   });
 
