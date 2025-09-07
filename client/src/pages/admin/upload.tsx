@@ -48,10 +48,10 @@ const fileUploadSchema = z.object({
 });
 
 const urlUploadSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  artist: z.string().min(1, "Artist is required"),
-  category: z.string().min(1, "Category is required"),
   url: z.string().url("Must be a valid URL"),
+  title: z.string().optional(),
+  artist: z.string().optional(),
+  category: z.string().optional(),
 });
 
 type FileUploadData = z.infer<typeof fileUploadSchema>;
@@ -77,9 +77,6 @@ export default function UploadManagement() {
   const urlForm = useForm<UrlUploadData>({
     resolver: zodResolver(urlUploadSchema),
     defaultValues: {
-      title: "",
-      artist: "",
-      category: "",
       url: "",
     },
   });
@@ -424,7 +421,11 @@ export default function UploadManagement() {
                   </Form>
                 </TabsContent>
 
-                <TabsContent value="url" className="space-y-4">
+                <TabsContent value="url" className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Upload via URL</h3>
+                  </div>
+                  
                   <Form {...urlForm}>
                     <form onSubmit={urlForm.handleSubmit(onUrlUpload)} className="space-y-4">
                       <FormField
@@ -432,62 +433,25 @@ export default function UploadManagement() {
                         name="url"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Music URL</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://example.com/track.mp3" {...field} data-testid="url-input" />
+                              <Input 
+                                placeholder="Enter music URL (YouTube, SoundCloud, etc.)" 
+                                {...field} 
+                                data-testid="url-input"
+                                className="h-12 text-base bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={urlForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Track Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter track title" {...field} data-testid="url-title-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={urlForm.control}
-                          name="artist"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Artist</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter artist name" {...field} data-testid="url-artist-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+                        <Music className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          Song details will be automatically extracted from the URL
+                        </p>
                       </div>
-
-                      <FormField
-                        control={urlForm.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl>
-                              <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800" data-testid="url-category-select">
-                                <option value="">Select a category</option>
-                                {categories.map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
                       {isUrlUploading && (
                         <div className="space-y-2">
@@ -501,8 +465,8 @@ export default function UploadManagement() {
 
                       <Button
                         type="submit"
-                        disabled={urlUploadMutation.isPending || isUrlUploading}
-                        className="w-full"
+                        disabled={urlUploadMutation.isPending || isUrlUploading || !urlForm.watch('url')}
+                        className="w-full h-12 text-base bg-orange-400 hover:bg-orange-500 text-white"
                         data-testid="upload-url-submit"
                       >
                         {urlUploadMutation.isPending || isUrlUploading ? (
@@ -512,8 +476,8 @@ export default function UploadManagement() {
                           </>
                         ) : (
                           <>
-                            <Link className="h-4 w-4 mr-2" />
-                            Add from URL
+                            <UploadIcon className="h-4 w-4 mr-2" />
+                            Upload from URL
                           </>
                         )}
                       </Button>
