@@ -25,7 +25,10 @@ export default function AdminLogin() {
 
   // Redirect to home if logged in as regular user
   if (user && user.role !== 'admin') {
-    toast.error("Admin access required");
+    toast.error("Admin access required", {
+      icon: '🚫',
+      duration: 3000,
+    });
     setLocation("/");
     return null;
   }
@@ -33,7 +36,10 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginForm.username || !loginForm.password) {
-      toast.error("Please enter both username and password");
+      toast.error("Please enter both username and password", {
+        icon: '⚠️',
+        duration: 3000,
+      });
       return;
     }
 
@@ -43,7 +49,10 @@ export default function AdminLogin() {
       if (loginMutation.data?.user?.role === 'admin') {
         setLocation("/admin");
       } else {
-        toast.error("Admin access required");
+        toast.error("Admin access required", {
+          icon: '🚫',
+          duration: 3000,
+        });
       }
     } catch (error) {
       // Error handling is done by the auth hook
