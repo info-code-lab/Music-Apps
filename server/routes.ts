@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertTrackSchema } from "@shared/schema";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
+import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
 import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -26,6 +27,11 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", login);
+  app.post("/api/auth/register", register);
+  app.get("/api/auth/me", authenticateToken, getCurrentUser);
+
   // SSE endpoint for progress updates
   app.get("/api/upload-progress/:sessionId", (req, res) => {
     const { sessionId } = req.params;
@@ -82,8 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload track via URL
-  app.post("/api/tracks/upload-url", async (req, res) => {
+  // Upload track via URL (Admin only)
+  app.post("/api/tracks/upload-url", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     const sessionId = randomUUID();
     
     try {
@@ -164,8 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload track via file
-  app.post("/api/tracks/upload-file", upload.single('audio'), async (req, res) => {
+  // Upload track via file (Admin only)
+  app.post("/api/tracks/upload-file", authenticateToken, requireAdmin, upload.single('audio'), async (req: AuthRequest, res) => {
     try {
       const multerReq = req as Request & { file?: Express.Multer.File };
       if (!multerReq.file) {
@@ -225,8 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete track
-  app.delete("/api/tracks/:id", async (req, res) => {
+  // Delete track (Admin only)
+  app.delete("/api/tracks/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteTrack(id);
