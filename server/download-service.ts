@@ -209,8 +209,69 @@ export class DownloadService {
       }
     }
     
-    // All attempts failed
-    throw new Error("YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.");
+    // All Node.js yt-dlp attempts failed, try Python as fallback
+    console.log("All Node.js attempts failed, trying Python downloader...");
+    try {
+      return await this.downloadWithPython(url, sessionId);
+    } catch (pythonError) {
+      console.log("Python downloader also failed:", pythonError);
+      throw new Error("YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.");
+    }
+  }
+
+  private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
+    console.log("Trying Python downloader for:", url);
+    
+    if (sessionId) {
+      progressEmitter.emit(sessionId, {
+        type: 'status',
+        message: 'Trying advanced Python downloader...',
+        progress: 60,
+        stage: 'downloading'
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const pythonScript = path.join(__dirname, 'python_downloader.py');
+      const command = `python3 "${pythonScript}" "${url}" "${this.uploadsDir}"`;
+      
+      console.log("Python command:", command);
+      
+      exec(command, { timeout: 180000 }, (error, stdout, stderr) => {
+        if (error) {
+          console.log("Python script error:", error);
+          console.log("Python stderr:", stderr);
+          reject(new Error(`Python downloader failed: ${error.message}`));
+          return;
+        }
+
+        try {
+          const result = JSON.parse(stdout);
+          console.log("Python result:", result);
+          
+          if (result.success) {
+            const localPath = path.join(this.uploadsDir, result.filename);
+            console.log(`Python download successful: ${localPath}`);
+            
+            if (sessionId) {
+              progressEmitter.emit(sessionId, {
+                type: 'status',
+                message: `Downloaded via ${result.strategy}`,
+                progress: 70,
+                stage: 'processing'
+              });
+            }
+            
+            resolve({ localPath, filename: result.filename });
+          } else {
+            reject(new Error(result.error || 'Python download failed'));
+          }
+        } catch (parseError) {
+          console.log("Failed to parse Python output:", stdout);
+          reject(new Error('Failed to parse Python downloader response'));
+        }
+      });
+    });
   }
 
   private async downloadDirectFile(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
