@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, date, decimal, pgEnum, json } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, date, decimal, pgEnum, json, index, unique, foreignKey } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -593,3 +594,195 @@ export type Follow = typeof follows.$inferSelect;
 export type ListeningHistory = typeof listeningHistory.$inferSelect;
 export type SearchLog = typeof searchLogs.$inferSelect;
 export type Recommendation = typeof recommendations.$inferSelect;
+
+// ========================
+// RELATIONSHIPS & CONSTRAINTS
+// ========================
+
+// Users Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  subscriptions: many(userSubscriptions),
+  favorites: many(favorites),
+  playlists: many(playlists),
+  comments: many(comments),
+  ratings: many(ratings),
+  follows: many(follows, { relationName: "userFollows" }),
+  followers: many(follows, { relationName: "userFollowers" }),
+  listeningHistory: many(listeningHistory),
+  searchLogs: many(searchLogs),
+  devices: many(devices),
+  authTokens: many(authTokens),
+  engagementMetrics: many(userEngagementMetrics),
+  testAssignments: many(userTestAssignments),
+  streamingAnalytics: many(streamingAnalytics),
+  behaviorAnalytics: many(userBehaviorAnalytics),
+}));
+
+// Artists Relations
+export const artistsRelations = relations(artists, ({ many }) => ({
+  albums: many(albums),
+  songArtists: many(songArtists),
+}));
+
+// Albums Relations
+export const albumsRelations = relations(albums, ({ one, many }) => ({
+  artist: one(artists, {
+    fields: [albums.artistId],
+    references: [artists.id],
+  }),
+  songs: many(songs),
+}));
+
+// Songs Relations
+export const songsRelations = relations(songs, ({ one, many }) => ({
+  album: one(albums, {
+    fields: [songs.albumId],
+    references: [albums.id],
+  }),
+  genre: one(genres, {
+    fields: [songs.genreId],
+    references: [genres.id],
+  }),
+  uploader: one(users, {
+    fields: [songs.uploadedBy],
+    references: [users.id],
+  }),
+  originalSong: one(songs, {
+    fields: [songs.originalSongId],
+    references: [songs.id],
+  }),
+  songArtists: many(songArtists),
+  playlistSongs: many(playlistSongs),
+  favorites: many(favorites),
+  comments: many(comments),
+  ratings: many(ratings),
+  listeningHistory: many(listeningHistory),
+  recommendations: many(recommendations),
+  royalties: many(songRoyalties),
+  contentReports: many(contentReports),
+  dmcaClaims: many(dmcaClaims),
+  streamingAnalytics: many(streamingAnalytics),
+  revenueReports: many(revenueReports),
+  songFiles: many(songFiles),
+  cacheMetrics: many(cacheMetrics),
+}));
+
+// Genres Relations
+export const genresRelations = relations(genres, ({ many }) => ({
+  songs: many(songs),
+}));
+
+// Song Artists Relations
+export const songArtistsRelations = relations(songArtists, ({ one }) => ({
+  song: one(songs, {
+    fields: [songArtists.songId],
+    references: [songs.id],
+  }),
+  artist: one(artists, {
+    fields: [songArtists.artistId],
+    references: [artists.id],
+  }),
+}));
+
+// Playlists Relations
+export const playlistsRelations = relations(playlists, ({ one, many }) => ({
+  user: one(users, {
+    fields: [playlists.userId],
+    references: [users.id],
+  }),
+  playlistSongs: many(playlistSongs),
+}));
+
+// Playlist Songs Relations
+export const playlistSongsRelations = relations(playlistSongs, ({ one }) => ({
+  playlist: one(playlists, {
+    fields: [playlistSongs.playlistId],
+    references: [playlists.id],
+  }),
+  song: one(songs, {
+    fields: [playlistSongs.songId],
+    references: [songs.id],
+  }),
+}));
+
+// Favorites Relations
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  song: one(songs, {
+    fields: [favorites.songId],
+    references: [songs.id],
+  }),
+}));
+
+// Comments Relations
+export const commentsRelations = relations(comments, ({ one }) => ({
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  song: one(songs, {
+    fields: [comments.songId],
+    references: [songs.id],
+  }),
+}));
+
+// Ratings Relations
+export const ratingsRelations = relations(ratings, ({ one }) => ({
+  user: one(users, {
+    fields: [ratings.userId],
+    references: [users.id],
+  }),
+  song: one(songs, {
+    fields: [ratings.songId],
+    references: [songs.id],
+  }),
+}));
+
+// Right Holders Relations
+export const rightHoldersRelations = relations(rightHolders, ({ many }) => ({
+  royalties: many(songRoyalties),
+  royaltyPayments: many(royaltyPayments),
+}));
+
+// Song Royalties Relations
+export const songRoyaltiesRelations = relations(songRoyalties, ({ one }) => ({
+  song: one(songs, {
+    fields: [songRoyalties.songId],
+    references: [songs.id],
+  }),
+  rightHolder: one(rightHolders, {
+    fields: [songRoyalties.rightHolderId],
+    references: [rightHolders.id],
+  }),
+}));
+
+// Royalty Payments Relations
+export const royaltyPaymentsRelations = relations(royaltyPayments, ({ one }) => ({
+  rightHolder: one(rightHolders, {
+    fields: [royaltyPayments.rightHolderId],
+    references: [rightHolders.id],
+  }),
+}));
+
+// Streaming Analytics Relations
+export const streamingAnalyticsRelations = relations(streamingAnalytics, ({ one }) => ({
+  song: one(songs, {
+    fields: [streamingAnalytics.songId],
+    references: [songs.id],
+  }),
+  user: one(users, {
+    fields: [streamingAnalytics.userId],
+    references: [users.id],
+  }),
+}));
+
+// Song Files Relations
+export const songFilesRelations = relations(songFiles, ({ one }) => ({
+  song: one(songs, {
+    fields: [songFiles.songId],
+    references: [songs.id],
+  }),
+}));
