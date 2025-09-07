@@ -7,10 +7,59 @@ import os
 import uuid
 from pathlib import Path
 import re
+import urllib.request
+from urllib.parse import urlparse
 
 def clean_url(url):
     """Remove playlist and radio parameters from YouTube URL"""
     return url.split('&list=')[0].split('&start_radio=')[0]
+
+def progress_hook(d):
+    """Progress hook for yt-dlp to report download progress"""
+    if d['status'] == 'downloading':
+        percent = d.get('_percent_str', '0%').strip('%')
+        try:
+            progress = float(percent)
+            print(f"PROGRESS:{progress}")
+        except (ValueError, TypeError):
+            pass
+    elif d['status'] == 'finished':
+        print("PROGRESS:100")
+
+def download_thumbnail(info, file_id, output_dir):
+    """Download the best available thumbnail"""
+    thumbnail_url = None
+    
+    # Get the best thumbnail URL
+    if 'thumbnails' in info and info['thumbnails']:
+        # Try to get the highest quality thumbnail
+        thumbnails = info['thumbnails']
+        if thumbnails:
+            # Find the best thumbnail (prefer larger resolutions)
+            best_thumbnail = max(thumbnails, key=lambda x: (x.get('width', 0) * x.get('height', 0)))
+            thumbnail_url = best_thumbnail.get('url')
+    
+    if not thumbnail_url:
+        return None
+    
+    try:
+        # Download thumbnail
+        thumbnail_ext = 'jpg'  # Default to jpg
+        if 'webp' in thumbnail_url.lower():
+            thumbnail_ext = 'webp'
+        elif 'png' in thumbnail_url.lower():
+            thumbnail_ext = 'png'
+            
+        thumbnail_filename = f"{file_id}_thumbnail.{thumbnail_ext}"
+        thumbnail_path = os.path.join(output_dir, thumbnail_filename)
+        
+        print(f"Downloading thumbnail from: {thumbnail_url}")
+        urllib.request.urlretrieve(thumbnail_url, thumbnail_path)
+        
+        return thumbnail_filename
+    except Exception as e:
+        print(f"Failed to download thumbnail: {str(e)}")
+        return None
 
 def download_youtube_audio(url, output_dir):
     """Download audio from YouTube with multiple fallback strategies"""
@@ -102,12 +151,13 @@ def download_youtube_audio(url, output_dir):
         'audioformat': 'mp3',
         'audioquality': 0,
         'outtmpl': output_template,
-        'quiet': True,
+        'quiet': False,  # Enable progress reporting
         'no_warnings': True,
         'ignoreerrors': True,
         'retries': 3,
         'fragment_retries': 3,
         'skip_unavailable_fragments': True,
+        'progress_hooks': [progress_hook],  # Add progress hook
     }
     
     for i, strategy in enumerate(strategies):
@@ -125,6 +175,10 @@ def download_youtube_audio(url, output_dir):
                     
                 # Download the audio
                 ydl.download([clean_url_str])
+                
+                # Download thumbnail
+                print("Downloading thumbnail...")
+                thumbnail_filename = download_thumbnail(info, file_id, output_dir)
                 
                 # Find the downloaded file
                 for ext in ['mp3', 'm4a', 'webm', 'ogg']:
@@ -153,6 +207,7 @@ def download_youtube_audio(url, output_dir):
                         return {
                             'success': True,
                             'filename': f"{file_id}.{ext}",
+                            'thumbnail': thumbnail_filename,
                             'title': title,
                             'artist': artist,
                             'duration': info.get('duration', 0),
