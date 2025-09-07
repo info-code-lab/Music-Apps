@@ -501,10 +501,32 @@ export const userTestAssignments = pgTable("user_test_assignments", {
 // SCHEMA DEFINITIONS
 // ========================
 
-// Legacy Track Schema (backward compatibility)
-export const insertTrackSchema = createInsertSchema(tracks).omit({
-  id: true,
+// Legacy Track Schema (backward compatibility) - Now using songs table
+export const insertTrackSchema = createInsertSchema(songs).pick({
+  title: true,
+  duration: true,
+  filePath: true,
+  coverArt: true,
+  uploadedBy: true,
+  albumId: true,
+  genreId: true,
 });
+
+// Map legacy track fields to song fields for compatibility
+export const insertTrackToSongSchema = insertTrackSchema.transform((data) => ({
+  title: data.title,
+  duration: data.duration,
+  filePath: data.filePath,
+  coverArt: data.coverArt,
+  uploadedBy: data.uploadedBy,
+  albumId: data.albumId,
+  genreId: data.genreId,
+  // Set defaults for required enterprise fields
+  contentStatus: 'approved' as const,
+  isExplicit: false,
+  isInstrumental: false,
+  isRemix: false,
+}));
 
 // User Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -562,7 +584,21 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
 // ========================
 
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
-export type Track = typeof tracks.$inferSelect;
+export type Track = typeof songs.$inferSelect; // Now using songs table
+
+// Legacy track type for backward compatibility
+export type LegacyTrack = {
+  id: string;
+  title: string;
+  artist: string;
+  category: string;
+  duration: number;
+  url: string;
+  artwork?: string | null;
+  isFavorite?: boolean;
+  uploadType: string;
+  createdAt?: Date;
+};
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
