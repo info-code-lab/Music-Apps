@@ -98,6 +98,45 @@ export class DownloadService {
         const result = await this.downloadFromStreamingPlatform(url, sessionId);
         localPath = result.localPath;
         filename = result.filename;
+        
+        // Use yt-dlp metadata if available (more accurate for YouTube videos)
+        if (result.metadata) {
+          if (sessionId) {
+            progressEmitter.emit(sessionId, {
+              type: 'status',
+              message: 'Using extracted video metadata...',
+              progress: 80,
+              stage: 'metadata'
+            });
+          }
+          
+          const ytMetadata = result.metadata;
+          let title = ytMetadata.title || 'Unknown';
+          let artist = ytMetadata.uploader || ytMetadata.channel || 'Unknown Artist';
+          
+          // Try to parse "Artist - Song" format in title
+          if (title.includes(' - ') && !title.startsWith('Unknown')) {
+            const parts = title.split(' - ', 2);
+            if (parts.length === 2) {
+              artist = parts[0].trim();
+              title = parts[1].trim();
+            }
+          }
+          
+          const metadata = {
+            duration: Math.round(ytMetadata.duration || 0),
+            title,
+            artist,
+            album: undefined
+          };
+          console.log('Using yt-dlp metadata:', metadata);
+          
+          return {
+            ...metadata,
+            filename,
+            localPath
+          };
+        }
       } else {
         // Direct download for regular file URLs
         if (sessionId) {
@@ -113,7 +152,7 @@ export class DownloadService {
         filename = result.filename;
       }
 
-      // Extract metadata
+      // Extract metadata (fallback method)
       if (sessionId) {
         progressEmitter.emit(sessionId, {
           type: 'status',
@@ -135,7 +174,7 @@ export class DownloadService {
     }
   }
 
-  private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
+  private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any}> {
     const filename = `${randomUUID()}.%(ext)s`;
     const outputTemplate = path.join(this.uploadsDir, filename);
     
@@ -145,8 +184,8 @@ export class DownloadService {
     
     // Try multiple approaches to bypass YouTube restrictions
     const attempts = [
-      // Attempt 1: Basic with cleaned URL
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 -f "bestaudio" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
+      // Attempt 1: Basic with cleaned URL and metadata extraction
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 -f "bestaudio" --print-json --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
       
       // Attempt 2: Android client with cleaned URL (most successful)
       `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
@@ -187,7 +226,26 @@ export class DownloadService {
         
         if (result.success) {
           console.log(`Success on attempt ${i + 1}`);
-          console.log('yt-dlp output:', result.stdout);
+          
+          // Try to extract metadata from yt-dlp JSON output
+          let extractedMetadata = null;
+          if (result.stdout && i === 0) { // Only attempt 1 has --print-json
+            try {
+              // yt-dlp prints JSON first, then regular output
+              const lines = result.stdout.split('\n');
+              const jsonLine = lines.find(line => line.trim().startsWith('{'));
+              if (jsonLine) {
+                extractedMetadata = JSON.parse(jsonLine.trim());
+                console.log('Extracted metadata:', {
+                  title: extractedMetadata.title,
+                  uploader: extractedMetadata.uploader,
+                  channel: extractedMetadata.channel
+                });
+              }
+            } catch (e) {
+              console.log('Failed to parse yt-dlp JSON output:', e);
+            }
+          }
           
           // Find the downloaded file
           const files = fs.readdirSync(this.uploadsDir);
@@ -199,7 +257,7 @@ export class DownloadService {
           if (downloadedFile) {
             const localPath = path.join(this.uploadsDir, downloadedFile);
             console.log(`File downloaded to: ${localPath}`);
-            return { localPath, filename: downloadedFile };
+            return { localPath, filename: downloadedFile, metadata: extractedMetadata };
           }
         } else {
           console.log(`Attempt ${i + 1} failed:`, result.stderr);
@@ -219,7 +277,7 @@ export class DownloadService {
     }
   }
 
-  private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string}> {
+  private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any}> {
     console.log("Trying Python downloader for:", url);
     
     if (sessionId) {
@@ -262,7 +320,15 @@ export class DownloadService {
               });
             }
             
-            resolve({ localPath, filename: result.filename });
+            resolve({ 
+              localPath, 
+              filename: result.filename,
+              metadata: {
+                title: result.title,
+                uploader: result.artist,
+                duration: result.duration
+              }
+            });
           } else {
             reject(new Error(result.error || 'Python download failed'));
           }
