@@ -153,9 +153,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedData = insertTrackSchema.parse(trackData);
           const track = await storage.createTrack(validatedData);
           
-          console.log(`Successfully created track: ${track.title} by ${track.artist}`);
+          console.log(`Successfully created track: ${track.title}`);
           
-          progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}" by ${track.artist}`);
+          progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}"`);
         } catch (error) {
           console.error("URL upload error:", error);
           const errorMessage = error instanceof Error ? error.message : "Failed to upload track via URL";
