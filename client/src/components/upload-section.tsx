@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link2, Upload, CloudUpload } from "lucide-react";
+import { Link2, Upload, CloudUpload, Shield, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import UploadProgressModal from "@/components/upload-progress-modal";
 
 export default function UploadSection() {
@@ -29,6 +30,7 @@ export default function UploadSection() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAdmin } = useAuth();
 
   const urlUploadMutation = useMutation({
     mutationFn: async (data: { url: string; title?: string; artist?: string; category?: string }) => {
@@ -54,8 +56,16 @@ export default function UploadSection() {
 
   const fileUploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {};
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/tracks/upload-file", {
         method: "POST",
+        headers,
         body: formData,
       });
       if (!response.ok) {
@@ -155,10 +165,32 @@ export default function UploadSection() {
     }
   };
 
+  // Admin-only upload interface
+  if (!isAdmin) {
+    return (
+      <section className="p-6">
+        <div className="bg-muted/30 rounded-lg p-8 border border-border text-center">
+          <Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2 font-sans">Admin Access Required</h3>
+          <p className="text-muted-foreground font-serif mb-4">
+            Only administrators can upload music tracks to the platform.
+          </p>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Shield className="w-4 h-4" />
+            <span>Contact your administrator for upload access</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="p-6">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">Upload Music</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="text-2xl font-bold text-foreground font-sans">Upload Music</h2>
+          <Shield className="w-5 h-5 text-green-600" />
+        </div>
         <p className="text-muted-foreground font-serif">Add new tracks to your library via URL or direct upload</p>
       </div>
 
