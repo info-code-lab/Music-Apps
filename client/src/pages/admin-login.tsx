@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { Music, Shield, Upload, Users, Lock } from "lucide-react";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const { user, loginMutation } = useAuth();
-  const { toast } = useToast();
   
   const [loginForm, setLoginForm] = useState({
     username: "",
@@ -26,10 +25,13 @@ export default function AdminLogin() {
 
   // Redirect to home if logged in as regular user
   if (user && user.role !== 'admin') {
-    toast({
-      title: "Access Denied",
-      description: "Admin access required",
-      variant: "destructive",
+    toast.error("Admin access required", {
+      icon: '🚫',
+      duration: 4000,
+      style: {
+        background: '#EF4444',
+        color: '#fff',
+      },
     });
     setLocation("/");
     return null;
@@ -38,10 +40,13 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginForm.username || !loginForm.password) {
-      toast({
-        title: "Missing fields",
-        description: "Please enter both username and password",
-        variant: "destructive",
+      toast.error("Please enter both username and password", {
+        icon: '⚠️',
+        duration: 4000,
+        style: {
+          background: '#F59E0B',
+          color: '#fff',
+        },
       });
       return;
     }
@@ -52,10 +57,13 @@ export default function AdminLogin() {
       if (loginMutation.data?.user?.role === 'admin') {
         setLocation("/admin");
       } else {
-        toast({
-          title: "Access Denied",
-          description: "Admin access required",
-          variant: "destructive",
+        toast.error("Admin access required", {
+          icon: '🚫',
+          duration: 4000,
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+          },
         });
       }
     } catch (error) {

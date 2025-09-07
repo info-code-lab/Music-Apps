@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
 import { apiRequest, queryClient } from "../lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 type AuthContextType = {
   user: User | null;
@@ -39,7 +39,6 @@ type LoginResponse = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
   const [token, setToken] = useState<string | null>(() => 
     localStorage.getItem('auth_token')
   );
@@ -89,16 +88,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (response: LoginResponse) => {
       setToken(response.token);
       queryClient.setQueryData(["/api/auth/me"], response.user);
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${response.user.username}!`,
+      toast.success(`Welcome back, ${response.user.username}!`, {
+        icon: '👋',
+        duration: 4000,
+        style: {
+          background: '#10B981',
+          color: '#fff',
+        },
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error(error.message || 'Login failed', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });
@@ -111,16 +117,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (response: LoginResponse) => {
       setToken(response.token);
       queryClient.setQueryData(["/api/auth/me"], response.user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${response.user.username}!`,
+      toast.success(`Welcome, ${response.user.username}!`, {
+        icon: '🎉',
+        duration: 4000,
+        style: {
+          background: '#10B981',
+          color: '#fff',
+        },
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error(error.message || 'Registration failed', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });
@@ -133,16 +146,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(null);
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear(); // Clear all cached data
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+      toast.success('You have been successfully logged out.', {
+        icon: '👋',
+        duration: 3000,
+        style: {
+          background: '#6366F1',
+          color: '#fff',
+        },
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error(error.message || 'Logout failed', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });

@@ -5,7 +5,7 @@ import { Play, Heart, Star, MessageCircle, MoreHorizontal } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import type { Song } from "@shared/schema";
 
 interface SongCardProps {
@@ -17,7 +17,6 @@ interface SongCardProps {
 
 export default function SongCard({ song, onPlay, showArtist = true, showAlbum = true }: SongCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const playMutation = useMutation({

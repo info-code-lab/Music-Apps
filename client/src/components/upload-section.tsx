@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link2, Upload, CloudUpload, Shield, Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,7 +28,6 @@ export default function UploadSection() {
   const [showProgress, setShowProgress] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
 
@@ -46,10 +45,13 @@ export default function UploadSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Upload Failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error(error.message || 'Upload failed', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });
@@ -75,19 +77,26 @@ export default function UploadSection() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Track uploaded successfully!",
+      toast.success('Track uploaded successfully!', {
+        icon: '🎵',
+        duration: 4000,
+        style: {
+          background: '#10B981',
+          color: '#fff',
+        },
       });
       setFileData({ title: "", artist: "", category: "" });
       setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Upload Failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error(error.message || 'Upload failed', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });
@@ -97,10 +106,13 @@ export default function UploadSection() {
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!urlData.url) {
-      toast({
-        title: "Missing URL",
-        description: "Please enter a music URL",
-        variant: "destructive",
+      toast.error('Please enter a music URL', {
+        icon: '⚠️',
+        duration: 3000,
+        style: {
+          background: '#F59E0B',
+          color: '#fff',
+        },
       });
       return;
     }
@@ -111,10 +123,13 @@ export default function UploadSection() {
   const handleFileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile || !fileData.title || !fileData.artist || !fileData.category) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a file and fill in all fields",
-        variant: "destructive",
+      toast.error('Please select a file and fill in all fields', {
+        icon: '⚠️',
+        duration: 3000,
+        style: {
+          background: '#F59E0B',
+          color: '#fff',
+        },
       });
       return;
     }
@@ -149,10 +164,13 @@ export default function UploadSection() {
       if (allowedTypes.includes(file.type)) {
         setSelectedFile(file);
       } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please select an MP3, WAV, or FLAC file",
-          variant: "destructive",
+        toast.error('Please select an MP3, WAV, or FLAC file', {
+          icon: '🚫',
+          duration: 4000,
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+          },
         });
       }
     }

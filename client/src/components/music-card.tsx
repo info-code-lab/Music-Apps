@@ -4,7 +4,7 @@ import { Play, Heart } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import type { Track } from "@shared/schema";
 
 interface MusicCardProps {
@@ -26,7 +26,6 @@ const getCategoryColor = (category: string) => {
 
 export default function MusicCard({ track, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const favoriteMutation = useMutation({
@@ -36,16 +35,22 @@ export default function MusicCard({ track, onPlay }: MusicCardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
-      toast({
-        title: track.isFavorite ? "Removed from favorites" : "Added to favorites",
-        description: `${track.title} by ${track.artist}`,
-      });
+      toast.success(
+        track.isFavorite ? "Removed from favorites" : "Added to favorites",
+        {
+          icon: track.isFavorite ? '💔' : '❤️',
+          duration: 3000,
+        }
+      );
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update favorite status",
-        variant: "destructive",
+      toast.error("Failed to update favorite status", {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+        },
       });
     },
   });
