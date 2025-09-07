@@ -6,6 +6,7 @@ import { Link2, Upload, CloudUpload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import UploadProgressModal from "@/components/upload-progress-modal";
 
 export default function UploadSection() {
   const [urlData, setUrlData] = useState({
@@ -23,6 +24,8 @@ export default function UploadSection() {
   
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -32,11 +35,11 @@ export default function UploadSection() {
       const response = await apiRequest("POST", "/api/tracks/upload-url", data);
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Track uploaded successfully via URL!",
-      });
+    onSuccess: (data) => {
+      if (data.sessionId) {
+        setCurrentSessionId(data.sessionId);
+        setShowProgress(true);
+      }
       setUrlData({ url: "", title: "", artist: "", category: "" });
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
@@ -289,6 +292,16 @@ export default function UploadSection() {
           </form>
         </div>
       </div>
+
+      {/* Progress Modal */}
+      <UploadProgressModal
+        isOpen={showProgress}
+        onClose={() => {
+          setShowProgress(false);
+          setCurrentSessionId(null);
+        }}
+        sessionId={currentSessionId}
+      />
     </section>
   );
 }
