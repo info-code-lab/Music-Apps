@@ -57,6 +57,15 @@ export default function SongsManagement() {
     queryKey: ["/api/tracks"],
   });
 
+  // Fetch categories from database
+  const { data: genres = [] } = useQuery<{id: string; name: string}[]>({
+    queryKey: ["/api/genres"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/genres");
+      return res.json();
+    }
+  });
+
   const deleteTrackMutation = useMutation({
     mutationFn: async (trackId: string) => {
       await apiRequest("DELETE", `/api/tracks/${trackId}`);
@@ -90,7 +99,8 @@ export default function SongsManagement() {
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ["all", ...Array.from(new Set(tracks.map(track => track.category)))];
+  // Create categories from database genres, adding "All Categories" at the beginning
+  const categories = ["all", ...genres.map(genre => genre.name)];
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -113,7 +123,7 @@ export default function SongsManagement() {
   const stats = [
     { title: "Total Songs", value: tracks.length, icon: Music, color: "text-blue-600" },
     { title: "Favorites", value: tracks.filter(t => t.isFavorite).length, icon: Heart, color: "text-red-600" },
-    { title: "Categories", value: categories.length - 1, icon: Filter, color: "text-green-600" },
+    { title: "Categories", value: genres.length, icon: Filter, color: "text-green-600" },
     { title: "Total Duration", value: `${Math.floor(tracks.reduce((acc, t) => acc + t.duration, 0) / 60)}m`, icon: Play, color: "text-purple-600" }
   ];
 
