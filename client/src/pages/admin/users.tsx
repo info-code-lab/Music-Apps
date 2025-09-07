@@ -28,7 +28,14 @@ import {
   UserX,
   Crown,
   Calendar,
-  Activity
+  Activity,
+  Eye,
+  Pencil,
+  Trash2,
+  Download,
+  Plus,
+  Shield,
+  Mail
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
@@ -36,63 +43,55 @@ import type { User } from "@shared/schema";
 
 export default function UsersManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [roleFilter, setRoleFilter] = useState<"all" | "user" | "admin">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "banned">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "user" | "admin" | "artist">("all");
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-    queryFn: async () => {
-      // Mock data for now since we need to implement users endpoint
-      return [
-        {
-          id: "1",
-          username: "john_doe",
-          email: "john@example.com",
-          role: "user",
-          status: "active",
-          profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-          bio: "Music enthusiast and producer",
-          createdAt: new Date("2024-01-15"),
-        },
-        {
-          id: "2",
-          username: "jane_smith",
-          email: "jane@example.com", 
-          role: "user",
-          status: "active",
-          profilePic: "https://images.unsplash.com/photo-1494790108755-2616b612b429?w=100",
-          bio: "Jazz lover and concert organizer",
-          createdAt: new Date("2024-02-20"),
-        },
-        {
-          id: "3",
-          username: "admin",
-          email: "admin@harmony.com",
-          role: "admin",
-          status: "active",
-          profilePic: "default.png",
-          bio: null,
-          createdAt: new Date("2025-09-07"),
-        },
-        {
-          id: "4",
-          username: "inactive_user",
-          email: "inactive@example.com",
-          role: "user",
-          status: "inactive",
-          profilePic: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-          bio: "Former user account",
-          createdAt: new Date("2023-12-10"),
-        }
-      ] as User[];
+  // Mock data for demonstration
+  const mockUsers: User[] = [
+    {
+      id: "1",
+      username: "john_doe",
+      email: "john@example.com",
+      password: "hashed",
+      role: "user",
+      status: "active",
+      profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+      bio: "Music enthusiast and producer",
+      createdAt: new Date("2024-01-15T00:00:00Z"),
+    },
+    {
+      id: "2",
+      username: "jane_artist",
+      email: "jane@example.com", 
+      password: "hashed",
+      role: "artist",
+      status: "active",
+      profilePic: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=100",
+      bio: "Singer-songwriter with a passion for indie folk",
+      createdAt: new Date("2024-02-20T00:00:00Z"),
+    },
+    {
+      id: "3",
+      username: "admin_user",
+      email: "admin@harmony.com",
+      password: "hashed", 
+      role: "admin",
+      status: "active",
+      profilePic: "default.png",
+      bio: "Platform administrator",
+      createdAt: new Date("2024-01-01T00:00:00Z"),
     }
+  ];
+
+  const { data: users = mockUsers, isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    queryFn: async () => mockUsers,
   });
 
   const updateUserStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: "active" | "inactive" }) => {
-      const response = await apiRequest("PATCH", `/api/users/${userId}/status`, { status });
-      return response.json();
+    mutationFn: async ({ userId, status }: { userId: string, status: string }) => {
+      await apiRequest("PATCH", `/api/users/${userId}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -104,9 +103,8 @@ export default function UsersManagement() {
   });
 
   const updateUserRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: "user" | "admin" }) => {
-      const response = await apiRequest("PATCH", `/api/users/${userId}/role`, { role });
-      return response.json();
+    mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
+      await apiRequest("PATCH", `/api/users/${userId}/role`, { role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -131,300 +129,251 @@ export default function UsersManagement() {
   });
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.bio && user.bio.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+    const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    
     return matchesSearch && matchesStatus && matchesRole;
   });
 
-  const handleUpdateStatus = (userId: string, status: "active" | "inactive", username: string) => {
-    const action = status === "active" ? "activate" : "deactivate";
-    if (window.confirm(`Are you sure you want to ${action} user "${username}"?`)) {
-      updateUserStatusMutation.mutate({ userId, status });
-    }
+  const handleUpdateStatus = (userId: string, status: string) => {
+    updateUserStatusMutation.mutate({ userId, status });
   };
 
-  const handleUpdateRole = (userId: string, role: "user" | "admin", username: string) => {
-    const action = role === "admin" ? "promote to admin" : "demote to user";
-    if (window.confirm(`Are you sure you want to ${action} "${username}"?`)) {
-      updateUserRoleMutation.mutate({ userId, role });
-    }
+  const handleUpdateRole = (userId: string, role: string) => {
+    updateUserRoleMutation.mutate({ userId, role });
   };
 
-  const handleDeleteUser = (userId: string, username: string) => {
-    if (window.confirm(`Are you sure you want to permanently delete user "${username}"? This action cannot be undone.`)) {
-      deleteUserMutation.mutate(userId);
+  const handleDeleteUser = (userId: string) => {
+    deleteUserMutation.mutate(userId);
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "admin": return "bg-red-100 text-red-800 dark:bg-red-900/20";
+      case "artist": return "bg-purple-100 text-purple-800 dark:bg-purple-900/20";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20";
     }
   };
 
   const getStatusColor = (status: string) => {
-    return status === "active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-red-100 text-red-800";
+    switch (status) {
+      case "active": return "bg-green-100 text-green-800 dark:bg-green-900/20";
+      case "banned": return "bg-red-100 text-red-800 dark:bg-red-900/20";
+      default: return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20";
+    }
   };
 
-  const getRoleColor = (role: string) => {
-    return role === "admin" 
-      ? "bg-purple-100 text-purple-800" 
-      : "bg-blue-100 text-blue-800";
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-500">Loading users...</p>
-        </div>
-      </div>
-    );
-  }
+  const stats = [
+    { title: "Total Users", value: users.length, icon: Users, color: "text-blue-600" },
+    { title: "Active Users", value: users.filter(u => u.status === "active").length, icon: UserCheck, color: "text-green-600" },
+    { title: "Artists", value: users.filter(u => u.role === "artist").length, icon: Crown, color: "text-purple-600" },
+    { title: "Admins", value: users.filter(u => u.role === "admin").length, icon: Shield, color: "text-red-600" }
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Users Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage users and their permissions</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage user accounts and permissions</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 gap-2">
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold">{users.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserCheck className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold">
-                  {users.filter(user => user.status === "active").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Crown className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Admins</p>
-                <p className="text-2xl font-bold">
-                  {users.filter(user => user.role === "admin").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold">
-                  {users.filter(user => {
-                    const userMonth = user.createdAt.getMonth();
-                    const currentMonth = new Date().getMonth();
-                    const userYear = user.createdAt.getFullYear();
-                    const currentYear = new Date().getFullYear();
-                    return userMonth === currentMonth && userYear === currentYear;
-                  }).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                  </div>
+                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Search and Filters */}
+      {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>User Directory</CardTitle>
-          <CardDescription>Search and manage all users on your platform</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            User Directory
+          </CardTitle>
+          <CardDescription>Browse and manage all user accounts on your platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search users by username, email, or bio..."
+                placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
-                data-testid="input-search-users"
+                data-testid="search-users"
               />
             </div>
-            
-            <select 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-              className="flex h-10 w-full md:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              data-testid="select-status-filter"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            
-            <select 
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as "all" | "user" | "admin")}
-              className="flex h-10 w-full md:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              data-testid="select-role-filter"
-            >
-              <option value="all">All Roles</option>
-              <option value="user">Users</option>
-              <option value="admin">Admins</option>
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm"
+                data-testid="filter-status"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="banned">Banned</option>
+              </select>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as any)}
+                className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm"
+                data-testid="filter-role"
+              >
+                <option value="all">All Roles</option>
+                <option value="user">User</option>
+                <option value="artist">Artist</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
           </div>
 
           <div className="border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16">Avatar</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Join Date</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">
-                        {searchQuery || statusFilter !== "all" || roleFilter !== "all" 
-                          ? "No users found matching your filters" 
-                          : "No users found"
-                        }
-                      </p>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-green-600 border-t-transparent"></div>
+                        Loading users...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Users className="h-8 w-8 text-gray-400" />
+                        <p className="text-gray-500">No users found</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
+                    <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <img 
-                            src={user.profilePic === "default.png" 
-                              ? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' 
-                              : user.profilePic
-                            } 
-                            alt={user.username}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="font-medium">{user.username}</p>
-                            {user.bio && (
-                              <p className="text-sm text-gray-500 truncate max-w-48">{user.bio}</p>
-                            )}
-                          </div>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
+                          {user.profilePic && user.profilePic !== "default.png" ? (
+                            <img
+                              src={user.profilePic}
+                              alt={user.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Users className="h-5 w-5 text-white" />
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{user.username}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">ID: {user.id}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm">{user.email}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge className={getRoleColor(user.role)}>
-                          {user.role === "admin" && <Crown className="h-3 w-3 mr-1" />}
                           {user.role}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(user.status)}>
-                          {user.status === "active" ? (
-                            <Activity className="h-3 w-3 mr-1" />
-                          ) : (
-                            <UserX className="h-3 w-3 mr-1" />
-                          )}
                           {user.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{user.createdAt.toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Unknown"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              className="h-8 w-8 p-0"
-                              data-testid={`actions-${user.id}`}
-                            >
+                            <Button variant="ghost" size="sm" data-testid={`user-actions-${user.id}`}>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              View Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Pencil className="h-4 w-4" />
+                              Edit User
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            
-                            {user.status === "active" ? (
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateStatus(user.id, "inactive", user.username)}
-                                className="text-orange-600"
-                                data-testid={`deactivate-${user.id}`}
-                              >
-                                <UserX className="h-4 w-4 mr-2" />
-                                Deactivate User
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateStatus(user.id, "active", user.username)}
-                                className="text-green-600"
-                                data-testid={`activate-${user.id}`}
-                              >
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activate User
-                              </DropdownMenuItem>
-                            )}
-                            
-                            {user.role === "user" ? (
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateRole(user.id, "admin", user.username)}
-                                className="text-purple-600"
-                                data-testid={`promote-${user.id}`}
-                              >
-                                <Crown className="h-4 w-4 mr-2" />
-                                Promote to Admin
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateRole(user.id, "user", user.username)}
-                                className="text-blue-600"
-                                data-testid={`demote-${user.id}`}
-                              >
-                                <Users className="h-4 w-4 mr-2" />
-                                Demote to User
-                              </DropdownMenuItem>
-                            )}
-                            
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteUser(user.id, user.username)}
-                              className="text-red-600"
-                              data-testid={`delete-${user.id}`}
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => handleUpdateStatus(user.id, user.status === "active" ? "banned" : "active")}
                             >
+                              {user.status === "active" ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                              {user.status === "active" ? "Ban User" : "Activate User"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => handleUpdateRole(user.id, user.role === "admin" ? "user" : "admin")}
+                            >
+                              <Crown className="h-4 w-4" />
+                              {user.role === "admin" ? "Remove Admin" : "Make Admin"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="gap-2 text-red-600"
+                              onClick={() => handleDeleteUser(user.id)}
+                              data-testid={`delete-user-${user.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
                               Delete User
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -436,6 +385,23 @@ export default function UsersManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Info */}
+          {filteredUsers.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {filteredUsers.length} of {users.length} users
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

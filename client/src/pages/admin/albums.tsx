@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
   Form,
@@ -29,6 +30,14 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
   Disc, 
   Search, 
   Plus, 
@@ -36,21 +45,36 @@ import {
   Trash2, 
   Music,
   Calendar,
-  UserIcon
+  MoreHorizontal,
+  Eye,
+  Play,
+  Download,
+  Users,
+  Clock
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
-import type { Album } from "@shared/schema";
+
+// Mock Album interface
+interface Album {
+  id: string;
+  title: string;
+  artistId: string;
+  artistName?: string;
+  releaseDate?: string;
+  coverArt?: string;
+  createdAt?: string;
+  trackCount?: number;
+  duration?: number;
+}
 
 const albumFormSchema = z.object({
   title: z.string().min(1, "Album title is required"),
   artistId: z.string().min(1, "Artist is required"),
-  description: z.string().optional(),
-  releaseDate: z.string().min(1, "Release date is required"),
-  genre: z.string().min(1, "Genre is required"),
+  releaseDate: z.string().optional(),
   coverArt: z.string().url().optional().or(z.literal("")),
 });
 
@@ -59,71 +83,63 @@ type AlbumFormData = z.infer<typeof albumFormSchema>;
 export default function AlbumsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const queryClient = useQueryClient();
+
+  // Mock data for albums
+  const mockAlbums: Album[] = [
+    {
+      id: "1",
+      title: "Midnight Vibes",
+      artistId: "1",
+      artistName: "Luna Collective",
+      releaseDate: "2024-03-15",
+      coverArt: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200",
+      createdAt: "2024-03-15",
+      trackCount: 8,
+      duration: 2340 // seconds
+    },
+    {
+      id: "2",
+      title: "Jazz Sessions Vol. 1",
+      artistId: "2", 
+      artistName: "Jazz Masters",
+      releaseDate: "2024-02-20",
+      coverArt: "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=200",
+      createdAt: "2024-02-20",
+      trackCount: 12,
+      duration: 3420
+    },
+    {
+      id: "3",
+      title: "Acoustic Dreams",
+      artistId: "3",
+      artistName: "Echo Valley", 
+      releaseDate: "2024-01-10",
+      coverArt: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200",
+      createdAt: "2024-01-10",
+      trackCount: 10,
+      duration: 2880
+    }
+  ];
+
+  const { data: albums = mockAlbums, isLoading } = useQuery<Album[]>({
+    queryKey: ["/api/albums"],
+    queryFn: async () => mockAlbums,
+  });
 
   const form = useForm<AlbumFormData>({
     resolver: zodResolver(albumFormSchema),
     defaultValues: {
       title: "",
       artistId: "",
-      description: "",
       releaseDate: "",
-      genre: "",
       coverArt: "",
     },
   });
 
-  const { data: albums = [], isLoading } = useQuery<Album[]>({
-    queryKey: ["/api/albums"],
-    queryFn: async () => {
-      // Mock data for now since we need to implement albums endpoint
-      return [
-        {
-          id: "1",
-          title: "Midnight Echoes",
-          artistId: "1",
-          description: "A collection of ambient electronic tracks",
-          releaseDate: new Date("2024-03-15"),
-          genre: "Electronic",
-          coverArt: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
-          createdAt: new Date("2024-02-01"),
-        },
-        {
-          id: "2",
-          title: "Jazz Standards Vol. 1",
-          artistId: "2", 
-          description: "Classic jazz standards with a modern twist",
-          releaseDate: new Date("2023-12-10"),
-          genre: "Jazz",
-          coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
-          createdAt: new Date("2023-11-01"),
-        }
-      ] as Album[];
-    }
-  });
-
-  const { data: artists = [] } = useQuery({
-    queryKey: ["/api/artists"],
-    queryFn: async () => {
-      return [
-        { id: "1", name: "Luna Collective" },
-        { id: "2", name: "Jazz Quintet" },
-      ];
-    }
-  });
-
-  const { data: tracks = [] } = useQuery({
-    queryKey: ["/api/tracks"],
-  });
-
   const createAlbumMutation = useMutation({
     mutationFn: async (data: AlbumFormData) => {
-      const response = await apiRequest("POST", "/api/albums", {
-        ...data,
-        releaseDate: new Date(data.releaseDate),
-      });
-      return response.json();
+      await apiRequest("POST", "/api/albums", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
@@ -133,25 +149,6 @@ export default function AlbumsManagement() {
     },
     onError: () => {
       toast.error("Failed to create album");
-    },
-  });
-
-  const updateAlbumMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: AlbumFormData }) => {
-      const response = await apiRequest("PUT", `/api/albums/${id}`, {
-        ...data,
-        releaseDate: new Date(data.releaseDate),
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
-      toast.success("Album updated successfully");
-      setEditingAlbum(null);
-      form.reset();
-    },
-    onError: () => {
-      toast.error("Failed to update album");
     },
   });
 
@@ -170,149 +167,179 @@ export default function AlbumsManagement() {
 
   const filteredAlbums = albums.filter(album =>
     album.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    album.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (album.description && album.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    album.artistName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateAlbum = (data: AlbumFormData) => {
+  const onSubmit = (data: AlbumFormData) => {
     createAlbumMutation.mutate(data);
   };
 
-  const handleUpdateAlbum = (data: AlbumFormData) => {
-    if (editingAlbum) {
-      updateAlbumMutation.mutate({ id: editingAlbum.id, data });
-    }
+  const handleDeleteAlbum = (albumId: string) => {
+    deleteAlbumMutation.mutate(albumId);
   };
 
-  const handleDeleteAlbum = (albumId: string, albumTitle: string) => {
-    if (window.confirm(`Are you sure you want to delete "${albumTitle}"?`)) {
-      deleteAlbumMutation.mutate(albumId);
-    }
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    return hrs > 0 ? `${hrs}h ${remainingMins}m` : `${mins}m`;
   };
 
-  const handleEditAlbum = (album: Album) => {
-    setEditingAlbum(album);
-    form.reset({
-      title: album.title,
-      artistId: album.artistId,
-      description: album.description || "",
-      releaseDate: album.releaseDate.toISOString().split('T')[0],
-      genre: album.genre,
-      coverArt: album.coverArt || "",
-    });
-  };
-
-  const getArtistName = (artistId: string) => {
-    const artist = artists.find((a: any) => a.id === artistId);
-    return artist?.name || "Unknown Artist";
-  };
-
-  const getAlbumTrackCount = (albumId: string) => {
-    return tracks.filter((track: any) => track.albumId === albumId).length;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Disc className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-500">Loading albums...</p>
-        </div>
-      </div>
-    );
-  }
+  const stats = [
+    { title: "Total Albums", value: albums.length, icon: Disc, color: "text-purple-600" },
+    { title: "Total Tracks", value: albums.reduce((acc, a) => acc + (a.trackCount || 0), 0), icon: Music, color: "text-blue-600" },
+    { title: "Total Duration", value: formatDuration(albums.reduce((acc, a) => acc + (a.duration || 0), 0)), icon: Clock, color: "text-green-600" },
+    { title: "Latest Release", value: albums.sort((a, b) => new Date(b.releaseDate || '').getTime() - new Date(a.releaseDate || '').getTime())[0]?.title || "-", icon: Calendar, color: "text-orange-600" }
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Albums Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage albums in your music collection</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage music albums and collections</p>
         </div>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700"
-          data-testid="button-add-album"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Album
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 gap-2">
+                <Plus className="h-4 w-4" />
+                Add Album
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add New Album</DialogTitle>
+                <DialogDescription>Create a new album collection</DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Album Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter album title" {...field} data-testid="album-title-input" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="artistId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Artist</FormLabel>
+                        <FormControl>
+                          <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800" data-testid="album-artist-select">
+                            <option value="">Select an artist</option>
+                            <option value="1">Luna Collective</option>
+                            <option value="2">Jazz Masters</option>
+                            <option value="3">Echo Valley</option>
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="releaseDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Release Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} data-testid="album-date-input" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="coverArt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cover Art URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/cover.jpg" {...field} data-testid="album-cover-input" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsCreateDialogOpen(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createAlbumMutation.isPending}
+                      className="flex-1"
+                      data-testid="create-album-submit"
+                    >
+                      {createAlbumMutation.isPending ? "Creating..." : "Create Album"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Disc className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Albums</p>
-                <p className="text-2xl font-bold">{albums.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Year</p>
-                <p className="text-2xl font-bold">
-                  {albums.filter(album => album.releaseDate.getFullYear() === new Date().getFullYear()).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserIcon className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Artists</p>
-                <p className="text-2xl font-bold">
-                  {new Set(albums.map(album => album.artistId)).size}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Music className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Genres</p>
-                <p className="text-2xl font-bold">
-                  {new Set(albums.map(album => album.genre)).size}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                  </div>
+                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Search and Albums Table */}
+      {/* Albums Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Album Collection</CardTitle>
-          <CardDescription>Search and manage all albums in your library</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Disc className="h-5 w-5" />
+            Album Collection
+          </CardTitle>
+          <CardDescription>Browse and manage all albums on your platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search albums, genres, or descriptions..."
+                placeholder="Search albums, artists..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
-                data-testid="input-search-albums"
+                data-testid="search-albums"
               />
             </div>
           </div>
@@ -321,70 +348,118 @@ export default function AlbumsManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16">Cover</TableHead>
                   <TableHead>Album</TableHead>
                   <TableHead>Artist</TableHead>
-                  <TableHead>Genre</TableHead>
-                  <TableHead>Release Date</TableHead>
                   <TableHead>Tracks</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Release Date</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAlbums.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8">
-                      <Disc className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">
-                        {searchQuery ? "No albums found matching your search" : "No albums found"}
-                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                        Loading albums...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredAlbums.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Disc className="h-8 w-8 text-gray-400" />
+                        <p className="text-gray-500">No albums found</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredAlbums.map((album) => (
-                    <TableRow key={album.id} data-testid={`album-row-${album.id}`}>
+                    <TableRow key={album.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <img 
-                            src={album.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100'} 
-                            alt={album.title}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                          <div>
-                            <p className="font-medium">{album.title}</p>
-                            {album.description && (
-                              <p className="text-sm text-gray-500 truncate max-w-48">{album.description}</p>
-                            )}
-                          </div>
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                          {album.coverArt ? (
+                            <img
+                              src={album.coverArt}
+                              alt={album.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Disc className="h-6 w-6 text-white" />
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell>{getArtistName(album.artistId)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{album.genre}</Badge>
-                      </TableCell>
-                      <TableCell>{album.releaseDate.toLocaleDateString()}</TableCell>
-                      <TableCell>{getAlbumTrackCount(album.id)}</TableCell>
-                      <TableCell>{album.createdAt.toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAlbum(album)}
-                            data-testid={`button-edit-${album.id}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteAlbum(album.id, album.title)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`button-delete-${album.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{album.title}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">ID: {album.id}</p>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium">{album.artistName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Music className="h-4 w-4 text-purple-500" />
+                          <span className="font-medium">{album.trackCount || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4 text-green-500" />
+                          <span className="font-medium">{formatDuration(album.duration || 0)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {album.releaseDate ? new Date(album.releaseDate).toLocaleDateString() : "Unknown"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" data-testid={`album-actions-${album.id}`}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              View Album
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Pencil className="h-4 w-4" />
+                              Edit Album
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Music className="h-4 w-4" />
+                              View Tracks
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Play className="h-4 w-4" />
+                              Play Album
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="gap-2 text-red-600"
+                              onClick={() => handleDeleteAlbum(album.id)}
+                              data-testid={`delete-album-${album.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete Album
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -392,161 +467,25 @@ export default function AlbumsManagement() {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Create/Edit Album Dialog */}
-      <Dialog open={isCreateDialogOpen || !!editingAlbum} onOpenChange={(open) => {
-        if (!open) {
-          setIsCreateDialogOpen(false);
-          setEditingAlbum(null);
-          form.reset();
-        }
-      }}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingAlbum ? "Edit Album" : "Add New Album"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingAlbum ? "Update album information" : "Create a new album entry"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form 
-              onSubmit={form.handleSubmit(editingAlbum ? handleUpdateAlbum : handleCreateAlbum)} 
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Album Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter album title" {...field} data-testid="input-album-title" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="artistId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Artist</FormLabel>
-                    <FormControl>
-                      <select 
-                        {...field}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        data-testid="select-album-artist"
-                      >
-                        <option value="">Select artist</option>
-                        {artists.map((artist: any) => (
-                          <option key={artist.id} value={artist.id}>
-                            {artist.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="genre"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Genre</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Electronic, Jazz, Rock" {...field} data-testid="input-album-genre" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="releaseDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Release Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} data-testid="input-album-date" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="coverArt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cover Art URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/cover.jpg" {...field} data-testid="input-album-cover" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Album description..."
-                        className="resize-none"
-                        rows={3}
-                        {...field}
-                        data-testid="textarea-album-description"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsCreateDialogOpen(false);
-                    setEditingAlbum(null);
-                    form.reset();
-                  }}
-                  data-testid="button-cancel-album"
-                >
-                  Cancel
+          {/* Pagination Info */}
+          {filteredAlbums.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {filteredAlbums.length} of {albums.length} albums
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={createAlbumMutation.isPending || updateAlbumMutation.isPending}
-                  data-testid="button-save-album"
-                >
-                  {(createAlbumMutation.isPending || updateAlbumMutation.isPending) && "Saving..."}
-                  {!createAlbumMutation.isPending && !updateAlbumMutation.isPending && (
-                    editingAlbum ? "Update Album" : "Create Album"
-                  )}
+                <Button variant="outline" size="sm" disabled>
+                  Next
                 </Button>
               </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
