@@ -34,35 +34,45 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentTrac
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-2 custom-scrollbar overflow-y-auto">
         <div className="space-y-1">
-          <Link href="/">
-            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-accent text-accent-foreground" data-testid="link-home">
-              <Home className="w-5 h-5" />
-              <span className="font-mono font-medium">Home</span>
-            </a>
+          <Link 
+            href="/" 
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-accent text-accent-foreground" 
+            data-testid="link-home"
+          >
+            <Home className="w-5 h-5" />
+            <span className="font-mono font-medium">Home</span>
           </Link>
-          <Link href="/songs">
-            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-songs">
-              <Music2 className="w-5 h-5" />
-              <span className="font-mono font-medium">Songs</span>
-            </a>
+          <Link 
+            href="/songs" 
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            data-testid="link-songs"
+          >
+            <Music2 className="w-5 h-5" />
+            <span className="font-mono font-medium">Songs</span>
           </Link>
-          <Link href="/artists">
-            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-artists">
-              <Users className="w-5 h-5" />
-              <span className="font-mono font-medium">Artists</span>
-            </a>
+          <Link 
+            href="/artists" 
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            data-testid="link-artists"
+          >
+            <Users className="w-5 h-5" />
+            <span className="font-mono font-medium">Artists</span>
           </Link>
-          <Link href="/albums">
-            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-albums">
-              <Disc className="w-5 h-5" />
-              <span className="font-mono font-medium">Albums</span>
-            </a>
+          <Link 
+            href="/albums" 
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            data-testid="link-albums"
+          >
+            <Disc className="w-5 h-5" />
+            <span className="font-mono font-medium">Albums</span>
           </Link>
-          <Link href="/playlists">
-            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-playlists">
-              <ListMusic className="w-5 h-5" />
-              <span className="font-mono font-medium">Playlists</span>
-            </a>
+          <Link 
+            href="/playlists" 
+            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            data-testid="link-playlists"
+          >
+            <ListMusic className="w-5 h-5" />
+            <span className="font-mono font-medium">Playlists</span>
           </Link>
           <button 
             className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
