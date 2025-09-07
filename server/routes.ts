@@ -100,11 +100,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      if (!title || !artist || !category) {
-        res.status(400).json({ message: "Title, artist, and category are required" });
-        return;
-      }
-
       console.log(`Starting URL upload for: ${url}`);
       
       // Return session ID immediately for progress tracking
@@ -130,10 +125,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             stage: 'finalizing'
           });
           
+          // Smart category detection based on title and artist
+          const detectCategory = (title: string, artist: string): string => {
+            const text = `${title} ${artist}`.toLowerCase();
+            
+            if (text.includes('rock') || text.includes('metal') || text.includes('punk')) return 'Rock';
+            if (text.includes('jazz') || text.includes('blues') || text.includes('swing')) return 'Jazz';
+            if (text.includes('classical') || text.includes('orchestra') || text.includes('symphony')) return 'Classical';
+            if (text.includes('folk') || text.includes('acoustic') || text.includes('country')) return 'Folk';
+            if (text.includes('rap') || text.includes('hip hop') || text.includes('hip-hop')) return 'Hip-Hop';
+            
+            // Default to Electronic for modern/unknown genres
+            return 'Electronic';
+          };
+
           const trackData = {
-            title,
-            artist, 
-            category,
+            title: title || metadata.title || "Unknown Title",
+            artist: artist || metadata.artist || "Unknown Artist", 
+            category: category || detectCategory(metadata.title || "", metadata.artist || ""),
             duration: metadata.duration,
             url: `/uploads/${metadata.filename}`, // Use local file path
             artwork: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,

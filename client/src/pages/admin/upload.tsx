@@ -48,10 +48,10 @@ const fileUploadSchema = z.object({
 });
 
 const urlUploadSchema = z.object({
-  url: z.string().url("Must be a valid URL"),
   title: z.string().min(1, "Title is required"),
   artist: z.string().min(1, "Artist is required"),
   category: z.string().min(1, "Category is required"),
+  url: z.string().url("Must be a valid URL"),
 });
 
 type FileUploadData = z.infer<typeof fileUploadSchema>;
