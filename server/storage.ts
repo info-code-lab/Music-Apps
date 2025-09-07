@@ -1,5 +1,5 @@
 import { 
-  users, tracks, artists, albums, songs, genres, playlists, playlistSongs, songArtists,
+  users, artists, albums, songs, genres, playlists, playlistSongs, songArtists,
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
   type Album, type InsertAlbum, type Song, type InsertSong, type Playlist, type InsertPlaylist,
