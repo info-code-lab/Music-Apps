@@ -273,257 +273,238 @@ export default function UploadManagement() {
         })}
       </div>
 
+      {/* Upload Music Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+              <Music className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Upload Music</CardTitle>
+              <CardDescription className="text-sm">Add new tracks to your library via URL or direct upload</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upload via URL */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <Globe className="h-4 w-4" />
+                Upload via URL
+              </div>
+              
+              <Form {...urlForm}>
+                <form onSubmit={urlForm.handleSubmit(onUrlUpload)} className="space-y-4">
+                  <FormField
+                    control={urlForm.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter music URL (YouTube, SoundCloud, etc.)" 
+                            className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                            {...field} 
+                            data-testid="url-input" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+                    <Music className="h-3 w-3" />
+                    <span>Song details will be automatically extracted from the URL</span>
+                  </div>
+
+                  {isUrlUploading && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Processing URL...</span>
+                        <span>{urlProgress}%</span>
+                      </div>
+                      <Progress value={urlProgress} className="h-2" />
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={urlUploadMutation.isPending || isUrlUploading}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    data-testid="upload-url-submit"
+                  >
+                    {urlUploadMutation.isPending || isUrlUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isUrlUploading ? 'Processing...' : 'Adding...'}
+                      </>
+                    ) : (
+                      <>
+                        <UploadIcon className="h-4 w-4 mr-2" />
+                        Upload from URL
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+
+            {/* Direct Upload */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <File className="h-4 w-4" />
+                Direct Upload
+              </div>
+              
+              <Form {...fileForm}>
+                <form onSubmit={fileForm.handleSubmit(onFileUpload)} className="space-y-4">
+                  <div 
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      dragActive 
+                        ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/20' 
+                        : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900'
+                    }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <div className="h-12 w-12 mx-auto mb-3 text-gray-400">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                      </svg>
+                    </div>
+                    
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Drop files here or click to browse
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                      Support for MP3, WAV, FLAC files up to 50MB
+                    </p>
+                    
+                    <FormField
+                      control={fileForm.control}
+                      name="file"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept=".mp3,.wav,.flac"
+                              onChange={(e) => field.onChange(e.target.files)}
+                              className="hidden"
+                              id="file-upload"
+                              data-testid="file-upload-input"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <label htmlFor="file-upload">
+                      <Button type="button" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100" asChild>
+                        <span>Choose File</span>
+                      </Button>
+                    </label>
+                  </div>
+
+                  <FormField
+                    control={fileForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            placeholder="Track title" 
+                            className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                            {...field} 
+                            data-testid="file-title-input" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={fileForm.control}
+                    name="artist"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            placeholder="Artist name" 
+                            className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                            {...field} 
+                            data-testid="file-artist-input" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={fileForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <select 
+                            {...field} 
+                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300" 
+                            data-testid="file-category-select"
+                          >
+                            <option value="">Select category</option>
+                            {categories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {isUploading && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Uploading...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={fileUploadMutation.isPending || isUploading}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    data-testid="upload-file-submit"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <UploadIcon className="h-4 w-4 mr-2" />
+                        Upload File
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upload Section */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UploadIcon className="h-5 w-5" />
-                Upload Content
-              </CardTitle>
-              <CardDescription>Add new tracks to your music library</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="file" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="file" className="gap-2">
-                    <File className="h-4 w-4" />
-                    File Upload
-                  </TabsTrigger>
-                  <TabsTrigger value="url" className="gap-2">
-                    <Globe className="h-4 w-4" />
-                    URL Import
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="file" className="space-y-4">
-                  <Form {...fileForm}>
-                    <form onSubmit={fileForm.handleSubmit(onFileUpload)} className="space-y-4">
-                      <div 
-                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                          dragActive 
-                            ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
-                            : 'border-gray-300 dark:border-gray-600'
-                        }`}
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                      >
-                        <FileAudio className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                          Drop your audio file here
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                          Supports MP3, WAV, FLAC (Max 50MB)
-                        </p>
-                        <FormField
-                          control={fileForm.control}
-                          name="file"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="file"
-                                  accept=".mp3,.wav,.flac"
-                                  onChange={(e) => field.onChange(e.target.files)}
-                                  className="hidden"
-                                  id="file-upload"
-                                  data-testid="file-upload-input"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <label htmlFor="file-upload">
-                          <Button type="button" variant="outline" asChild>
-                            <span>Choose File</span>
-                          </Button>
-                        </label>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={fileForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Track Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter track title" {...field} data-testid="file-title-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={fileForm.control}
-                          name="artist"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Artist</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter artist name" {...field} data-testid="file-artist-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={fileForm.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl>
-                              <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800" data-testid="file-category-select">
-                                <option value="">Select a category</option>
-                                {categories.map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {isUploading && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Uploading...</span>
-                            <span>{uploadProgress}%</span>
-                          </div>
-                          <Progress value={uploadProgress} className="h-2" />
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={fileUploadMutation.isPending || isUploading}
-                        className="w-full"
-                        data-testid="upload-file-submit"
-                      >
-                        {isUploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <UploadIcon className="h-4 w-4 mr-2" />
-                            Upload Track
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </TabsContent>
-
-                <TabsContent value="url" className="space-y-4">
-                  <Form {...urlForm}>
-                    <form onSubmit={urlForm.handleSubmit(onUrlUpload)} className="space-y-4">
-                      <FormField
-                        control={urlForm.control}
-                        name="url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Music URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://example.com/track.mp3" {...field} data-testid="url-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={urlForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Track Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter track title" {...field} data-testid="url-title-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={urlForm.control}
-                          name="artist"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Artist</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter artist name" {...field} data-testid="url-artist-input" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={urlForm.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl>
-                              <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800" data-testid="url-category-select">
-                                <option value="">Select a category</option>
-                                {categories.map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {isUrlUploading && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Processing URL...</span>
-                            <span>{urlProgress}%</span>
-                          </div>
-                          <Progress value={urlProgress} className="h-2" />
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={urlUploadMutation.isPending || isUrlUploading}
-                        className="w-full"
-                        data-testid="upload-url-submit"
-                      >
-                        {urlUploadMutation.isPending || isUrlUploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            {isUrlUploading ? 'Processing...' : 'Adding...'}
-                          </>
-                        ) : (
-                          <>
-                            <Link className="h-4 w-4 mr-2" />
-                            Add from URL
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Recent Uploads */}
         <div>
