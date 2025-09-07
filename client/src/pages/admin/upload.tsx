@@ -61,13 +61,16 @@ export default function UploadManagement() {
         })}
       </div>
 
-      {/* Upload Section */}
-      <UploadSection />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Recent Uploads */}
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column - Upload Content */}
         <div>
+          <UploadSection />
+        </div>
+
+        {/* Right Column - Recent Uploads and Guidelines */}
+        <div className="space-y-6">
+          {/* Recent Uploads */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -109,7 +112,7 @@ export default function UploadManagement() {
           </Card>
 
           {/* Upload Guidelines */}
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
