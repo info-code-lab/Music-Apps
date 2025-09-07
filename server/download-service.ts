@@ -2,6 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
+import { exec } from "child_process";
 import ffmpeg from "fluent-ffmpeg";
 import { randomUUID } from "crypto";
 
@@ -24,6 +25,34 @@ export class DownloadService {
     this.ensureUploadsDir();
   }
 
+  private isStreamingPlatformUrl(url: string): boolean {
+    const streamingDomains = [
+      'youtube.com', 'youtu.be', 'music.youtube.com',
+      'soundcloud.com', 'vimeo.com', 'dailymotion.com',
+      'twitch.tv', 'facebook.com', 'instagram.com',
+      'tiktok.com', 'twitter.com', 'x.com'
+    ];
+    
+    try {
+      const urlObj = new URL(url);
+      return streamingDomains.some(domain => 
+        urlObj.hostname.includes(domain) ||
+        urlObj.hostname.endsWith(domain)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  private isSpotifyUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.includes('spotify.com');
+    } catch {
+      return false;
+    }
+  }
+
   private async ensureUploadsDir() {
     try {
       await mkdir(this.uploadsDir, { recursive: true });
@@ -34,27 +63,27 @@ export class DownloadService {
 
   async downloadAndExtractMetadata(url: string): Promise<AudioMetadata> {
     try {
-      console.log(`Downloading audio from URL: ${url}`);
+      console.log(`Processing URL: ${url}`);
       
-      // Download the file
-      const response = await axios({
-        method: 'GET',
-        url: url,
-        responseType: 'arraybuffer',
-        timeout: 60000, // 1 minute timeout
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
-
-      // Generate unique filename
-      const fileExtension = this.getFileExtension(url, response.headers['content-type']);
-      const filename = `${randomUUID()}${fileExtension}`;
-      const localPath = path.join(this.uploadsDir, filename);
-
-      // Save file to disk
-      await writeFile(localPath, Buffer.from(response.data));
-      console.log(`File saved to: ${localPath}`);
+      // Check if it's Spotify (not supported)
+      if (this.isSpotifyUrl(url)) {
+        throw new Error('Spotify URLs are not supported due to copyright restrictions. Please use YouTube, SoundCloud, or direct file URLs instead.');
+      }
+      
+      let localPath: string;
+      let filename: string;
+      
+      if (this.isStreamingPlatformUrl(url)) {
+        // Use yt-dlp for streaming platforms
+        const result = await this.downloadFromStreamingPlatform(url);
+        localPath = result.localPath;
+        filename = result.filename;
+      } else {
+        // Direct download for regular file URLs
+        const result = await this.downloadDirectFile(url);
+        localPath = result.localPath;
+        filename = result.filename;
+      }
 
       // Extract metadata
       const metadata = await this.extractMetadata(localPath);
@@ -68,6 +97,70 @@ export class DownloadService {
       console.error("Download error:", error);
       throw new Error(`Failed to download audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  private async downloadFromStreamingPlatform(url: string): Promise<{localPath: string, filename: string}> {
+    return new Promise((resolve, reject) => {
+      const filename = `${randomUUID()}.%(ext)s`;
+      const outputTemplate = path.join(this.uploadsDir, filename);
+      
+      // Use yt-dlp to download audio
+      const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outputTemplate}" "${url}"`;
+      
+      console.log(`Running: ${command}`);
+      
+      exec(command, { timeout: 120000 }, (error, stdout, stderr) => {
+        if (error) {
+          console.error('yt-dlp error:', error);
+          console.error('stderr:', stderr);
+          reject(new Error(`Failed to download from streaming platform: ${error.message}`));
+          return;
+        }
+        
+        console.log('yt-dlp output:', stdout);
+        
+        // Find the downloaded file
+        const files = fs.readdirSync(this.uploadsDir);
+        const downloadedFile = files.find(file => 
+          file.startsWith(filename.replace('.%(ext)s', '')) && 
+          file.endsWith('.mp3')
+        );
+        
+        if (!downloadedFile) {
+          reject(new Error('Downloaded file not found'));
+          return;
+        }
+        
+        const localPath = path.join(this.uploadsDir, downloadedFile);
+        console.log(`File downloaded to: ${localPath}`);
+        
+        resolve({
+          localPath,
+          filename: downloadedFile
+        });
+      });
+    });
+  }
+
+  private async downloadDirectFile(url: string): Promise<{localPath: string, filename: string}> {
+    const response = await axios({
+      method: 'GET',
+      url: url,
+      responseType: 'arraybuffer',
+      timeout: 60000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const fileExtension = this.getFileExtension(url, response.headers['content-type']);
+    const filename = `${randomUUID()}${fileExtension}`;
+    const localPath = path.join(this.uploadsDir, filename);
+
+    await writeFile(localPath, Buffer.from(response.data));
+    console.log(`Direct file saved to: ${localPath}`);
+    
+    return { localPath, filename };
   }
 
   private getFileExtension(url: string, contentType?: string): string {
