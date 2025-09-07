@@ -85,11 +85,18 @@ export default function AlbumsManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-
   const { data: albums = [], isLoading } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/albums");
+      return res.json();
+    }
+  });
+
+  const { data: artists = [] } = useQuery<{id: string; name: string}[]>({
+    queryKey: ["/api/artists"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/artists");
       return res.json();
     }
   });
@@ -208,9 +215,11 @@ export default function AlbumsManagement() {
                         <FormControl>
                           <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800" data-testid="album-artist-select">
                             <option value="">Select an artist</option>
-                            <option value="1">Luna Collective</option>
-                            <option value="2">Jazz Masters</option>
-                            <option value="3">Echo Valley</option>
+                            {artists.map((artist) => (
+                              <option key={artist.id} value={artist.id}>
+                                {artist.name}
+                              </option>
+                            ))}
                           </select>
                         </FormControl>
                         <FormMessage />
