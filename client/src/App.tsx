@@ -22,7 +22,14 @@ function Router() {
       <Route path="/albums" component={Albums} />
       <Route path="/playlists" component={Playlists} />
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin*" component={Admin} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/admin/dashboard" component={Admin} />
+      <Route path="/admin/tracks" component={Admin} />
+      <Route path="/admin/artists" component={Admin} />
+      <Route path="/admin/albums" component={Admin} />
+      <Route path="/admin/users" component={Admin} />
+      <Route path="/admin/upload" component={Admin} />
+      <Route path="/admin/settings" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
