@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       borderColor: "border-blue-200 dark:border-blue-800"
     },
     {
-      title: "Total Tracks",
+      title: "Total Songs",
       value: stats?.totalTracks?.toString() || "0",
       change: "Available",
       changeType: "increase" as const,
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
     { label: "Albums", value: stats?.totalAlbums?.toString() || "0", icon: Disc },
     { label: "Genres", value: stats?.totalGenres?.toString() || "0", icon: Tags },
     { label: "Artists", value: stats?.totalArtists?.toString() || "0", icon: Users },
-    { label: "Tracks", value: stats?.totalTracks?.toString() || "0", icon: Music }
+    { label: "Songs", value: stats?.totalTracks?.toString() || "0", icon: Music }
   ];
 
   // Format time for recent activity

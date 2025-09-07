@@ -25,7 +25,7 @@ interface AdminLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-  { name: 'Tracks', href: '/admin/tracks', icon: Music },
+  { name: 'Songs', href: '/admin/tracks', icon: Music },
   { name: 'Artists', href: '/admin/artists', icon: UserIcon },
   { name: 'Albums', href: '/admin/albums', icon: Disc },
   { name: 'Categories', href: '/admin/categories', icon: Tags },
