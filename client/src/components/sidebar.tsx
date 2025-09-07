@@ -1,6 +1,8 @@
 import { Link } from "wouter";
-import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2, Headphones, Waves, Zap, Volume2, Coffee, Mic } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2, Headphones, Waves, Zap, Volume2, Coffee, Mic, Tags } from "lucide-react";
 import type { Track } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SidebarProps {
   onCategorySelect: (category: string) => void;
@@ -8,19 +10,43 @@ interface SidebarProps {
   recentTracks: Track[];
 }
 
+interface Genre {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
+// Icon mapping for genre icons
+const iconMap: { [key: string]: any } = {
+  Music, Flame, Heart, Star, Guitar, Coffee, Mic, Headphones, 
+  Waves, Volume2, Zap, Tags, Users, Disc, ListMusic
+};
+
 export default function Sidebar({ onCategorySelect, selectedCategory, recentTracks }: SidebarProps) {
+  // Fetch genres from API
+  const { data: genres = [], isLoading } = useQuery({
+    queryKey: ['/api/genres'],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/genres");
+      return res.json();
+    }
+  });
+
+  // Create categories from genres, adding "All Categories" at the beginning
   const categories = [
-    { name: "All Categories", icon: Music },
-    { name: "Rock", icon: Flame },
-    { name: "Jazz", icon: Heart },
-    { name: "Electronic", icon: Star },
-    { name: "Classical", icon: Guitar },
-    { name: "Folk", icon: Coffee },
-    { name: "Hip-Hop", icon: Mic },
-    { name: "Pop", icon: Headphones },
-    { name: "Blues", icon: Waves },
-    { name: "Indie", icon: Volume2 },
-    { name: "Ambient", icon: Zap },
+    { name: "All Categories", icon: Music, color: "#8B5CF6" },
+    ...genres
+      .filter((genre: Genre) => genre.isActive !== false)
+      .sort((a: Genre, b: Genre) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .map((genre: Genre) => ({
+        name: genre.name,
+        icon: iconMap[genre.icon || "Music"] || Music,
+        color: genre.color || "#8B5CF6"
+      }))
   ];
 
   return (
