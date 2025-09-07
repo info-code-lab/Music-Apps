@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Grid3X3, List } from "lucide-react";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import type { Track } from "@shared/schema";
 
 interface MusicLibraryProps {
@@ -22,7 +24,17 @@ export default function MusicLibrary({
   onPlaySong,
   searchQuery 
 }: MusicLibraryProps) {
-  const categories = ["All Categories", "Rock", "Jazz", "Electronic", "Classical", "Folk", "Hip-Hop"];
+  // Fetch categories from database
+  const { data: genres = [] } = useQuery<{id: string; name: string}[]>({
+    queryKey: ["/api/genres"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/genres");
+      return res.json();
+    }
+  });
+
+  // Create categories from database genres, adding "All Categories" at the beginning
+  const categories = ["All Categories", ...genres.map(genre => genre.name)];
 
   if (isLoading) {
     return (
