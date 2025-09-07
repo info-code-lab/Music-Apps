@@ -43,7 +43,7 @@ export default function UploadSection() {
         setShowProgress(true);
       }
       setUrlData({ url: "", title: "", artist: "", category: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
     },
     onError: () => {
       toast.error("URL upload failed");
@@ -71,10 +71,10 @@ export default function UploadSection() {
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Track uploaded successfully!');
+      toast.success('Song uploaded successfully!');
       setFileData({ title: "", artist: "", category: "" });
       setSelectedFile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
     },
     onError: () => {
       toast.error("File upload failed");
@@ -212,10 +212,10 @@ export default function UploadSection() {
             {/* Form Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Track Title</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Song Title</label>
                 <Input
                   type="text"
-                  placeholder="Enter track title"
+                  placeholder="Enter song title"
                   value={fileData.title}
                   onChange={(e) => setFileData({ ...fileData, title: e.target.value })}
                   className="bg-background border-input"
@@ -258,7 +258,7 @@ export default function UploadSection() {
               data-testid="button-upload-file"
             >
               <Upload className="w-4 h-4 mr-2" />
-              {fileUploadMutation.isPending ? "Uploading..." : "Upload Track"}
+              {fileUploadMutation.isPending ? "Uploading..." : "Upload Song"}
             </Button>
           </form>
         </TabsContent>

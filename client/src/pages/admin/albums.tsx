@@ -161,7 +161,7 @@ export default function AlbumsManagement() {
 
   const stats = [
     { title: "Total Albums", value: albums.length, icon: Disc, color: "text-purple-600" },
-    { title: "Total Tracks", value: albums.reduce((acc, a) => acc + (a.trackCount || 0), 0), icon: Music, color: "text-blue-600" },
+    { title: "Total Songs", value: albums.reduce((acc, a) => acc + (a.trackCount || 0), 0), icon: Music, color: "text-blue-600" },
     { title: "Total Duration", value: formatDuration(albums.reduce((acc, a) => acc + (a.duration || 0), 0)), icon: Clock, color: "text-green-600" },
     { title: "Latest Release", value: albums.sort((a, b) => new Date(b.releaseDate || '').getTime() - new Date(a.releaseDate || '').getTime())[0]?.title || "-", icon: Calendar, color: "text-orange-600" }
   ];
@@ -327,7 +327,7 @@ export default function AlbumsManagement() {
                   <TableHead className="w-16">Cover</TableHead>
                   <TableHead>Album</TableHead>
                   <TableHead>Artist</TableHead>
-                  <TableHead>Tracks</TableHead>
+                  <TableHead>Songs</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Release Date</TableHead>
                   <TableHead className="w-12"></TableHead>
@@ -419,7 +419,7 @@ export default function AlbumsManagement() {
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2">
                               <Music className="h-4 w-4" />
-                              View Tracks
+                              View Songs
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2">
                               <Play className="h-4 w-4" />
