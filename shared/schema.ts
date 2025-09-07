@@ -24,6 +24,7 @@ export const tracks = pgTable("tracks", {
   artwork: text("artwork"), // artwork URL or path
   isFavorite: boolean("is_favorite").default(false),
   uploadType: text("upload_type").notNull(), // 'file' or 'url'
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ========================

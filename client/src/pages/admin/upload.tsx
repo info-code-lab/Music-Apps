@@ -9,14 +9,28 @@ import {
   User,
   Upload as UploadIcon
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { type Track } from "@shared/schema";
 
 export default function UploadManagement() {
-
-  const recentUploads = [
-    { title: "Sunset Dreams", artist: "Luna Collective", status: "completed", time: "2 minutes ago" },
-    { title: "Jazz Improvisation", artist: "Jazz Masters", status: "processing", time: "5 minutes ago" },
-    { title: "Electronic Pulse", artist: "Digital Waves", status: "completed", time: "10 minutes ago" },
-  ];
+  // Fetch recent tracks
+  const { data: recentUploads = [], isLoading: isLoadingTracks } = useQuery({
+    queryKey: ["/api/tracks"],
+    select: (tracks: Track[]) => {
+      // Sort by creation date and take the 5 most recent
+      return tracks
+        .sort((a: Track, b: Track) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 5)
+        .map((track: Track) => ({
+          title: track.title,
+          artist: track.artist,
+          status: "completed", // All tracks in the DB are considered completed
+          time: track.createdAt ? formatDistanceToNow(new Date(track.createdAt), { addSuffix: true }) : "Unknown",
+          uploadType: track.uploadType
+        }));
+    }
+  });
 
   const uploadStats = [
     { title: "Today's Uploads", value: "12", icon: UploadIcon, color: "text-blue-600" },
@@ -80,34 +94,45 @@ export default function UploadManagement() {
               <CardDescription>Latest upload activity</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentUploads.map((upload, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                  <div className="flex-shrink-0">
-                    {upload.status === "completed" ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {upload.title}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      by {upload.artist}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge 
-                        variant={upload.status === "completed" ? "outline" : "secondary"}
-                        className={upload.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20" : ""}
-                      >
-                        {upload.status}
-                      </Badge>
-                      <span className="text-xs text-gray-500">{upload.time}</span>
+              {isLoadingTracks ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading recent uploads...</span>
+                </div>
+              ) : recentUploads.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">No recent uploads found</p>
+                </div>
+              ) : (
+                recentUploads.map((upload: any, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex-shrink-0">
+                      {upload.status === "completed" ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {upload.title}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        by {upload.artist}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge 
+                          variant={upload.status === "completed" ? "outline" : "secondary"}
+                          className={upload.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20" : ""}
+                        >
+                          {upload.status}
+                        </Badge>
+                        <span className="text-xs text-gray-500">{upload.time}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
 
