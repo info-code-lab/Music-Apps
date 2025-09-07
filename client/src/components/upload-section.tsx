@@ -141,24 +141,8 @@ export default function UploadSection() {
     }
   };
 
-  // Admin-only upload interface
-  if (!isAdmin) {
-    return (
-      <section className="p-6">
-        <div className="bg-muted/30 rounded-lg p-8 border border-border text-center">
-          <Lock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-foreground mb-2 font-sans">Admin Access Required</h3>
-          <p className="text-muted-foreground font-serif mb-4">
-            Only administrators can upload music tracks to the platform.
-          </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Shield className="w-4 h-4" />
-            <span>Contact your administrator for upload access</span>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // Allow all authenticated users to upload
+  // Removed admin restriction - regular users can now upload music
 
   return (
     <section className="p-6">
