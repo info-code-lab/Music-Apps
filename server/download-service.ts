@@ -140,8 +140,8 @@ export class DownloadService {
       const filename = `${randomUUID()}.%(ext)s`;
       const outputTemplate = path.join(this.uploadsDir, filename);
       
-      // Use yt-dlp to download audio
-      const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outputTemplate}" "${url}"`;
+      // Use yt-dlp to download audio with options to avoid bot detection
+      const command = `yt-dlp -x --audio-format mp3 --audio-quality 0 --no-check-certificate --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" --add-header "Accept-Language:en-US,en;q=0.9" --add-header "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" --extractor-retries 5 --fragment-retries 10 --retry-sleep 5 --sleep-interval 1 --max-sleep-interval 5 --no-warnings -o "${outputTemplate}" "${url}"`;
       
       console.log(`Running: ${command}`);
       
@@ -149,7 +149,20 @@ export class DownloadService {
         if (error) {
           console.error('yt-dlp error:', error);
           console.error('stderr:', stderr);
-          reject(new Error(`Failed to download from streaming platform: ${error.message}`));
+          
+          // Provide more helpful error messages based on the specific error
+          let errorMessage = "Failed to download from streaming platform";
+          if (stderr.includes("Sign in to confirm you're not a bot") || stderr.includes("bot")) {
+            errorMessage = "YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.";
+          } else if (stderr.includes("403") || stderr.includes("Forbidden")) {
+            errorMessage = "Access to this video is restricted. The video may be private, geo-blocked, or have copyright protection.";
+          } else if (stderr.includes("404") || stderr.includes("not found")) {
+            errorMessage = "Video not found. Please check the URL and try again.";
+          } else if (stderr.includes("nsig extraction failed")) {
+            errorMessage = "Video format not supported. Try a different video or check if the URL is correct.";
+          }
+          
+          reject(new Error(errorMessage));
           return;
         }
         
