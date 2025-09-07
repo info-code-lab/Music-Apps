@@ -47,46 +47,13 @@ export default function UsersManagement() {
   const [roleFilter, setRoleFilter] = useState<"all" | "user" | "admin" | "artist">("all");
   const queryClient = useQueryClient();
 
-  // Mock data for demonstration
-  const mockUsers: User[] = [
-    {
-      id: "1",
-      username: "john_doe",
-      email: "john@example.com",
-      password: "hashed",
-      role: "user",
-      status: "active",
-      profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-      bio: "Music enthusiast and producer",
-      createdAt: new Date("2024-01-15T00:00:00Z"),
-    },
-    {
-      id: "2",
-      username: "jane_artist",
-      email: "jane@example.com", 
-      password: "hashed",
-      role: "artist",
-      status: "active",
-      profilePic: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=100",
-      bio: "Singer-songwriter with a passion for indie folk",
-      createdAt: new Date("2024-02-20T00:00:00Z"),
-    },
-    {
-      id: "3",
-      username: "admin_user",
-      email: "admin@harmony.com",
-      password: "hashed", 
-      role: "admin",
-      status: "active",
-      profilePic: "default.png",
-      bio: "Platform administrator",
-      createdAt: new Date("2024-01-01T00:00:00Z"),
-    }
-  ];
 
-  const { data: users = mockUsers, isLoading } = useQuery<User[]>({
+  const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    queryFn: async () => mockUsers,
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/users");
+      return res.json();
+    }
   });
 
   const updateUserStatusMutation = useMutation({

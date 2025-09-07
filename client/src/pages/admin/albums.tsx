@@ -85,46 +85,13 @@ export default function AlbumsManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Mock data for albums
-  const mockAlbums: Album[] = [
-    {
-      id: "1",
-      title: "Midnight Vibes",
-      artistId: "1",
-      artistName: "Luna Collective",
-      releaseDate: "2024-03-15",
-      coverArt: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200",
-      createdAt: "2024-03-15",
-      trackCount: 8,
-      duration: 2340 // seconds
-    },
-    {
-      id: "2",
-      title: "Jazz Sessions Vol. 1",
-      artistId: "2", 
-      artistName: "Jazz Masters",
-      releaseDate: "2024-02-20",
-      coverArt: "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=200",
-      createdAt: "2024-02-20",
-      trackCount: 12,
-      duration: 3420
-    },
-    {
-      id: "3",
-      title: "Acoustic Dreams",
-      artistId: "3",
-      artistName: "Echo Valley", 
-      releaseDate: "2024-01-10",
-      coverArt: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200",
-      createdAt: "2024-01-10",
-      trackCount: 10,
-      duration: 2880
-    }
-  ];
 
-  const { data: albums = mockAlbums, isLoading } = useQuery<Album[]>({
+  const { data: albums = [], isLoading } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
-    queryFn: async () => mockAlbums,
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/albums");
+      return res.json();
+    }
   });
 
   const form = useForm<AlbumFormData>({

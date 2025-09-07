@@ -82,40 +82,13 @@ export default function ArtistsManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Mock data for artists
-  const mockArtists: Artist[] = [
-    {
-      id: "1",
-      name: "Luna Collective",
-      bio: "Electronic music duo creating ambient soundscapes",
-      profilePic: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100",
-      createdAt: "2024-01-15",
-      trackCount: 12,
-      followers: 2847
-    },
-    {
-      id: "2", 
-      name: "Jazz Masters",
-      bio: "Traditional jazz ensemble with modern influences",
-      profilePic: "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=100",
-      createdAt: "2024-02-20",
-      trackCount: 8,
-      followers: 1523
-    },
-    {
-      id: "3",
-      name: "Echo Valley",
-      bio: "Indie folk artist from the Pacific Northwest",
-      profilePic: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100",
-      createdAt: "2024-03-10",
-      trackCount: 15,
-      followers: 3241
-    }
-  ];
 
-  const { data: artists = mockArtists, isLoading } = useQuery<Artist[]>({
+  const { data: artists = [], isLoading } = useQuery<Artist[]>({
     queryKey: ["/api/artists"],
-    queryFn: async () => mockArtists,
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/artists");
+      return res.json();
+    }
   });
 
   const form = useForm<ArtistFormData>({
