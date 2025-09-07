@@ -49,7 +49,7 @@ export class DownloadService {
   private isSpotifyUrl(url: string): boolean {
     try {
       const urlObj = new URL(url);
-      return urlObj.hostname.includes('spotify.com');
+      return urlObj.hostname.includes('spotify.com') || url.includes('spotify:');
     } catch {
       return false;
     }
@@ -76,15 +76,42 @@ export class DownloadService {
         });
       }
       
-      // Check if it's Spotify (not supported)
-      if (this.isSpotifyUrl(url)) {
-        const error = 'Spotify URLs are not supported due to copyright restrictions. Please use YouTube, SoundCloud, or direct file URLs instead.';
-        if (sessionId) progressEmitter.emitError(sessionId, error);
-        throw new Error(error);
-      }
-      
       let localPath: string;
       let filename: string;
+      
+      // Handle Spotify URLs with spotDL
+      if (this.isSpotifyUrl(url)) {
+        if (sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Processing Spotify URL...',
+            progress: 15,
+            stage: 'analyzing'
+          });
+        }
+        const result = await this.downloadFromSpotify(url, sessionId);
+        localPath = result.localPath;
+        filename = result.filename;
+        
+        // Use spotDL metadata
+        if (result.metadata) {
+          if (sessionId) {
+            progressEmitter.emit(sessionId, {
+              type: 'status',
+              message: 'Using Spotify metadata...',
+              progress: 80,
+              stage: 'metadata'
+            });
+          }
+          
+          return {
+            ...result.metadata,
+            filename,
+            localPath,
+            thumbnail: result.thumbnail
+          };
+        }
+      }
       
       if (this.isStreamingPlatformUrl(url)) {
         // Use yt-dlp for streaming platforms
@@ -548,6 +575,143 @@ export class DownloadService {
           reject(new Error("Failed to parse audio metadata"));
         }
       });
+    });
+  }
+
+  private async downloadFromSpotify(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any, thumbnail?: string}> {
+    console.log("Downloading from Spotify using spotDL:", url);
+    
+    if (sessionId) {
+      progressEmitter.emit(sessionId, {
+        type: 'status',
+        message: 'Finding song on YouTube via spotDL...',
+        progress: 30,
+        stage: 'downloading'
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const fileId = randomUUID();
+      const outputTemplate = path.join(this.uploadsDir, `${fileId}.%(ext)s`);
+      
+      console.log("spotDL command for:", url);
+      
+      const { spawn } = require('child_process');
+      const child = spawn('python3', ['-m', 'spotdl', url, '--output', outputTemplate, '--format', 'mp3', '--bitrate', '320k', '--print-errors', '--overwrite', 'skip']);
+      
+      let stdout = '';
+      let stderr = '';
+      
+      child.stdout.on('data', (data: Buffer) => {
+        const output = data.toString();
+        stdout += output;
+        console.log('spotDL stdout:', output.trim());
+        
+        // Parse progress updates from spotDL output
+        if (output.includes('Downloaded') && sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Downloaded from YouTube',
+            progress: 70,
+            stage: 'processing'
+          });
+        } else if (output.includes('Searching') && sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Searching for song on YouTube...',
+            progress: 40,
+            stage: 'downloading'
+          });
+        } else if (output.includes('Found') && sessionId) {
+          progressEmitter.emit(sessionId, {
+            type: 'status',
+            message: 'Found matching song, downloading...',
+            progress: 50,
+            stage: 'downloading'
+          });
+        }
+      });
+      
+      child.stderr.on('data', (data: Buffer) => {
+        const output = data.toString();
+        stderr += output;
+        console.log('spotDL stderr:', output.trim());
+      });
+      
+      child.on('close', (code: number) => {
+        console.log(`spotDL process exited with code ${code}`);
+        
+        if (code !== 0) {
+          console.log("spotDL error - stderr:", stderr);
+          reject(new Error(`spotDL failed with exit code ${code}: ${stderr}`));
+          return;
+        }
+
+        try {
+          // Find the downloaded file
+          const files = fs.readdirSync(this.uploadsDir);
+          const downloadedFile = files.find(file => 
+            file.startsWith(fileId) && 
+            (file.endsWith('.mp3') || file.endsWith('.m4a'))
+          );
+          
+          if (!downloadedFile) {
+            reject(new Error('No file found after spotDL download'));
+            return;
+          }
+          
+          const localPath = path.join(this.uploadsDir, downloadedFile);
+          console.log(`spotDL download successful: ${localPath}`);
+          
+          // Try to extract metadata from the downloaded file
+          this.extractMetadata(localPath)
+            .then(metadata => {
+              if (sessionId) {
+                progressEmitter.emit(sessionId, {
+                  type: 'status',
+                  message: 'Processing metadata...',
+                  progress: 85,
+                  stage: 'metadata'
+                });
+              }
+              
+              resolve({ 
+                localPath, 
+                filename: downloadedFile,
+                thumbnail: undefined, // spotDL usually embeds artwork in the file
+                metadata: {
+                  title: metadata.title,
+                  artist: metadata.artist,
+                  album: metadata.album,
+                  duration: metadata.duration
+                }
+              });
+            })
+            .catch(metaError => {
+              console.log('Metadata extraction failed, using basic info:', metaError);
+              // Fallback with basic info
+              resolve({ 
+                localPath, 
+                filename: downloadedFile,
+                thumbnail: undefined,
+                metadata: {
+                  title: downloadedFile.replace(/\.[^/.]+$/, ''), // Remove extension
+                  artist: 'Unknown Artist',
+                  duration: 0
+                }
+              });
+            });
+        } catch (error) {
+          console.log("Error processing spotDL download:", error);
+          reject(new Error('Failed to process spotDL download'));
+        }
+      });
+      
+      // Add timeout
+      setTimeout(() => {
+        child.kill();
+        reject(new Error('spotDL download timeout'));
+      }, 180000); // 3 minutes timeout
     });
   }
 
