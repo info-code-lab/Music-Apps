@@ -21,8 +21,8 @@ function Router() {
       <Route path="/artists" component={Artists} />
       <Route path="/albums" component={Albums} />
       <Route path="/playlists" component={Playlists} />
-      <Route path="/admin*" component={Admin} />
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin*" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
