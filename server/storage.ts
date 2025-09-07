@@ -1,5 +1,6 @@
-import { type User, type InsertUser, type Track, type InsertTrack } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { users, tracks, type User, type InsertUser, type Track, type InsertTrack } from "@shared/schema";
+import { db } from "./db";
+import { eq, sql, ilike, or } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -17,144 +18,66 @@ export interface IStorage {
   toggleFavorite(id: string): Promise<Track | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private tracks: Map<string, Track>;
-
-  constructor() {
-    this.users = new Map();
-    this.tracks = new Map();
-    
-    // Initialize with some sample tracks
-    this.initializeSampleData();
-  }
-
-  private async initializeSampleData() {
-    const sampleTracks: InsertTrack[] = [
-      {
-        title: "Smooth Night",
-        artist: "Marcus Johnson",
-        category: "Jazz",
-        duration: 204, // 3:24
-        url: "https://www.soundjay.com/misc/sounds/jazz-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: true,
-        uploadType: "url"
-      },
-      {
-        title: "Digital Dreams",
-        artist: "Cyber Wave",
-        category: "Electronic",
-        duration: 252, // 4:12
-        url: "https://www.soundjay.com/misc/sounds/electronic-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: false,
-        uploadType: "url"
-      },
-      {
-        title: "Moonlight Sonata",
-        artist: "Ludwig van Beethoven",
-        category: "Classical",
-        duration: 453, // 7:33
-        url: "https://www.soundjay.com/misc/sounds/classical-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1465821185615-20b3c2fbf41b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: true,
-        uploadType: "url"
-      },
-      {
-        title: "Thunder Road",
-        artist: "The Storm Riders",
-        category: "Rock",
-        duration: 227, // 3:47
-        url: "https://www.soundjay.com/misc/sounds/rock-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: false,
-        uploadType: "url"
-      },
-      {
-        title: "Campfire Stories",
-        artist: "Emma Woods",
-        category: "Folk",
-        duration: 176, // 2:56
-        url: "https://www.soundjay.com/misc/sounds/folk-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: false,
-        uploadType: "url"
-      },
-      {
-        title: "City Lights",
-        artist: "DJ Metro",
-        category: "Hip-Hop",
-        duration: 198, // 3:18
-        url: "https://www.soundjay.com/misc/sounds/hiphop-sample.mp3",
-        artwork: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
-        isFavorite: false,
-        uploadType: "url"
-      }
-    ];
-
-    for (const track of sampleTracks) {
-      await this.createTrack(track);
-    }
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async getAllTracks(): Promise<Track[]> {
-    return Array.from(this.tracks.values());
+    return await db.select().from(tracks);
   }
 
   async getTrack(id: string): Promise<Track | undefined> {
-    return this.tracks.get(id);
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
+    return track || undefined;
   }
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {
-    const id = randomUUID();
-    const track: Track = { 
-      ...insertTrack, 
-      id,
-      artwork: insertTrack.artwork || null,
-      isFavorite: insertTrack.isFavorite || false
-    };
-    this.tracks.set(id, track);
+    const [track] = await db
+      .insert(tracks)
+      .values(insertTrack)
+      .returning();
     return track;
   }
 
   async updateTrack(id: string, updates: Partial<Track>): Promise<Track | undefined> {
-    const track = this.tracks.get(id);
-    if (!track) return undefined;
-    
-    const updatedTrack = { ...track, ...updates };
-    this.tracks.set(id, updatedTrack);
-    return updatedTrack;
+    const [track] = await db
+      .update(tracks)
+      .set(updates)
+      .where(eq(tracks.id, id))
+      .returning();
+    return track || undefined;
   }
 
   async deleteTrack(id: string): Promise<boolean> {
-    return this.tracks.delete(id);
+    const result = await db
+      .delete(tracks)
+      .where(eq(tracks.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   async searchTracks(query: string): Promise<Track[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.tracks.values()).filter(
-      track => 
-        track.title.toLowerCase().includes(lowercaseQuery) ||
-        track.artist.toLowerCase().includes(lowercaseQuery) ||
-        track.category.toLowerCase().includes(lowercaseQuery)
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(tracks).where(
+      or(
+        ilike(tracks.title, searchTerm),
+        ilike(tracks.artist, searchTerm),
+        ilike(tracks.category, searchTerm)
+      )
     );
   }
 
@@ -162,19 +85,17 @@ export class MemStorage implements IStorage {
     if (category === "All Categories") {
       return this.getAllTracks();
     }
-    return Array.from(this.tracks.values()).filter(
-      track => track.category.toLowerCase() === category.toLowerCase()
-    );
+    return await db.select().from(tracks).where(ilike(tracks.category, category));
   }
 
   async toggleFavorite(id: string): Promise<Track | undefined> {
-    const track = this.tracks.get(id);
-    if (!track) return undefined;
-    
-    const updatedTrack = { ...track, isFavorite: !track.isFavorite };
-    this.tracks.set(id, updatedTrack);
-    return updatedTrack;
+    const [track] = await db
+      .update(tracks)
+      .set({ isFavorite: sql`not ${tracks.isFavorite}` })
+      .where(eq(tracks.id, id))
+      .returning();
+    return track || undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
