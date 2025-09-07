@@ -12,6 +12,12 @@ export const paymentStatusEnum = pgEnum('payment_status', ['success', 'failed', 
 export const licenseTypeEnum = pgEnum('license_type', ['exclusive', 'non-exclusive', 'royalty-free']);
 export const reportTargetEnum = pgEnum('report_target', ['song', 'comment', 'user']);
 export const reportStatusEnum = pgEnum('report_status', ['pending', 'reviewed', 'action_taken']);
+export const contentStatusEnum = pgEnum('content_status', ['draft', 'pending_review', 'approved', 'rejected', 'dmca_flagged']);
+export const rightsScopeEnum = pgEnum('rights_scope', ['worldwide', 'regional', 'country_specific']);
+export const royaltyTypeEnum = pgEnum('royalty_type', ['mechanical', 'performance', 'synchronization', 'streaming']);
+export const qualityEnum = pgEnum('quality', ['lossy_64', 'lossy_128', 'lossy_320', 'lossless_16_44', 'lossless_24_48', 'lossless_24_96', 'master_quality']);
+export const songMoodEnum = pgEnum('song_mood', ['happy', 'sad', 'energetic', 'chill', 'aggressive', 'romantic', 'melancholic', 'uplifting']);
+export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 'europe', 'asia_pacific', 'latin_america', 'africa', 'middle_east']);
 
 // Legacy tracks table for backward compatibility (keeping original structure)
 export const tracks = pgTable("tracks", {
@@ -107,7 +113,46 @@ export const songs = pgTable("songs", {
   releaseDate: date("release_date"),
   uploadedBy: varchar("uploaded_by"),
   playCount: integer("play_count").default(0),
+  // Enterprise Music Metadata
+  isrc: varchar("isrc", { length: 12 }).unique(), // International Standard Recording Code
+  bpm: integer("bpm"), // Beats per minute
+  musicalKey: varchar("musical_key", { length: 10 }), // e.g., "C major", "A# minor"
+  timeSignature: varchar("time_signature", { length: 10 }).default('4/4'),
+  mood: songMoodEnum("mood"),
+  energy: decimal("energy", { precision: 3, scale: 2 }), // 0.00-10.00 energy level
+  danceability: decimal("danceability", { precision: 3, scale: 2 }), // 0.00-10.00
+  valence: decimal("valence", { precision: 3, scale: 2 }), // 0.00-10.00 (positivity)
+  acousticness: decimal("acousticness", { precision: 3, scale: 2 }), // 0.00-10.00
+  instrumentalness: decimal("instrumentalness", { precision: 3, scale: 2 }), // 0.00-10.00
+  liveness: decimal("liveness", { precision: 3, scale: 2 }), // 0.00-10.00
+  speechiness: decimal("speechiness", { precision: 3, scale: 2 }), // 0.00-10.00
+  // Content Management
+  contentStatus: contentStatusEnum("content_status").default('draft'),
+  contentWarnings: json("content_warnings"), // Array of content warnings
+  languages: json("languages"), // Array of languages in the song
+  tags: json("tags"), // Array of descriptive tags
+  // Technical Metadata
+  fileSize: integer("file_size"), // in bytes
+  bitrate: integer("bitrate"), // in kbps
+  sampleRate: integer("sample_rate"), // in Hz
+  audioFormat: varchar("audio_format", { length: 10 }), // mp3, flac, wav, etc.
+  audioFingerprint: text("audio_fingerprint"), // For duplicate detection
+  waveformData: text("waveform_data"), // JSON array of waveform points
+  // Performance Metrics
+  skipRate: decimal("skip_rate", { precision: 5, scale: 4 }).default('0.0000'), // Skip percentage
+  completionRate: decimal("completion_rate", { precision: 5, scale: 4 }).default('0.0000'),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default('0.00'),
+  totalRatings: integer("total_ratings").default(0),
+  // Licensing & Rights
+  copyrightOwner: varchar("copyright_owner", { length: 200 }),
+  publishingRights: varchar("publishing_rights", { length: 200 }),
+  masterRights: varchar("master_rights", { length: 200 }),
+  isExplicit: boolean("is_explicit").default(false),
+  isInstrumental: boolean("is_instrumental").default(false),
+  isRemix: boolean("is_remix").default(false),
+  originalSongId: varchar("original_song_id"), // If this is a remix/cover
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const songArtists = pgTable("song_artists", {
@@ -227,6 +272,228 @@ export const recommendations = pgTable("recommendations", {
   songId: varchar("song_id").notNull(),
   score: decimal("score", { precision: 5, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// ========================
+// ENTERPRISE FEATURES
+// ========================
+
+// Royalty Management
+export const rightHolders = pgTable("right_holders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 200 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // artist, publisher, label, distributor
+  contactEmail: varchar("contact_email", { length: 150 }),
+  taxId: varchar("tax_id", { length: 50 }),
+  paymentDetails: json("payment_details"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const songRoyalties = pgTable("song_royalties", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  rightHolderId: varchar("right_holder_id").notNull(),
+  royaltyType: royaltyTypeEnum("royalty_type").notNull(),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(),
+  rightsScope: rightsScopeEnum("rights_scope").default('worldwide'),
+  territories: json("territories"), // Array of country codes if regional
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const royaltyPayments = pgTable("royalty_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rightHolderId: varchar("right_holder_id").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // e.g., "2024-Q1"
+  totalAmount: decimal("total_amount", { precision: 12, scale: 4 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('USD'),
+  paymentDate: date("payment_date"),
+  status: paymentStatusEnum("status").default('pending'),
+  paymentReference: varchar("payment_reference", { length: 100 }),
+  details: json("details"), // Breakdown by song/territory/royalty type
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Content Moderation & Rights Management
+export const contentReports = pgTable("content_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  reporterId: varchar("reporter_id"), // Can be null for system reports
+  reportType: varchar("report_type", { length: 50 }).notNull(), // copyright, inappropriate, duplicate
+  description: text("description").notNull(),
+  evidence: json("evidence"), // URLs, timestamps, etc.
+  status: reportStatusEnum("status").default('pending'),
+  reviewerId: varchar("reviewer_id"),
+  reviewNotes: text("review_notes"),
+  actionTaken: varchar("action_taken", { length: 100 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const dmcaClaims = pgTable("dmca_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  claimantName: varchar("claimant_name", { length: 200 }).notNull(),
+  claimantEmail: varchar("claimant_email", { length: 150 }).notNull(),
+  workDescription: text("work_description").notNull(),
+  copyrightInfo: text("copyright_info").notNull(),
+  swornStatement: boolean("sworn_statement").notNull(),
+  status: varchar("status", { length: 50 }).default('submitted'),
+  reviewNotes: text("review_notes"),
+  responseRequired: boolean("response_required").default(true),
+  submittedAt: timestamp("submitted_at").default(sql`CURRENT_TIMESTAMP`),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+// Advanced Analytics & Business Intelligence
+export const streamingAnalytics = pgTable("streaming_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  userId: varchar("user_id"),
+  sessionId: varchar("session_id").notNull(),
+  streamingRegion: streamingRegionEnum("streaming_region").notNull(),
+  country: varchar("country", { length: 2 }).notNull(), // ISO country code
+  device: deviceTypeEnum("device").notNull(),
+  quality: qualityEnum("quality").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration"), // How long they actually listened
+  percentComplete: decimal("percent_complete", { precision: 5, scale: 2 }),
+  skipPoint: integer("skip_point"), // Where they skipped (in seconds)
+  volume: decimal("volume", { precision: 3, scale: 2 }), // 0.00-1.00
+  isOffline: boolean("is_offline").default(false),
+  networkType: varchar("network_type", { length: 20 }), // wifi, 4g, 5g, ethernet
+  bufferingEvents: integer("buffering_events").default(0),
+  errorEvents: integer("error_events").default(0),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const userBehaviorAnalytics = pgTable("user_behavior_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  sessionId: varchar("session_id").notNull(),
+  activityType: varchar("activity_type", { length: 50 }).notNull(), // play, skip, like, share, search
+  target: varchar("target", { length: 100 }), // song_id, playlist_id, artist_id, search_term
+  context: json("context"), // Additional context data
+  timestamp: timestamp("timestamp").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const revenueReports = pgTable("revenue_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // e.g., "2024-03"
+  streams: integer("streams").notNull(),
+  revenue: decimal("revenue", { precision: 12, scale: 4 }).notNull(),
+  royaltyPaid: decimal("royalty_paid", { precision: 12, scale: 4 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('USD'),
+  region: streamingRegionEnum("region"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Content Delivery & Performance
+export const cdnEndpoints = pgTable("cdn_endpoints", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  region: streamingRegionEnum("region").notNull(),
+  endpoint: varchar("endpoint", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0),
+  maxBandwidth: integer("max_bandwidth"), // in Mbps
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const songFiles = pgTable("song_files", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  quality: qualityEnum("quality").notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  cdnUrl: varchar("cdn_url", { length: 500 }),
+  fileSize: integer("file_size").notNull(),
+  duration: integer("duration").notNull(),
+  bitrate: integer("bitrate").notNull(),
+  sampleRate: integer("sample_rate").notNull(),
+  audioFormat: varchar("audio_format", { length: 10 }).notNull(),
+  isProcessed: boolean("is_processed").default(false),
+  processingStatus: varchar("processing_status", { length: 50 }).default('pending'),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const cacheMetrics = pgTable("cache_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  region: streamingRegionEnum("region").notNull(),
+  cacheHitRate: decimal("cache_hit_rate", { precision: 5, scale: 4 }).notNull(),
+  avgResponseTime: integer("avg_response_time").notNull(), // in milliseconds
+  totalRequests: integer("total_requests").notNull(),
+  date: date("date").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Advanced User Management
+export const userSubscriptionHistory = pgTable("user_subscription_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  subscriptionId: varchar("subscription_id").notNull(),
+  action: varchar("action", { length: 50 }).notNull(), // upgrade, downgrade, cancel, renew
+  fromPlan: varchar("from_plan", { length: 100 }),
+  toPlan: varchar("to_plan", { length: 100 }),
+  reason: varchar("reason", { length: 200 }),
+  effectiveDate: timestamp("effective_date").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const userEngagementMetrics = pgTable("user_engagement_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  date: date("date").notNull(),
+  totalListeningTime: integer("total_listening_time"), // in seconds
+  songsPlayed: integer("songs_played"),
+  skipsCount: integer("skips_count"),
+  likesCount: integer("likes_count"),
+  searchesCount: integer("searches_count"),
+  playlistsCreated: integer("playlists_created"),
+  socialInteractions: integer("social_interactions"),
+  averageSessionDuration: integer("average_session_duration"),
+  peakListeningHour: integer("peak_listening_hour"), // 0-23
+  topGenre: varchar("top_genre", { length: 100 }),
+  churnRisk: decimal("churn_risk", { precision: 5, scale: 4 }), // 0.0000-1.0000
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// A/B Testing & Feature Flags
+export const featureFlags = pgTable("feature_flags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").default(false),
+  targetPercentage: decimal("target_percentage", { precision: 5, scale: 2 }).default('0.00'),
+  conditions: json("conditions"), // User segments, regions, etc.
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const abTests = pgTable("ab_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  variants: json("variants").notNull(), // Array of test variants
+  trafficAllocation: json("traffic_allocation").notNull(), // Percentage per variant
+  isActive: boolean("is_active").default(false),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const userTestAssignments = pgTable("user_test_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  testId: varchar("test_id").notNull(),
+  variant: varchar("variant", { length: 50 }).notNull(),
+  assignedAt: timestamp("assigned_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ========================
