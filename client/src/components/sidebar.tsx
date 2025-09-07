@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2 } from "lucide-react";
+import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2, Headphones, Waves, Zap, Volume2, Coffee, Mic } from "lucide-react";
 import type { Track } from "@shared/schema";
 
 interface SidebarProps {
@@ -10,10 +10,17 @@ interface SidebarProps {
 
 export default function Sidebar({ onCategorySelect, selectedCategory, recentTracks }: SidebarProps) {
   const categories = [
+    { name: "All Categories", icon: Music },
     { name: "Rock", icon: Flame },
     { name: "Jazz", icon: Heart },
     { name: "Electronic", icon: Star },
     { name: "Classical", icon: Guitar },
+    { name: "Folk", icon: Coffee },
+    { name: "Hip-Hop", icon: Mic },
+    { name: "Pop", icon: Headphones },
+    { name: "Blues", icon: Waves },
+    { name: "Indie", icon: Volume2 },
+    { name: "Ambient", icon: Zap },
   ];
 
   return (
@@ -123,13 +130,13 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentTrac
                 data-testid={`recent-track-${track.id}`}
               >
                 <img 
-                  src={track.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40'} 
+                  src={track.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40'} 
                   alt={track.title}
                   className="w-8 h-8 rounded object-cover" 
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground font-mono truncate">{track.title}</p>
-                  <p className="text-xs text-muted-foreground font-serif truncate">{track.artist}</p>
+                  <p className="text-xs text-muted-foreground font-serif truncate">Unknown Artist</p>
                 </div>
               </div>
             ))}
