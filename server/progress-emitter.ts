@@ -30,7 +30,7 @@ class ProgressEmitter {
     const connection = this.connections.get(sessionId);
     if (connection && !connection.destroyed) {
       try {
-        connection.write(`data: ${JSON.stringify(update)}\\n\\n`);
+        connection.write(`data: ${JSON.stringify(update)}\n\n`);
       } catch (error) {
         console.error('Error emitting progress:', error);
         this.connections.delete(sessionId);
