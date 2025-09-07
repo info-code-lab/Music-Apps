@@ -7,7 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface SidebarProps {
   onCategorySelect: (category: string) => void;
   selectedCategory: string;
-  recentTracks: Track[];
+  recentSongs: Track[];
 }
 
 interface Genre {
@@ -26,7 +26,7 @@ const iconMap: { [key: string]: any } = {
   Waves, Volume2, Zap, Tags, Users, Disc, ListMusic
 };
 
-export default function Sidebar({ onCategorySelect, selectedCategory, recentTracks }: SidebarProps) {
+export default function Sidebar({ onCategorySelect, selectedCategory, recentSongs }: SidebarProps) {
   // Fetch genres from API
   const { data: genres = [], isLoading } = useQuery({
     queryKey: ['/api/genres'],
@@ -149,19 +149,19 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentTrac
             Recent
           </h3>
           <div className="space-y-2">
-            {recentTracks.map((track) => (
+            {recentSongs.map((song) => (
               <div 
-                key={track.id}
+                key={song.id}
                 className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                data-testid={`recent-track-${track.id}`}
+                data-testid={`recent-song-${song.id}`}
               >
                 <img 
-                  src={track.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40'} 
-                  alt={track.title}
+                  src={song.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40'} 
+                  alt={song.title}
                   className="w-8 h-8 rounded object-cover" 
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground font-mono truncate">{track.title}</p>
+                  <p className="text-sm font-medium text-foreground font-mono truncate">{song.title}</p>
                   <p className="text-xs text-muted-foreground font-serif truncate">Unknown Artist</p>
                 </div>
               </div>

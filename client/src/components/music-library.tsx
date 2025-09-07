@@ -6,20 +6,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Track } from "@shared/schema";
 
 interface MusicLibraryProps {
-  tracks: Track[];
+  songs: Track[];
   isLoading: boolean;
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
-  onPlayTrack: (track: Track) => void;
+  onPlaySong: (song: Track) => void;
   searchQuery: string;
 }
 
 export default function MusicLibrary({ 
-  tracks, 
+  songs, 
   isLoading, 
   selectedCategory, 
   onCategoryChange, 
-  onPlayTrack,
+  onPlaySong,
   searchQuery 
 }: MusicLibraryProps) {
   const categories = ["All Categories", "Rock", "Jazz", "Electronic", "Classical", "Folk", "Hip-Hop"];
@@ -61,7 +61,7 @@ export default function MusicLibrary({
           </h2>
           <p className="text-muted-foreground font-serif">
             {searchQuery 
-              ? `Found ${tracks.length} tracks`
+              ? `Found ${songs.length} songs`
               : "Browse and organize your music collection"
             }
           </p>
@@ -88,13 +88,13 @@ export default function MusicLibrary({
         </div>
       </div>
 
-      {tracks.length === 0 ? (
+      {songs.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
             <Grid3X3 className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2 font-sans">
-            {searchQuery ? "No tracks found" : "No tracks yet"}
+            {searchQuery ? "No songs found" : "No songs yet"}
           </h3>
           <p className="text-muted-foreground font-serif">
             {searchQuery 
@@ -105,11 +105,11 @@ export default function MusicLibrary({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {tracks.map((track) => (
+          {songs.map((song) => (
             <MusicCard 
-              key={track.id} 
-              track={track} 
-              onPlay={() => onPlayTrack(track)}
+              key={song.id} 
+              song={song} 
+              onPlay={() => onPlaySong(song)}
             />
           ))}
         </div>

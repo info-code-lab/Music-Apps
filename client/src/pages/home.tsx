@@ -11,15 +11,15 @@ import type { Track } from "@shared/schema";
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [currentSong, setCurrentSong] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { data: tracks = [], isLoading } = useQuery<Track[]>({
+  const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/tracks"],
     enabled: selectedCategory === "All Categories" && !searchQuery,
   });
 
-  const { data: filteredTracks = [] } = useQuery<Track[]>({
+  const { data: filteredSongs = [] } = useQuery<Track[]>({
     queryKey: ["/api/tracks/category", selectedCategory],
     enabled: selectedCategory !== "All Categories" && !searchQuery,
   });
@@ -29,14 +29,14 @@ export default function Home() {
     enabled: !!searchQuery,
   });
 
-  const displayTracks = searchQuery 
+  const displaySongs = searchQuery 
     ? searchResults 
     : selectedCategory === "All Categories" 
-      ? tracks 
-      : filteredTracks;
+      ? songs 
+      : filteredSongs;
 
-  const handlePlayTrack = (track: Track) => {
-    setCurrentTrack(track);
+  const handlePlaySong = (song: Track) => {
+    setCurrentSong(song);
     setIsPlaying(true);
   };
 
@@ -50,7 +50,7 @@ export default function Home() {
         <Sidebar 
           onCategorySelect={setSelectedCategory}
           selectedCategory={selectedCategory}
-          recentTracks={tracks.slice(0, 2)}
+          recentSongs={songs.slice(0, 2)}
         />
 
         <main className="flex-1 overflow-auto pb-32 custom-scrollbar">
@@ -82,33 +82,33 @@ export default function Home() {
           </header>
 
           <MusicLibrary
-            tracks={displayTracks}
+            songs={displaySongs}
             isLoading={isLoading}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
-            onPlayTrack={handlePlayTrack}
+            onPlaySong={handlePlaySong}
             searchQuery={searchQuery}
           />
         </main>
       </div>
 
-      {currentTrack && (
+      {currentSong && (
         <MusicPlayer
-          track={currentTrack}
+          song={currentSong}
           isPlaying={isPlaying}
           onPlayPause={() => setIsPlaying(!isPlaying)}
           onNext={() => {
-            const currentIndex = displayTracks.findIndex(t => t.id === currentTrack.id);
-            const nextTrack = displayTracks[currentIndex + 1];
-            if (nextTrack) {
-              setCurrentTrack(nextTrack);
+            const currentIndex = displaySongs.findIndex(t => t.id === currentSong.id);
+            const nextSong = displaySongs[currentIndex + 1];
+            if (nextSong) {
+              setCurrentSong(nextSong);
             }
           }}
           onPrevious={() => {
-            const currentIndex = displayTracks.findIndex(t => t.id === currentTrack.id);
-            const prevTrack = displayTracks[currentIndex - 1];
-            if (prevTrack) {
-              setCurrentTrack(prevTrack);
+            const currentIndex = displaySongs.findIndex(t => t.id === currentSong.id);
+            const prevSong = displaySongs[currentIndex - 1];
+            if (prevSong) {
+              setCurrentSong(prevSong);
             }
           }}
         />

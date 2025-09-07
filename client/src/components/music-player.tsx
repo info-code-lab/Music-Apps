@@ -18,7 +18,7 @@ import { formatDuration } from "@/lib/audio-utils";
 import type { Track } from "@shared/schema";
 
 interface MusicPlayerProps {
-  track: Track;
+  song: Track;
   isPlaying: boolean;
   onPlayPause: () => void;
   onNext: () => void;
@@ -26,7 +26,7 @@ interface MusicPlayerProps {
 }
 
 export default function MusicPlayer({ 
-  track, 
+  song, 
   isPlaying, 
   onPlayPause, 
   onNext, 
@@ -44,7 +44,7 @@ export default function MusicPlayer({
     isLoading,
     seek,
     setVolumeLevel
-  } = useAudioPlayer(track.url, isPlaying);
+  } = useAudioPlayer(song.url, isPlaying);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
@@ -75,16 +75,16 @@ export default function MusicPlayer({
           {/* Currently Playing Info */}
           <div className="flex items-center space-x-3 min-w-0 flex-1">
             <img 
-              src={track.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60'} 
-              alt={track.title}
+              src={song.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60'} 
+              alt={song.title}
               className="w-12 h-12 rounded object-cover" 
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-foreground font-sans truncate" data-testid="text-current-title">
-                {track.title}
+                {song.title}
               </p>
               <p className="text-xs text-muted-foreground font-serif truncate" data-testid="text-current-artist">
-                {track.artist}
+                {song.artist}
               </p>
             </div>
             <Button 
@@ -93,7 +93,7 @@ export default function MusicPlayer({
               className="text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-favorite-current"
             >
-              <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-current text-destructive' : ''}`} />
+              <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
             </Button>
           </div>
 
