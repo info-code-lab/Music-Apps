@@ -36,22 +36,11 @@ export default function MusicCard({ track, onPlay }: MusicCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
       toast.success(
-        track.isFavorite ? "Removed from favorites" : "Added to favorites",
-        {
-          icon: track.isFavorite ? '💔' : '❤️',
-          duration: 3000,
-        }
+        track.isFavorite ? "Removed from favorites" : "Added to favorites"
       );
     },
     onError: () => {
-      toast.error("Failed to update favorite status", {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+      toast.error("Couldn't update favorites");
     },
   });
 

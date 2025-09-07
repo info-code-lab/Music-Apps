@@ -44,15 +44,8 @@ export default function UploadSection() {
       setUrlData({ url: "", title: "", artist: "", category: "" });
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Upload failed', {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+    onError: () => {
+      toast.error("URL upload failed");
     },
   });
 
@@ -77,27 +70,13 @@ export default function UploadSection() {
       return response.json();
     },
     onSuccess: () => {
-      toast.success('Track uploaded successfully!', {
-        icon: '🎵',
-        duration: 4000,
-        style: {
-          background: '#10B981',
-          color: '#fff',
-        },
-      });
+      toast.success('Track uploaded successfully!');
       setFileData({ title: "", artist: "", category: "" });
       setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Upload failed', {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+    onError: () => {
+      toast.error("File upload failed");
     },
   });
 
@@ -106,14 +85,7 @@ export default function UploadSection() {
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!urlData.url) {
-      toast.error('Please enter a music URL', {
-        icon: '⚠️',
-        duration: 3000,
-        style: {
-          background: '#F59E0B',
-          color: '#fff',
-        },
-      });
+      toast.error('Please enter a music URL');
       return;
     }
     // Only send the URL - backend will auto-extract metadata
@@ -123,14 +95,7 @@ export default function UploadSection() {
   const handleFileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile || !fileData.title || !fileData.artist || !fileData.category) {
-      toast.error('Please select a file and fill in all fields', {
-        icon: '⚠️',
-        duration: 3000,
-        style: {
-          background: '#F59E0B',
-          color: '#fff',
-        },
-      });
+      toast.error('Please select a file and fill in all fields');
       return;
     }
 
@@ -164,14 +129,7 @@ export default function UploadSection() {
       if (allowedTypes.includes(file.type)) {
         setSelectedFile(file);
       } else {
-        toast.error('Please select an MP3, WAV, or FLAC file', {
-          icon: '🚫',
-          duration: 4000,
-          style: {
-            background: '#EF4444',
-            color: '#fff',
-          },
-        });
+        toast.error('Please select an MP3, WAV, or FLAC file');
       }
     }
   };

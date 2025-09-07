@@ -82,59 +82,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData): Promise<LoginResponse> => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      const loginPromise = async () => {
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
+        return await res.json();
+      };
+
+      return toast.promise(
+        loginPromise(),
+        {
+          loading: 'Signing in...',
+          success: <b>Welcome back!</b>,
+          error: <b>Login failed.</b>,
+        }
+      );
     },
     onSuccess: (response: LoginResponse) => {
       setToken(response.token);
       queryClient.setQueryData(["/api/auth/me"], response.user);
-      toast.success(`Welcome back, ${response.user.username}!`, {
-        icon: '👋',
-        duration: 4000,
-        style: {
-          background: '#10B981',
-          color: '#fff',
-        },
-      });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Login failed', {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+    onError: () => {
+      // Error handling is done by the promise toast
     },
   });
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData): Promise<LoginResponse> => {
-      const res = await apiRequest("POST", "/api/auth/register", credentials);
-      return await res.json();
+      const registerPromise = async () => {
+        const res = await apiRequest("POST", "/api/auth/register", credentials);
+        return await res.json();
+      };
+
+      return toast.promise(
+        registerPromise(),
+        {
+          loading: 'Creating account...',
+          success: <b>Account created!</b>,
+          error: <b>Registration failed.</b>,
+        }
+      );
     },
     onSuccess: (response: LoginResponse) => {
       setToken(response.token);
       queryClient.setQueryData(["/api/auth/me"], response.user);
-      toast.success(`Welcome, ${response.user.username}!`, {
-        icon: '🎉',
-        duration: 4000,
-        style: {
-          background: '#10B981',
-          color: '#fff',
-        },
-      });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Registration failed', {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+    onError: () => {
+      // Error handling is done by the promise toast
     },
   });
 
@@ -146,24 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(null);
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear(); // Clear all cached data
-      toast.success('You have been successfully logged out.', {
-        icon: '👋',
-        duration: 3000,
-        style: {
-          background: '#6366F1',
-          color: '#fff',
-        },
-      });
+      toast.success('Successfully logged out!');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Logout failed', {
-        icon: '❌',
-        duration: 4000,
-        style: {
-          background: '#EF4444',
-          color: '#fff',
-        },
-      });
+    onError: () => {
+      toast.error("Logout failed.");
     },
   });
 

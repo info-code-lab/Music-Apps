@@ -33,7 +33,33 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+            gutter={8}
+            containerClassName=""
+            containerStyle={{}}
+            toastOptions={{
+              className: '',
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                duration: 3000,
+                style: {
+                  background: '#10B981',
+                },
+              },
+              error: {
+                duration: 4000,
+                style: {
+                  background: '#EF4444',
+                },
+              },
+            }}
+          />
           <Router />
         </TooltipProvider>
       </AuthProvider>
