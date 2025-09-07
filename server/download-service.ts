@@ -139,19 +139,35 @@ export class DownloadService {
     const filename = `${randomUUID()}.%(ext)s`;
     const outputTemplate = path.join(this.uploadsDir, filename);
     
+    // Clean URL (remove playlist parameters that might cause issues)
+    const cleanUrl = url.split('&list=')[0].split('&start_radio=')[0];
+    console.log(`Cleaned URL: ${cleanUrl}`);
+    
     // Try multiple approaches to bypass YouTube restrictions
     const attempts = [
-      // Attempt 1: Basic approach with minimal options
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 -f "bestaudio[ext=m4a]/bestaudio/best" --no-warnings -o "${outputTemplate}" "${url}"`,
+      // Attempt 1: Basic with cleaned URL
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 -f "bestaudio" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
       
-      // Attempt 2: Android client approach (often works better)
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --no-warnings -o "${outputTemplate}" "${url}"`,
+      // Attempt 2: Android client with cleaned URL (most successful)
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
       
-      // Attempt 3: With browser cookies if available
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 --cookies-from-browser chrome --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" --referer "https://www.youtube.com/" --no-warnings -o "${outputTemplate}" "${url}"`,
+      // Attempt 3: iOS client 
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=ios" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
       
-      // Attempt 4: Mobile user agent with sleep intervals
-      `yt-dlp -x --audio-format mp3 --audio-quality 0 --user-agent "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36" --sleep-interval 2 --max-sleep-interval 5 --no-warnings -o "${outputTemplate}" "${url}"`
+      // Attempt 4: TV client (often works when others fail)
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=tv" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
+      
+      // Attempt 5: Media connect client
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=mediaconnect" --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
+      
+      // Attempt 6: Age-gate bypass with embedding 
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --age-limit 99 --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
+      
+      // Attempt 7: Force generic extractor
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --force-generic-extractor --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`,
+      
+      // Attempt 8: Last resort with maximum bypasses
+      `yt-dlp -x --audio-format mp3 --audio-quality 0 --extractor-args "youtube:player_client=android" --user-agent "Mozilla/5.0 (Linux; Android 11; SM-G973F) AppleWebKit/537.36" --add-header "Accept-Language:en-US,en;q=0.9" --sleep-interval 3 --max-sleep-interval 8 --no-warnings --ignore-errors -o "${outputTemplate}" "${cleanUrl}"`
     ];
     
     for (let i = 0; i < attempts.length; i++) {
