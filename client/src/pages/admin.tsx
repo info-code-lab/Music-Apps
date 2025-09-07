@@ -7,6 +7,7 @@ import AdminDashboard from "./admin/dashboard";
 import TracksManagement from "./admin/tracks";
 import ArtistsManagement from "./admin/artists";
 import AlbumsManagement from "./admin/albums";
+import CategoriesManagement from "./admin/categories";
 import UsersManagement from "./admin/users";
 import UploadManagement from "./admin/upload";
 import AdminSettings from "./admin/settings";
@@ -34,6 +35,7 @@ export default function Admin() {
         <Route path="/admin/tracks" component={TracksManagement} />
         <Route path="/admin/artists" component={ArtistsManagement} />
         <Route path="/admin/albums" component={AlbumsManagement} />
+        <Route path="/admin/categories" component={CategoriesManagement} />
         <Route path="/admin/users" component={UsersManagement} />
         <Route path="/admin/upload" component={UploadManagement} />
         <Route path="/admin/settings" component={AdminSettings} />

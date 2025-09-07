@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   X,
-  Home
+  Home,
+  Tags
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Tracks', href: '/admin/tracks', icon: Music },
   { name: 'Artists', href: '/admin/artists', icon: UserIcon },
   { name: 'Albums', href: '/admin/albums', icon: Disc },
+  { name: 'Categories', href: '/admin/categories', icon: Tags },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Upload', href: '/admin/upload', icon: Upload },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
