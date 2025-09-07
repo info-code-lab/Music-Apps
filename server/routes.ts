@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             category: category || detectCategory(metadata.title || "", metadata.artist || ""),
             duration: metadata.duration,
             url: `/uploads/${metadata.filename}`, // Use local file path
-            artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
+            artwork: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
             isFavorite: false,
             uploadType: "url" as const
           };
