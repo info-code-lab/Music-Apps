@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar } from "lucide-react";
+import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2 } from "lucide-react";
 import type { Track } from "@shared/schema";
 
 interface SidebarProps {
@@ -40,27 +40,36 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentTrac
               <span className="font-mono font-medium">Home</span>
             </a>
           </Link>
+          <Link href="/songs">
+            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-songs">
+              <Music2 className="w-5 h-5" />
+              <span className="font-mono font-medium">Songs</span>
+            </a>
+          </Link>
+          <Link href="/artists">
+            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-artists">
+              <Users className="w-5 h-5" />
+              <span className="font-mono font-medium">Artists</span>
+            </a>
+          </Link>
+          <Link href="/albums">
+            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-albums">
+              <Disc className="w-5 h-5" />
+              <span className="font-mono font-medium">Albums</span>
+            </a>
+          </Link>
+          <Link href="/playlists">
+            <a className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-testid="link-playlists">
+              <ListMusic className="w-5 h-5" />
+              <span className="font-mono font-medium">Playlists</span>
+            </a>
+          </Link>
           <button 
             className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             data-testid="button-search"
           >
             <Search className="w-5 h-5" />
             <span className="font-mono font-medium">Search</span>
-          </button>
-          <button 
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            onClick={() => onCategorySelect("All Categories")}
-            data-testid="button-library"
-          >
-            <Music className="w-5 h-5" />
-            <span className="font-mono font-medium">Library</span>
-          </button>
-          <button 
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            data-testid="button-add-music"
-          >
-            <Plus className="w-5 h-5" />
-            <span className="font-mono font-medium">Add Music</span>
           </button>
         </div>
 
