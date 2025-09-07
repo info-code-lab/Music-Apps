@@ -47,7 +47,7 @@ import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
 import type { Track } from "@shared/schema";
 
-export default function TracksManagement() {
+export default function SongsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
@@ -63,10 +63,10 @@ export default function TracksManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
-      toast.success("Track deleted successfully");
+      toast.success("Song deleted successfully");
     },
     onError: () => {
-      toast.error("Failed to delete track");
+      toast.error("Failed to delete song");
     },
   });
 
@@ -111,7 +111,7 @@ export default function TracksManagement() {
   };
 
   const stats = [
-    { title: "Total Tracks", value: tracks.length, icon: Music, color: "text-blue-600" },
+    { title: "Total Songs", value: tracks.length, icon: Music, color: "text-blue-600" },
     { title: "Favorites", value: tracks.filter(t => t.isFavorite).length, icon: Heart, color: "text-red-600" },
     { title: "Categories", value: categories.length - 1, icon: Filter, color: "text-green-600" },
     { title: "Total Duration", value: `${Math.floor(tracks.reduce((acc, t) => acc + t.duration, 0) / 60)}m`, icon: Play, color: "text-purple-600" }
@@ -122,8 +122,8 @@ export default function TracksManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tracks Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your music library and track content</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Songs Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your music library and song content</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2">
@@ -134,13 +134,13 @@ export default function TracksManagement() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 gap-2">
                 <Plus className="h-4 w-4" />
-                Add Track
+                Add Song
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Track</DialogTitle>
-                <DialogDescription>Upload a new track to your music library</DialogDescription>
+                <DialogTitle>Add New Song</DialogTitle>
+                <DialogDescription>Upload a new song to your music library</DialogDescription>
               </DialogHeader>
               <div className="p-4 text-center">
                 <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -176,20 +176,20 @@ export default function TracksManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="h-5 w-5" />
-            Track Library
+            Song Library
           </CardTitle>
-          <CardDescription>Browse and manage all tracks in your music library</CardDescription>
+          <CardDescription>Browse and manage all songs in your music library</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search tracks, artists..."
+                placeholder="Search songs, artists..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
-                data-testid="search-tracks"
+                data-testid="search-songs"
               />
             </div>
             <div className="flex gap-2">
@@ -214,7 +214,7 @@ export default function TracksManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
-                  <TableHead>Track</TableHead>
+                  <TableHead>Song</TableHead>
                   <TableHead>Artist</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Duration</TableHead>
