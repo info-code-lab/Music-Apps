@@ -71,7 +71,7 @@ export default function UploadManagement() {
         {/* Right Column - Recent Uploads and Guidelines */}
         <div className="space-y-6">
           {/* Recent Uploads */}
-          <Card className="h-96">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
@@ -79,31 +79,31 @@ export default function UploadManagement() {
               </CardTitle>
               <CardDescription>Latest upload activity</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 h-full overflow-y-auto">
+            <CardContent className="space-y-4">
               {recentUploads.map((upload, index) => (
-                <div key={index} className="flex items-start gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                   <div className="flex-shrink-0">
                     {upload.status === "completed" ? (
-                      <CheckCircle className="h-6 w-6 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
-                      <Loader2 className="h-6 w-6 text-yellow-500 animate-spin" />
+                      <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {upload.title}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       by {upload.artist}
                     </p>
-                    <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-2 mt-1">
                       <Badge 
                         variant={upload.status === "completed" ? "outline" : "secondary"}
                         className={upload.status === "completed" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20" : ""}
                       >
                         {upload.status}
                       </Badge>
-                      <span className="text-sm text-gray-500">{upload.time}</span>
+                      <span className="text-xs text-gray-500">{upload.time}</span>
                     </div>
                   </div>
                 </div>
