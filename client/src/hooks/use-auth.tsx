@@ -84,29 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginData): Promise<LoginResponse> => {
       const loginPromise = async () => {
         const res = await apiRequest("POST", "/api/auth/login", credentials);
-        const data = await res.json();
-        return data;
+        return await res.json();
       };
 
       return toast.promise(
         loginPromise(),
         {
           loading: 'Signing in...',
-          success: (data) => `Welcome back, ${data.user.username}!`,
-          error: (error) => error?.message || 'Login failed',
-        },
-        {
-          style: {
-            minWidth: '250px',
-          },
-          success: {
-            duration: 3000,
-            icon: '👋',
-          },
-          error: {
-            duration: 4000,
-            icon: '❌',
-          },
+          success: <b>Welcome back!</b>,
+          error: <b>Login failed.</b>,
         }
       );
     },
@@ -123,29 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: RegisterData): Promise<LoginResponse> => {
       const registerPromise = async () => {
         const res = await apiRequest("POST", "/api/auth/register", credentials);
-        const data = await res.json();
-        return data;
+        return await res.json();
       };
 
       return toast.promise(
         registerPromise(),
         {
           loading: 'Creating account...',
-          success: (data) => `Welcome, ${data.user.username}!`,
-          error: (error) => error?.message || 'Registration failed',
-        },
-        {
-          style: {
-            minWidth: '250px',
-          },
-          success: {
-            duration: 3000,
-            icon: '🎉',
-          },
-          error: {
-            duration: 4000,
-            icon: '❌',
-          },
+          success: <b>Account created!</b>,
+          error: <b>Registration failed.</b>,
         }
       );
     },
@@ -161,22 +133,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       // No server logout needed for JWT, just clear local storage
-      return Promise.resolve();
     },
     onSuccess: () => {
       setToken(null);
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear(); // Clear all cached data
-      toast.success('Successfully logged out!', {
-        icon: '👋',
-        duration: 2000,
-      });
+      toast.success('Successfully logged out!');
     },
     onError: () => {
-      toast.error('Logout failed', {
-        icon: '❌',
-        duration: 3000,
-      });
+      toast.error("Logout failed.");
     },
   });
 

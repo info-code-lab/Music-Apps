@@ -40,51 +40,22 @@ function App() {
             containerClassName=""
             containerStyle={{}}
             toastOptions={{
-              // Default duration
+              className: '',
               duration: 4000,
-              
-              // Default style
               style: {
                 background: '#363636',
                 color: '#fff',
-                fontWeight: '500',
-                borderRadius: '8px',
-                padding: '16px',
-                maxWidth: '350px',
               },
-              
-              // Success toasts
               success: {
                 duration: 3000,
                 style: {
                   background: '#10B981',
-                  color: '#fff',
-                },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#10B981',
                 },
               },
-              
-              // Error toasts  
               error: {
                 duration: 4000,
                 style: {
                   background: '#EF4444',
-                  color: '#fff',
-                },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#EF4444',
-                },
-              },
-              
-              // Loading toasts
-              loading: {
-                duration: Infinity,
-                style: {
-                  background: '#6366F1',
-                  color: '#fff',
                 },
               },
             }}

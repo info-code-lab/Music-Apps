@@ -33,29 +33,8 @@ export default function UploadSection() {
 
   const urlUploadMutation = useMutation({
     mutationFn: async (data: { url: string; title?: string; artist?: string; category?: string }) => {
-      const uploadPromise = async () => {
-        const response = await apiRequest("POST", "/api/tracks/upload-url", data);
-        return response.json();
-      };
-
-      return toast.promise(
-        uploadPromise(),
-        {
-          loading: 'Processing URL...',
-          success: 'Upload started successfully!',
-          error: (error) => error?.message || 'Failed to start upload',
-        },
-        {
-          success: {
-            duration: 2000,
-            icon: '🚀',
-          },
-          error: {
-            duration: 4000,
-            icon: '❌',
-          },
-        }
-      );
+      const response = await apiRequest("POST", "/api/tracks/upload-url", data);
+      return response.json();
     },
     onSuccess: (data) => {
       if (data.sessionId) {
@@ -66,7 +45,7 @@ export default function UploadSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: () => {
-      // Error handling is done by the promise toast
+      toast.error("URL upload failed");
     },
   });
 
@@ -90,20 +69,14 @@ export default function UploadSection() {
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      toast.success(`Track "${data.title}" uploaded successfully!`, {
-        icon: '🎵',
-        duration: 3000,
-      });
+    onSuccess: () => {
+      toast.success('Track uploaded successfully!');
       setFileData({ title: "", artist: "", category: "" });
       setSelectedFile(null);
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Upload failed', {
-        icon: '❌',
-        duration: 4000,
-      });
+    onError: () => {
+      toast.error("File upload failed");
     },
   });
 
@@ -112,10 +85,7 @@ export default function UploadSection() {
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!urlData.url) {
-      toast.error('Please enter a music URL', {
-        icon: '⚠️',
-        duration: 3000,
-      });
+      toast.error('Please enter a music URL');
       return;
     }
     // Only send the URL - backend will auto-extract metadata
@@ -125,10 +95,7 @@ export default function UploadSection() {
   const handleFileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile || !fileData.title || !fileData.artist || !fileData.category) {
-      toast.error('Please select a file and fill in all fields', {
-        icon: '📝',
-        duration: 3000,
-      });
+      toast.error('Please select a file and fill in all fields');
       return;
     }
 
@@ -162,10 +129,7 @@ export default function UploadSection() {
       if (allowedTypes.includes(file.type)) {
         setSelectedFile(file);
       } else {
-        toast.error('Please select an MP3, WAV, or FLAC file', {
-          icon: '🚫',
-          duration: 4000,
-        });
+        toast.error('Please select an MP3, WAV, or FLAC file');
       }
     }
   };
