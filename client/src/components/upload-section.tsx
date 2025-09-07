@@ -158,15 +158,15 @@ export default function UploadSection() {
         <p className="text-muted-foreground text-sm">Add new tracks to your music library</p>
       </div>
 
-      <Tabs defaultValue="file" className="w-full">
+      <Tabs defaultValue="url" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="file" className="flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            File Upload
-          </TabsTrigger>
           <TabsTrigger value="url" className="flex items-center gap-2">
             <Link2 className="w-4 h-4" />
             URL Import
+          </TabsTrigger>
+          <TabsTrigger value="file" className="flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            File Upload
           </TabsTrigger>
         </TabsList>
 
