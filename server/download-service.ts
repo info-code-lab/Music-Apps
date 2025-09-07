@@ -259,7 +259,19 @@ export class DownloadService {
           if (downloadedFile) {
             const localPath = path.join(this.uploadsDir, downloadedFile);
             console.log(`File downloaded to: ${localPath}`);
-            return { localPath, filename: downloadedFile, metadata: extractedMetadata, thumbnail: undefined };
+            
+            // Download thumbnail separately using yt-dlp
+            let thumbnailFilename = undefined;
+            if (extractedMetadata) {
+              try {
+                console.log('Downloading thumbnail...');
+                thumbnailFilename = await this.downloadThumbnailWithYtDlp(cleanUrl, filename.replace('.%(ext)s', ''));
+              } catch (thumbError) {
+                console.log('Thumbnail download failed:', thumbError);
+              }
+            }
+            
+            return { localPath, filename: downloadedFile, metadata: extractedMetadata, thumbnail: thumbnailFilename };
           }
         } else {
           console.log(`Attempt ${i + 1} failed:`, result.stderr);
@@ -461,6 +473,43 @@ export class DownloadService {
     }
 
     return '.mp3'; // Default fallback
+  }
+
+  private async downloadThumbnailWithYtDlp(url: string, fileId: string): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      const thumbnailPath = path.join(this.uploadsDir, `${fileId}_thumbnail.%(ext)s`);
+      const command = `yt-dlp --write-thumbnail --skip-download --convert-thumbnails jpg -o "${thumbnailPath}" "${url}"`;
+      
+      console.log('Thumbnail command:', command);
+      
+      exec(command, { timeout: 30000 }, (error, stdout, stderr) => {
+        if (error) {
+          console.log('Thumbnail download error:', error.message);
+          resolve(undefined);
+          return;
+        }
+        
+        try {
+          // Find the downloaded thumbnail file
+          const files = fs.readdirSync(this.uploadsDir);
+          const thumbnailFile = files.find(file => 
+            file.startsWith(`${fileId}_thumbnail`) && 
+            (file.endsWith('.jpg') || file.endsWith('.jpeg') || file.endsWith('.png') || file.endsWith('.webp'))
+          );
+          
+          if (thumbnailFile) {
+            console.log(`Thumbnail downloaded: ${thumbnailFile}`);
+            resolve(thumbnailFile);
+          } else {
+            console.log('No thumbnail file found after download');
+            resolve(undefined);
+          }
+        } catch (readError) {
+          console.log('Error finding thumbnail file:', readError);
+          resolve(undefined);
+        }
+      });
+    });
   }
 
   private extractMetadata(filePath: string): Promise<{
