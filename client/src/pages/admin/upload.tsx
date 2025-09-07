@@ -14,9 +14,13 @@ import { formatDistanceToNow } from "date-fns";
 import { type Track } from "@shared/schema";
 
 export default function UploadManagement() {
-  // Fetch recent tracks
+  // Fetch recent tracks with real-time updates
   const { data: allTracks = [], isLoading: isLoadingTracks } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"]
+    queryKey: ["/api/tracks"],
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnMount: true, // Always refetch when component mounts
+    staleTime: 0 // Consider data stale immediately to ensure fresh data
   });
 
   // Process the tracks data
