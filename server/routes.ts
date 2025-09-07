@@ -2,18 +2,9 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTrackSchema } from "@shared/schema";
+import { downloadService } from "./download-service";
 import multer from "multer";
 import path from "path";
-import axios from "axios";
-import fs from "fs";
-import { promisify } from "util";
-import ffmpeg from "fluent-ffmpeg";
-import ffmpegPath from "ffmpeg-static";
-
-// Set FFmpeg path
-if (ffmpegPath) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
-}
 
 // Configure multer for file uploads
 const upload = multer({
@@ -74,20 +65,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { url, title, artist, category } = req.body;
       
-      if (!url || !title || !artist || !category) {
-        res.status(400).json({ message: "URL, title, artist, and category are required" });
+      if (!url) {
+        res.status(400).json({ message: "URL is required" });
         return;
       }
 
-      // Estimate duration (would normally extract from actual audio file)
-      const estimatedDuration = Math.floor(Math.random() * 300) + 120; // 2-7 minutes
-
+      console.log(`Starting URL upload for: ${url}`);
+      
+      // Download file and extract metadata
+      const metadata = await downloadService.downloadAndExtractMetadata(url);
+      
       const trackData = {
-        title,
-        artist,
-        category,
-        duration: estimatedDuration,
-        url,
+        title: title || metadata.title || "Unknown Title",
+        artist: artist || metadata.artist || "Unknown Artist", 
+        category: category || "Electronic", // Default category if not provided
+        duration: metadata.duration,
+        url: `/uploads/${metadata.filename}`, // Use local file path
         artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
         isFavorite: false,
         uploadType: "url" as const
@@ -96,8 +89,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertTrackSchema.parse(trackData);
       const track = await storage.createTrack(validatedData);
       
+      console.log(`Successfully created track: ${track.title} by ${track.artist}`);
       res.status(201).json(track);
     } catch (error) {
+      console.error("URL upload error:", error);
       if (error instanceof Error) {
         res.status(400).json({ message: error.message });
       } else {
