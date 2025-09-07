@@ -125,7 +125,12 @@ export class MemStorage implements IStorage {
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {
     const id = randomUUID();
-    const track: Track = { ...insertTrack, id };
+    const track: Track = { 
+      ...insertTrack, 
+      id,
+      artwork: insertTrack.artwork || null,
+      isFavorite: insertTrack.isFavorite || false
+    };
     this.tracks.set(id, track);
     return track;
   }

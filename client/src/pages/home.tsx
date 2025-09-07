@@ -15,17 +15,17 @@ export default function Home() {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { data: tracks = [], isLoading } = useQuery({
+  const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/tracks"],
     enabled: selectedCategory === "All Categories" && !searchQuery,
   });
 
-  const { data: filteredTracks = [] } = useQuery({
+  const { data: filteredTracks = [] } = useQuery<Track[]>({
     queryKey: ["/api/tracks/category", selectedCategory],
     enabled: selectedCategory !== "All Categories" && !searchQuery,
   });
 
-  const { data: searchResults = [] } = useQuery({
+  const { data: searchResults = [] } = useQuery<Track[]>({
     queryKey: ["/api/tracks/search", { q: searchQuery }],
     enabled: !!searchQuery,
   });

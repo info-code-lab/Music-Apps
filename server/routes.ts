@@ -1,9 +1,19 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTrackSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
+import axios from "axios";
+import fs from "fs";
+import { promisify } from "util";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "ffmpeg-static";
+
+// Set FFmpeg path
+if (ffmpegPath) {
+  ffmpeg.setFfmpegPath(ffmpegPath);
+}
 
 // Configure multer for file uploads
 const upload = multer({
@@ -11,7 +21,7 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = ['.mp3', '.wav', '.flac'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedTypes.includes(ext)) {
@@ -99,7 +109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload track via file
   app.post("/api/tracks/upload-file", upload.single('audio'), async (req, res) => {
     try {
-      if (!req.file) {
+      const multerReq = req as Request & { file?: Express.Multer.File };
+      if (!multerReq.file) {
         res.status(400).json({ message: "Audio file is required" });
         return;
       }
@@ -119,7 +130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         artist,
         category,
         duration: estimatedDuration,
-        url: `/uploads/${req.file.filename}`,
+        url: `/uploads/${multerReq.file.filename}`,
+        fileName: multerReq.file.filename,
         artwork: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
         isFavorite: false,
         uploadType: "file" as const
