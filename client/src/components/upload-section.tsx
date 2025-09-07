@@ -31,7 +31,7 @@ export default function UploadSection() {
   const queryClient = useQueryClient();
 
   const urlUploadMutation = useMutation({
-    mutationFn: async (data: typeof urlData) => {
+    mutationFn: async (data: { url: string; title?: string; artist?: string; category?: string }) => {
       const response = await apiRequest("POST", "/api/tracks/upload-url", data);
       return response.json();
     },
