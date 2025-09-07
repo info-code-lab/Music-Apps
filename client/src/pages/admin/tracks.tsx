@@ -21,6 +21,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
   Music, 
   Search, 
   Plus, 
@@ -28,16 +36,21 @@ import {
   Trash2, 
   Heart,
   Play,
-  MoreHorizontal
+  MoreHorizontal,
+  Filter,
+  Download,
+  Eye,
+  Upload,
+  BarChart3
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { formatDuration } from "@/lib/audio-utils";
 import toast from "react-hot-toast";
 import type { Track } from "@shared/schema";
 
 export default function TracksManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
@@ -59,145 +72,139 @@ export default function TracksManagement() {
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: async (trackId: string) => {
-      const response = await apiRequest("PATCH", `/api/tracks/${trackId}/favorite`);
-      return response.json();
+      await apiRequest("PATCH", `/api/tracks/${trackId}/favorite`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
       toast.success("Favorite status updated");
     },
     onError: () => {
-      toast.error("Failed to update favorite");
+      toast.error("Failed to update favorite status");
     },
   });
 
-  const filteredTracks = tracks.filter(track =>
-    track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTracks = tracks.filter(track => {
+    const matchesSearch = track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         track.artist.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || track.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
-  const handleDeleteTrack = (trackId: string, trackTitle: string) => {
-    if (window.confirm(`Are you sure you want to delete "${trackTitle}"?`)) {
-      deleteTrackMutation.mutate(trackId);
-    }
+  const categories = ["all", ...Array.from(new Set(tracks.map(track => track.category)))];
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      Jazz: "bg-blue-100 text-blue-800",
-      Electronic: "bg-purple-100 text-purple-800",
-      Classical: "bg-green-100 text-green-800",
-      Rock: "bg-red-100 text-red-800",
-      Folk: "bg-yellow-100 text-yellow-800",
-      "Hip-Hop": "bg-orange-100 text-orange-800",
-    };
-    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
+  const handleDeleteTrack = (trackId: string) => {
+    deleteTrackMutation.mutate(trackId);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Music className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-500">Loading tracks...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleToggleFavorite = (trackId: string) => {
+    toggleFavoriteMutation.mutate(trackId);
+  };
+
+  const getUploadTypeColor = (uploadType: string) => {
+    return uploadType === 'file' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/20';
+  };
+
+  const stats = [
+    { title: "Total Tracks", value: tracks.length, icon: Music, color: "text-blue-600" },
+    { title: "Favorites", value: tracks.filter(t => t.isFavorite).length, icon: Heart, color: "text-red-600" },
+    { title: "Categories", value: categories.length - 1, icon: Filter, color: "text-green-600" },
+    { title: "Total Duration", value: `${Math.floor(tracks.reduce((acc, t) => acc + t.duration, 0) / 60)}m`, icon: Play, color: "text-purple-600" }
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tracks Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your music library</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage your music library and track content</p>
         </div>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700"
-          data-testid="button-add-track"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Track
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 gap-2">
+                <Plus className="h-4 w-4" />
+                Add Track
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Track</DialogTitle>
+                <DialogDescription>Upload a new track to your music library</DialogDescription>
+              </DialogHeader>
+              <div className="p-4 text-center">
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm text-gray-500">Upload functionality will be implemented</p>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Music className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Tracks</p>
-                <p className="text-2xl font-bold">{tracks.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Heart className="h-8 w-8 text-red-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Favorites</p>
-                <p className="text-2xl font-bold">
-                  {tracks.filter(track => track.isFavorite).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Play className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-bold">
-                  {new Set(tracks.map(track => track.category)).size}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <MoreHorizontal className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Duration</p>
-                <p className="text-2xl font-bold">
-                  {Math.floor(tracks.reduce((total, track) => total + track.duration, 0) / 60)}m
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                  </div>
+                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Search and Filters */}
+      {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Track Library</CardTitle>
-          <CardDescription>Search and manage all tracks in your library</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Music className="h-5 w-5" />
+            Track Library
+          </CardTitle>
+          <CardDescription>Browse and manage all tracks in your music library</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search tracks, artists, or categories..."
+                placeholder="Search tracks, artists..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
-                data-testid="input-search-tracks"
+                data-testid="search-tracks"
               />
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm"
+                data-testid="filter-category"
+              >
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category === "all" ? "All Categories" : category}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -206,87 +213,104 @@ export default function TracksManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Track</TableHead>
                   <TableHead>Artist</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Favorite</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTracks.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">
-                        {searchQuery ? "No tracks found matching your search" : "No tracks found"}
-                      </p>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                        Loading tracks...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTracks.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Music className="h-8 w-8 text-gray-400" />
+                        <p className="text-gray-500">No tracks found</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTracks.map((track) => (
-                    <TableRow key={track.id} data-testid={`track-row-${track.id}`}>
+                    <TableRow key={track.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <img 
-                            src={track.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100'} 
-                            alt={track.title}
-                            className="w-10 h-10 rounded object-cover"
-                          />
-                          <div>
-                            <p className="font-medium">{track.title}</p>
-                          </div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                          <Music className="h-4 w-4 text-white" />
                         </div>
                       </TableCell>
-                      <TableCell>{track.artist}</TableCell>
                       <TableCell>
-                        <Badge className={getCategoryColor(track.category)}>
-                          {track.category}
-                        </Badge>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{track.title}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">ID: {track.id.slice(0, 8)}...</p>
+                        </div>
                       </TableCell>
-                      <TableCell>{formatDuration(track.duration)}</TableCell>
+                      <TableCell className="font-medium">{track.artist}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
+                        <Badge variant="outline">{track.category}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono">{formatDuration(track.duration)}</TableCell>
+                      <TableCell>
+                        <Badge className={getUploadTypeColor(track.uploadType)}>
                           {track.uploadType}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavoriteMutation.mutate(track.id)}
-                          data-testid={`button-favorite-${track.id}`}
-                        >
-                          <Heart 
-                            className={`h-4 w-4 ${
-                              track.isFavorite 
-                                ? 'fill-red-500 text-red-500' 
-                                : 'text-gray-400'
-                            }`} 
-                          />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            data-testid={`button-edit-${track.id}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteTrack(track.id, track.title)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`button-delete-${track.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div className="flex items-center gap-2">
+                          {track.isFavorite && (
+                            <Heart className="h-4 w-4 text-red-500 fill-current" />
+                          )}
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20">
+                            Active
+                          </Badge>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" data-testid={`track-actions-${track.id}`}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Pencil className="h-4 w-4" />
+                              Edit Track
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => handleToggleFavorite(track.id)}
+                            >
+                              <Heart className="h-4 w-4" />
+                              {track.isFavorite ? 'Remove Favorite' : 'Add Favorite'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="gap-2 text-red-600"
+                              onClick={() => handleDeleteTrack(track.id)}
+                              data-testid={`delete-track-${track.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete Track
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -294,6 +318,23 @@ export default function TracksManagement() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Info */}
+          {filteredTracks.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {filteredTracks.length} of {tracks.length} tracks
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
