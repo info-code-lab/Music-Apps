@@ -17,6 +17,7 @@ export interface AudioMetadata {
   album?: string;
   filename: string;
   localPath: string;
+  thumbnail?: string;
 }
 
 export class DownloadService {
@@ -134,7 +135,8 @@ export class DownloadService {
           return {
             ...metadata,
             filename,
-            localPath
+            localPath,
+            thumbnail: result.thumbnail
           };
         }
       } else {
@@ -174,7 +176,7 @@ export class DownloadService {
     }
   }
 
-  private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any}> {
+  private async downloadFromStreamingPlatform(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any, thumbnail?: string}> {
     const filename = `${randomUUID()}.%(ext)s`;
     const outputTemplate = path.join(this.uploadsDir, filename);
     
@@ -257,7 +259,7 @@ export class DownloadService {
           if (downloadedFile) {
             const localPath = path.join(this.uploadsDir, downloadedFile);
             console.log(`File downloaded to: ${localPath}`);
-            return { localPath, filename: downloadedFile, metadata: extractedMetadata };
+            return { localPath, filename: downloadedFile, metadata: extractedMetadata, thumbnail: undefined };
           }
         } else {
           console.log(`Attempt ${i + 1} failed:`, result.stderr);
@@ -277,7 +279,7 @@ export class DownloadService {
     }
   }
 
-  private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any}> {
+  private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any, thumbnail?: string}> {
     console.log("Trying Python downloader for:", url);
     
     if (sessionId) {
@@ -295,16 +297,74 @@ export class DownloadService {
       
       console.log("Python command:", command);
       
-      exec(command, { timeout: 180000 }, (error, stdout, stderr) => {
-        if (error) {
-          console.log("Python script error:", error);
+      const { spawn } = require('child_process');
+      const child = spawn('python3', [pythonScript, url, this.uploadsDir]);
+      
+      let stdout = '';
+      let stderr = '';
+      
+      child.stdout.on('data', (data: Buffer) => {
+        const output = data.toString();
+        stdout += output;
+        
+        // Parse progress updates
+        const lines = output.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('PROGRESS:')) {
+            const progressMatch = line.match(/PROGRESS:(\d+(?:\.\d+)?)/);
+            if (progressMatch && sessionId) {
+              const progress = Math.min(95, 20 + (parseFloat(progressMatch[1]) * 0.6));
+              progressEmitter.emit(sessionId, {
+                type: 'status',
+                message: 'Downloading...',
+                progress: Math.round(progress),
+                stage: 'downloading'
+              });
+            }
+          } else if (line.includes('Downloading thumbnail')) {
+            if (sessionId) {
+              progressEmitter.emit(sessionId, {
+                type: 'status',
+                message: 'Downloading thumbnail...',
+                progress: 85,
+                stage: 'processing'
+              });
+            }
+          }
+        }
+      });
+      
+      child.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+      
+      child.on('close', (code: number) => {
+        if (code !== 0) {
+          console.log("Python script error - exit code:", code);
           console.log("Python stderr:", stderr);
-          reject(new Error(`Python downloader failed: ${error.message}`));
+          reject(new Error(`Python downloader failed with exit code ${code}`));
           return;
         }
 
         try {
-          const result = JSON.parse(stdout);
+          // Extract the last JSON line from stdout (the final result)
+          const lines = stdout.trim().split('\n');
+          const jsonLine = lines.find(line => {
+            try {
+              JSON.parse(line);
+              return true;
+            } catch {
+              return false;
+            }
+          });
+          
+          if (!jsonLine) {
+            console.log("No valid JSON found in Python output:", stdout);
+            reject(new Error('No valid JSON result from Python downloader'));
+            return;
+          }
+          
+          const result = JSON.parse(jsonLine);
           console.log("Python result:", result);
           
           if (result.success) {
@@ -315,7 +375,7 @@ export class DownloadService {
               progressEmitter.emit(sessionId, {
                 type: 'status',
                 message: `Downloaded via ${result.strategy}`,
-                progress: 70,
+                progress: 95,
                 stage: 'processing'
               });
             }
@@ -323,6 +383,7 @@ export class DownloadService {
             resolve({ 
               localPath, 
               filename: result.filename,
+              thumbnail: result.thumbnail,
               metadata: {
                 title: result.title,
                 uploader: result.artist,
@@ -337,6 +398,12 @@ export class DownloadService {
           reject(new Error('Failed to parse Python downloader response'));
         }
       });
+      
+      // Add timeout
+      setTimeout(() => {
+        child.kill();
+        reject(new Error('Python downloader timeout'));
+      }, 180000);
     });
   }
 
