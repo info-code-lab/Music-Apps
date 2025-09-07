@@ -20,19 +20,7 @@ export const qualityEnum = pgEnum('quality', ['lossy_64', 'lossy_128', 'lossy_32
 export const songMoodEnum = pgEnum('song_mood', ['happy', 'sad', 'energetic', 'chill', 'aggressive', 'romantic', 'melancholic', 'uplifting']);
 export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 'europe', 'asia_pacific', 'latin_america', 'africa', 'middle_east']);
 
-// Legacy tracks table for backward compatibility (keeping original structure)
-export const tracks = pgTable("tracks", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  artist: text("artist").notNull(),
-  category: text("category").notNull(),
-  duration: integer("duration").notNull(), // in seconds
-  url: text("url").notNull(), // file path or external URL
-  artwork: text("artwork"), // artwork URL or path
-  isFavorite: boolean("is_favorite").default(false),
-  uploadType: text("upload_type").notNull(), // 'file' or 'url'
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
+// Legacy tracks table removed - now using songs table with enterprise features
 
 // ========================
 // USERS & AUTHENTICATION  
