@@ -137,7 +137,7 @@ export default function UploadManagement() {
       setUrlProgress(0);
       
       try {
-        const response = await apiRequest("POST", "/api/tracks/upload-url", data);
+        const response = await apiRequest("POST", "/api/tracks/upload-url", data) as unknown as { sessionId: string; message: string };
         const { sessionId } = response;
         
         // Set up progress tracking
@@ -185,6 +185,34 @@ export default function UploadManagement() {
       setUrlProgress(0);
     },
   });
+
+  // Drag and drop handlers
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/flac', 'audio/mpeg'];
+      if (allowedTypes.includes(file.type) || file.name.match(/\.(mp3|wav|flac)$/i)) {
+        fileForm.setValue('file', files);
+      } else {
+        toast.error('Invalid file type. Please select MP3, WAV, or FLAC files.');
+      }
+    }
+  };
 
   const onFileUpload = (data: FileUploadData) => {
     fileUploadMutation.mutate(data);
@@ -272,7 +300,17 @@ export default function UploadManagement() {
                 <TabsContent value="file" className="space-y-4">
                   <Form {...fileForm}>
                     <form onSubmit={fileForm.handleSubmit(onFileUpload)} className="space-y-4">
-                      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                      <div 
+                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                          dragActive 
+                            ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
+                      >
                         <FileAudio className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                           Drop your audio file here
@@ -451,16 +489,26 @@ export default function UploadManagement() {
                         )}
                       />
 
+                      {isUrlUploading && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Processing URL...</span>
+                            <span>{urlProgress}%</span>
+                          </div>
+                          <Progress value={urlProgress} className="h-2" />
+                        </div>
+                      )}
+
                       <Button
                         type="submit"
-                        disabled={urlUploadMutation.isPending}
+                        disabled={urlUploadMutation.isPending || isUrlUploading}
                         className="w-full"
                         data-testid="upload-url-submit"
                       >
-                        {urlUploadMutation.isPending ? (
+                        {urlUploadMutation.isPending || isUrlUploading ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Adding...
+                            {isUrlUploading ? 'Processing...' : 'Adding...'}
                           </>
                         ) : (
                           <>
