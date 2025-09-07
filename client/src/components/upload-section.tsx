@@ -148,7 +148,7 @@ export default function UploadSection() {
   }
 
   return (
-    <section className="p-6 bg-card rounded-lg border border-border">
+    <section className="max-w-2xl mx-auto p-6 bg-card rounded-lg border border-border">
       {/* Header */}
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">

@@ -3,7 +3,6 @@ import Sidebar from "@/components/sidebar";
 import MusicPlayer from "@/components/music-player";
 import MusicLibrary from "@/components/music-library";
 import UploadSection from "@/components/upload-section";
-import UploadRightSidebar from "@/components/upload-right-sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -83,13 +82,7 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Upload Section with Right Sidebar */}
-          <div className="flex gap-6 p-6">
-            <div className="flex-1">
-              <UploadSection />
-            </div>
-            <UploadRightSidebar />
-          </div>
+          <UploadSection />
 
           <MusicLibrary
             tracks={displayTracks}
