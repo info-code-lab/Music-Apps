@@ -21,65 +21,92 @@ import {
   Plus,
   Settings,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Tags
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import type { Track } from "@shared/schema";
 
+interface DashboardStats {
+  totalTracks: number;
+  totalAlbums: number;
+  totalArtists: number;
+  totalUsers: number;
+  totalGenres: number;
+  totalPlays: number;
+}
+
+interface RecentActivity {
+  id: string;
+  action: string;
+  item: string;
+  user: string;
+  time: string;
+  type: string;
+  status: string;
+}
+
 export default function AdminDashboard() {
-  const { data: tracks = [] } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+  // Fetch real dashboard statistics
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/dashboard/stats");
+      return res.json();
+    }
   });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
+  // Fetch recent activity
+  const { data: recentActivity = [], isLoading: activityLoading } = useQuery<RecentActivity[]>({
+    queryKey: ["/api/dashboard/recent-activity"],
     queryFn: async () => {
-      // Real user count will come from backend
-      return [];
+      const res = await apiRequest("GET", "/api/dashboard/recent-activity");
+      return res.json();
     }
   });
 
   // Professional statistics with real data
   const mainStats = [
     {
-      title: "Total Revenue",
-      value: "$12,485",
-      change: "+12.5%",
-      changeType: "increase" as const,
-      icon: DollarSign,
-      description: "From last month",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
-      borderColor: "border-emerald-200 dark:border-emerald-800"
-    },
-    {
-      title: "Active Users",
-      value: "2,847",
-      change: "+8.2%",
+      title: "Total Users",
+      value: stats?.totalUsers?.toString() || "0",
+      change: "Active",
       changeType: "increase" as const,
       icon: Users,
-      description: "Monthly active users",
+      description: "Registered users",
       color: "text-blue-600",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       borderColor: "border-blue-200 dark:border-blue-800"
     },
     {
       title: "Total Tracks",
-      value: tracks.length.toString(),
-      change: "+24",
+      value: stats?.totalTracks?.toString() || "0",
+      change: "Available",
       changeType: "increase" as const,
       icon: Music,
-      description: "Tracks in library",
+      description: "Songs in library",
       color: "text-purple-600",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
       borderColor: "border-purple-200 dark:border-purple-800"
     },
     {
-      title: "Stream Count",
-      value: "156K",
-      change: "-2.1%",
-      changeType: "decrease" as const,
+      title: "Total Artists",
+      value: stats?.totalArtists?.toString() || "0",
+      change: "Featured",
+      changeType: "increase" as const,
+      icon: Users,
+      description: "Artist profiles",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      borderColor: "border-emerald-200 dark:border-emerald-800"
+    },
+    {
+      title: "Total Plays",
+      value: stats?.totalPlays?.toString() || "0",
+      change: "Streams",
+      changeType: "increase" as const,
       icon: PlayCircle,
-      description: "This month",
+      description: "Total streams",
       color: "text-orange-600",
       bgColor: "bg-orange-50 dark:bg-orange-900/20",
       borderColor: "border-orange-200 dark:border-orange-800"
@@ -87,54 +114,35 @@ export default function AdminDashboard() {
   ];
 
   const secondaryStats = [
-    { label: "Albums", value: "89", icon: Disc },
-    { label: "Artists", value: "234", icon: Users },
-    { label: "Downloads", value: "1.2K", icon: Download },
-    { label: "Favorites", value: "8.9K", icon: Heart }
+    { label: "Albums", value: stats?.totalAlbums?.toString() || "0", icon: Disc },
+    { label: "Genres", value: stats?.totalGenres?.toString() || "0", icon: Tags },
+    { label: "Artists", value: stats?.totalArtists?.toString() || "0", icon: Users },
+    { label: "Tracks", value: stats?.totalTracks?.toString() || "0", icon: Music }
   ];
 
-  const recentActivity = [
-    { 
-      action: "New track uploaded", 
-      item: "Sunset Dreams - Lo-Fi Beats", 
-      user: "john_producer",
-      time: "2 minutes ago",
-      type: "upload",
-      status: "success"
-    },
-    { 
-      action: "User subscription", 
-      item: "Premium Plan", 
-      user: "sarah_music",
-      time: "15 minutes ago",
-      type: "subscription",
-      status: "success"
-    },
-    { 
-      action: "Album published", 
-      item: "Electronic Vibes Collection", 
-      user: "luna_artist",
-      time: "1 hour ago",
-      type: "album",
-      status: "success"
-    },
-    { 
-      action: "Payment processed", 
-      item: "$49.99", 
-      user: "mike_listener",
-      time: "2 hours ago",
-      type: "payment",
-      status: "success"
-    },
-    { 
-      action: "Report submitted", 
-      item: "Copyright claim", 
-      user: "system",
-      time: "3 hours ago",
-      type: "report",
-      status: "pending"
-    }
-  ];
+  // Format time for recent activity
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    return `${diffDays} days ago`;
+  };
+
+  if (statsLoading || activityLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          Loading dashboard data...
+        </div>
+      </div>
+    );
+  }
 
   const quickActions = [
     { 
@@ -320,7 +328,7 @@ export default function AdminDashboard() {
                         </span>
                         <span className="text-xs text-gray-400">•</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {activity.time}
+                          {formatTime(activity.time)}
                         </span>
                       </div>
                     </div>

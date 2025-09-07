@@ -2,6 +2,9 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTrackSchema, insertArtistSchema, insertAlbumSchema, insertSongSchema, insertPlaylistSchema, insertCommentSchema, insertRatingSchema, insertGenreSchema } from "@shared/schema";
+import { db } from "./db";
+import { songs, albums, artists, users, genres } from "@shared/schema";
+import { sql, desc } from "drizzle-orm";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
 import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
@@ -1002,6 +1005,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Genre deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete genre" });
+    }
+  });
+
+  // ========================
+  // DASHBOARD STATS ROUTES
+  // ========================
+
+  // Get dashboard statistics
+  app.get("/api/dashboard/stats", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      // Get counts from database
+      const [tracksCount] = await db.select({ count: sql<number>`count(*)` }).from(songs);
+      const [albumsCount] = await db.select({ count: sql<number>`count(*)` }).from(albums);
+      const [artistsCount] = await db.select({ count: sql<number>`count(*)` }).from(artists);
+      const [usersCount] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const [genresCount] = await db.select({ count: sql<number>`count(*)` }).from(genres);
+      
+      // Get total play count
+      const [totalPlays] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${songs.playCount}), 0)` 
+      }).from(songs);
+
+      const stats = {
+        totalTracks: tracksCount.count || 0,
+        totalAlbums: albumsCount.count || 0,
+        totalArtists: artistsCount.count || 0,
+        totalUsers: usersCount.count || 0,
+        totalGenres: genresCount.count || 0,
+        totalPlays: totalPlays.total || 0
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+
+  // Get recent activities
+  app.get("/api/dashboard/recent-activity", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      // Get recent songs
+      const recentSongs = await db
+        .select({
+          id: songs.id,
+          title: songs.title,
+          createdAt: songs.createdAt,
+          uploadedBy: songs.uploadedBy
+        })
+        .from(songs)
+        .orderBy(desc(songs.createdAt))
+        .limit(5);
+
+      // Get recent users
+      const recentUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          createdAt: users.createdAt
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(3);
+
+      const activities = [
+        ...recentSongs.map((song: any) => ({
+          id: song.id,
+          action: "New track uploaded",
+          item: song.title,
+          user: song.uploadedBy || "Unknown",
+          time: song.createdAt,
+          type: "upload",
+          status: "success"
+        })),
+        ...recentUsers.map((user: any) => ({
+          id: user.id,
+          action: "New user registered",
+          item: user.username,
+          user: user.username,
+          time: user.createdAt,
+          type: "registration",
+          status: "success"
+        }))
+      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 8);
+
+      res.json(activities);
+    } catch (error) {
+      console.error("Recent activity error:", error);
+      res.status(500).json({ message: "Failed to fetch recent activity" });
     }
   });
 
