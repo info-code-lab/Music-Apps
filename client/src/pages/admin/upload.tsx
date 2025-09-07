@@ -15,28 +15,33 @@ import { type Track } from "@shared/schema";
 
 export default function UploadManagement() {
   // Fetch recent tracks
-  const { data: recentUploads = [], isLoading: isLoadingTracks } = useQuery({
-    queryKey: ["/api/tracks"],
-    select: (tracks: Track[]) => {
-      // Sort by creation date and take the 5 most recent
-      return tracks
-        .sort((a: Track, b: Track) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-        .slice(0, 5)
-        .map((track: Track) => ({
-          title: track.title,
-          artist: track.artist,
-          status: "completed", // All tracks in the DB are considered completed
-          time: track.createdAt ? formatDistanceToNow(new Date(track.createdAt), { addSuffix: true }) : "Unknown",
-          uploadType: track.uploadType
-        }));
-    }
+  const { data: allTracks = [], isLoading: isLoadingTracks } = useQuery<Track[]>({
+    queryKey: ["/api/tracks"]
   });
 
+  // Process the tracks data
+  const recentUploads = allTracks
+    .sort((a: Track, b: Track) => {
+      // Sort by creation date if available, otherwise by title
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return b.title.localeCompare(a.title);
+    })
+    .slice(0, 5)
+    .map((track: Track) => ({
+      title: track.title,
+      artist: track.artist,
+      status: "completed", // All tracks in the DB are considered completed
+      time: track.createdAt ? formatDistanceToNow(new Date(track.createdAt), { addSuffix: true }) : "Just uploaded",
+      uploadType: track.uploadType
+    }));
+
   const uploadStats = [
-    { title: "Today's Uploads", value: "12", icon: UploadIcon, color: "text-blue-600" },
-    { title: "Processing", value: "3", icon: Loader2, color: "text-yellow-600" },
-    { title: "Completed", value: "156", icon: CheckCircle, color: "text-green-600" },
-    { title: "Failed", value: "2", icon: AlertCircle, color: "text-red-600" }
+    { title: "Total Uploads", value: allTracks.length.toString(), icon: UploadIcon, color: "text-blue-600" },
+    { title: "Processing", value: "0", icon: Loader2, color: "text-yellow-600" },
+    { title: "Completed", value: allTracks.length.toString(), icon: CheckCircle, color: "text-green-600" },
+    { title: "Failed", value: "0", icon: AlertCircle, color: "text-red-600" }
   ];
 
   return (
