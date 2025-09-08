@@ -149,29 +149,29 @@ export default function AdminDashboard() {
       title: "Upload Track", 
       description: "Add new music to library",
       icon: Upload, 
-      color: "bg-gradient-to-r from-purple-500 to-purple-600",
-      hoverColor: "hover:from-purple-600 hover:to-purple-700"
+      color: "bg-gradient-to-r from-indigo-600 to-indigo-700",
+      hoverColor: "hover:from-indigo-700 hover:to-indigo-800"
     },
     { 
       title: "Manage Users", 
       description: "View and edit user accounts",
       icon: Users, 
-      color: "bg-gradient-to-r from-blue-500 to-blue-600",
-      hoverColor: "hover:from-blue-600 hover:to-blue-700"
+      color: "bg-gradient-to-r from-slate-600 to-slate-700",
+      hoverColor: "hover:from-slate-700 hover:to-slate-800"
     },
     { 
       title: "Analytics", 
       description: "View detailed reports",
       icon: BarChart3, 
-      color: "bg-gradient-to-r from-emerald-500 to-emerald-600",
-      hoverColor: "hover:from-emerald-600 hover:to-emerald-700"
+      color: "bg-gradient-to-r from-emerald-700 to-emerald-800",
+      hoverColor: "hover:from-emerald-800 hover:to-emerald-900"
     },
     { 
       title: "Settings", 
       description: "Configure platform",
       icon: Settings, 
-      color: "bg-gradient-to-r from-gray-500 to-gray-600",
-      hoverColor: "hover:from-gray-600 hover:to-gray-700"
+      color: "bg-gradient-to-r from-gray-700 to-gray-800",
+      hoverColor: "hover:from-gray-800 hover:to-gray-900"
     }
   ];
 
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
             <Activity className="h-3 w-3 mr-1" />
             System Healthy
           </Badge>
-          <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
+          <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg">
             <Plus className="h-4 w-4 mr-2" />
             Quick Action
           </Button>
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
                   <Button
                     key={action.title}
                     variant="outline"
-                    className={`w-full p-6 h-auto flex flex-col items-start gap-3 border-2 hover:border-purple-300 dark:hover:border-purple-600 group`}
+                    className={`w-full p-6 h-auto flex flex-col items-start gap-3 border-2 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all duration-200 group`}
                     data-testid={`quick-${action.title.toLowerCase().replace(' ', '-')}`}
                   >
                     <div className="flex items-center gap-3 w-full">
