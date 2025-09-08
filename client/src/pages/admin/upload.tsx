@@ -11,21 +11,21 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { type Track } from "@shared/schema";
+import { type Song } from "@shared/schema";
 
 export default function UploadManagement() {
   // Fetch recent tracks with real-time updates
-  const { data: allTracks = [], isLoading: isLoadingTracks } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+  const { data: allSongs = [], isLoading: isLoadingSongs } = useQuery<Song[]>({
+    queryKey: ["/api/songs"],
     refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
     refetchOnWindowFocus: true, // Refetch when user returns to tab
     refetchOnMount: true, // Always refetch when component mounts
     staleTime: 0 // Consider data stale immediately to ensure fresh data
   });
 
-  // Process the tracks data
-  const recentUploads = allTracks
-    .sort((a: Track, b: Track) => {
+  // Process the songs data
+  const recentUploads = allSongs
+    .sort((a: Song, b: Song) => {
       // Sort by creation date if available, otherwise by title
       if (a.createdAt && b.createdAt) {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -33,18 +33,18 @@ export default function UploadManagement() {
       return b.title.localeCompare(a.title);
     })
     .slice(0, 5)
-    .map((track: Track) => ({
-      title: track.title,
-      artist: track.artist,
-      status: "completed", // All tracks in the DB are considered completed
-      time: track.createdAt ? formatDistanceToNow(new Date(track.createdAt), { addSuffix: true }) : "Just uploaded",
-      uploadType: track.uploadType
+    .map((song: Song) => ({
+      title: song.title,
+      artist: "Unknown Artist", // Songs don't have artist field directly
+      status: "completed", // All songs in the DB are considered completed
+      time: song.createdAt ? formatDistanceToNow(new Date(song.createdAt), { addSuffix: true }) : "Just uploaded",
+      uploadType: "file" // Default upload type
     }));
 
   const uploadStats = [
-    { title: "Total Uploads", value: allTracks.length.toString(), icon: UploadIcon, color: "text-blue-600" },
+    { title: "Total Uploads", value: allSongs.length.toString(), icon: UploadIcon, color: "text-blue-600" },
     { title: "Processing", value: "0", icon: Loader2, color: "text-yellow-600" },
-    { title: "Completed", value: allTracks.length.toString(), icon: CheckCircle, color: "text-green-600" },
+    { title: "Completed", value: allSongs.length.toString(), icon: CheckCircle, color: "text-green-600" },
     { title: "Failed", value: "0", icon: AlertCircle, color: "text-red-600" }
   ];
 
@@ -103,7 +103,7 @@ export default function UploadManagement() {
               <CardDescription>Latest upload activity</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isLoadingTracks ? (
+              {isLoadingSongs ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   <span className="ml-2 text-sm text-muted-foreground">Loading recent uploads...</span>

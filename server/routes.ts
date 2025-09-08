@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           progressEmitter.emit(sessionId, {
             type: 'status',
-            message: 'Creating track record...',
+            message: 'Creating song record...',
             progress: 90,
             stage: 'finalizing'
           });
@@ -113,21 +113,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return 'Electronic';
           };
 
-          const trackData = {
+          const songData = {
             title: title || metadata.title || "Unknown Title",
             duration: metadata.duration,
             filePath: `/uploads/${metadata.filename}`, // Updated field name for songs table
             coverArt: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
           };
 
-          const validatedData = insertTrackSchema.parse(trackData);
-          const track = await storage.createSong(validatedData);
+          const validatedData = insertSongSchema.parse(songData);
+          const song = await storage.createSong(validatedData);
           
           
-          progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}"`);
+          progressEmitter.emitComplete(sessionId, `Successfully added "${song.title}"`);
         } catch (error) {
           console.error("URL upload error:", error);
-          const errorMessage = error instanceof Error ? error.message : "Failed to upload track via URL";
+          const errorMessage = error instanceof Error ? error.message : "Failed to upload song via URL";
           progressEmitter.emitError(sessionId, errorMessage);
         }
       });
@@ -158,22 +158,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Estimate duration (would normally extract from actual audio file)
       const estimatedDuration = Math.floor(Math.random() * 300) + 120; // 2-7 minutes
 
-      const trackData = {
+      const songData = {
         title,
         duration: estimatedDuration,
         filePath: `/uploads/${multerReq.file.filename}`, // Updated field name for songs table
         coverArt: `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
       };
 
-      const validatedData = insertTrackSchema.parse(trackData);
-      const track = await storage.createSong(validatedData);
+      const validatedData = insertSongSchema.parse(songData);
+      const song = await storage.createSong(validatedData);
       
-      res.status(201).json(track);
+      res.status(201).json(song);
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({ message: error.message });
       } else {
-        res.status(500).json({ message: "Failed to upload track file" });
+        res.status(500).json({ message: "Failed to upload song file" });
       }
     }
   });
@@ -182,14 +182,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/songs/:id/favorite", async (req, res) => {
     try {
       const { id } = req.params;
-      const track = await storage.toggleFavorite(id);
+      const song = await storage.toggleFavorite(id);
       
-      if (!track) {
+      if (!song) {
         res.status(404).json({ message: "Song not found" });
         return;
       }
       
-      res.json(track);
+      res.json(song);
     } catch (error) {
       res.status(500).json({ message: "Failed to toggle favorite" });
     }

@@ -44,11 +44,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
 
   const favoriteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("PATCH", `/api/tracks/${song.id}/favorite`);
+      const response = await apiRequest("PATCH", `/api/songs/${song.id}/favorite`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       toast.success(
         song.isFavorite ? "Removed from favorites" : "Added to favorites"
       );

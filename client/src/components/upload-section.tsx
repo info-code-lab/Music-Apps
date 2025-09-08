@@ -34,7 +34,7 @@ export default function UploadSection() {
 
   const urlUploadMutation = useMutation({
     mutationFn: async (data: { url: string; title?: string; artist?: string; category?: string }) => {
-      const response = await apiRequest("POST", "/api/tracks/upload-url", data);
+      const response = await apiRequest("POST", "/api/songs/upload-url", data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -59,7 +59,7 @@ export default function UploadSection() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/tracks/upload-file", {
+      const response = await fetch("/api/songs/upload-file", {
         method: "POST",
         headers,
         body: formData,
