@@ -8,6 +8,7 @@ import { sql, desc } from "drizzle-orm";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
 import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
+import { streamingService } from "./streaming-service";
 import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -1092,6 +1093,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Recent activity error:", error);
       res.status(500).json({ message: "Failed to fetch recent activity" });
+    }
+  });
+
+  // ================================
+  // STREAMING API ENDPOINTS
+  // ================================
+
+  // Process song for streaming (Admin/Artist only)
+  app.post("/api/streaming/process/:songId", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { songId } = req.params;
+      
+      // Get song from database
+      const song = await storage.getSong(songId);
+      if (!song) {
+        return res.status(404).json({ error: "Song not found" });
+      }
+
+      // Process for streaming
+      const streamingData = await streamingService.processAudioForStreaming(song);
+      
+      // Update song with streaming URLs
+      await storage.updateSong(songId, {
+        hlsManifestUrl: streamingData.hlsManifestUrl,
+        dashManifestUrl: streamingData.dashManifestUrl,
+        segmentUrls: JSON.stringify(streamingData.segmentUrls)
+      });
+
+      res.json({
+        message: "Song processed for streaming",
+        ...streamingData
+      });
+    } catch (error) {
+      console.error("Streaming processing error:", error);
+      res.status(500).json({ error: "Failed to process song for streaming" });
+    }
+  });
+
+  // Serve HLS manifest and segments
+  app.get("/api/streaming/hls/:songId/:filename", async (req, res) => {
+    try {
+      const { songId, filename } = req.params;
+      
+      const fileData = await streamingService.serveStreamingFile(songId, 'hls', filename);
+      
+      res.setHeader('Content-Type', fileData.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      if (fileData.contentLength) {
+        res.setHeader('Content-Length', fileData.contentLength);
+      }
+      
+      fileData.stream.pipe(res);
+    } catch (error) {
+      console.error("HLS streaming error:", error);
+      res.status(404).json({ error: "Streaming file not found" });
+    }
+  });
+
+  // Serve DASH manifest and segments
+  app.get("/api/streaming/dash/:songId/:filename", async (req, res) => {
+    try {
+      const { songId, filename } = req.params;
+      
+      const fileData = await streamingService.serveStreamingFile(songId, 'dash', filename);
+      
+      res.setHeader('Content-Type', fileData.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      if (fileData.contentLength) {
+        res.setHeader('Content-Length', fileData.contentLength);
+      }
+      
+      fileData.stream.pipe(res);
+    } catch (error) {
+      console.error("DASH streaming error:", error);
+      res.status(404).json({ error: "Streaming file not found" });
+    }
+  });
+
+  // Get recommended streaming quality
+  app.get("/api/streaming/quality/:songId", authenticateToken, async (req, res) => {
+    try {
+      const { bandwidth, deviceType } = req.query;
+      const bandwidthNum = bandwidth ? parseInt(bandwidth as string) : 320000;
+      const device = (deviceType as string) || 'desktop';
+      
+      const recommendedQuality = streamingService.getRecommendedQuality(bandwidthNum, device);
+      
+      res.json({
+        recommendedQuality,
+        availableQualities: ['aac_128', 'aac_320', 'ogg_vorbis', 'flac']
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get quality recommendation" });
+    }
+  });
+
+  // Track streaming analytics
+  app.post("/api/streaming/analytics", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const sessionData = {
+        userId: req.user?.id || '',
+        ...req.body
+      };
+      
+      await streamingService.trackStreamingSession(sessionData);
+      
+      res.json({ message: "Analytics tracked" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to track analytics" });
+    }
+  });
+
+  // Streaming cleanup (Admin only)
+  app.post("/api/streaming/cleanup", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { maxAgeHours = 24 } = req.body;
+      await streamingService.cleanupOldFiles(maxAgeHours);
+      
+      res.json({ message: "Cleanup completed" });
+    } catch (error) {
+      res.status(500).json({ error: "Cleanup failed" });
     }
   });
 
