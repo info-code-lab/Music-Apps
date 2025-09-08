@@ -250,12 +250,19 @@ export default function SongsManagement() {
       ? track.artistNames 
       : (track.artist && track.artist !== 'Unknown Artist' ? track.artist.split(', ') : []);
     
-    const categoriesArray = track.category ? [track.category] : [];
+    // For categories, use the current category name
+    const categoriesArray = track.category && track.category !== 'Music' ? [track.category] : [];
+    
+    // For albums, use the current albumId (keep as ID for the dropdown)
     const albumsArray = track.albumId ? [track.albumId] : [];
     
     console.log('Editing track:', track);
-    console.log('Artist names from backend:', track.artistNames);
-    console.log('Setting form data with artists:', artistsArray, 'categories:', categoriesArray, 'albums:', albumsArray);
+    console.log('Current track category:', track.category);
+    console.log('Current track albumId:', track.albumId);
+    console.log('Setting form data with:');
+    console.log('- artists:', artistsArray);
+    console.log('- categories:', categoriesArray);
+    console.log('- albums:', albumsArray);
     
     setEditFormData({
       title: track.title,
@@ -273,7 +280,7 @@ export default function SongsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTrack) {
-      // Find genreId from selected category name
+      // Find genreId from selected category name (take first category for now)
       const selectedGenre = genres.find(genre => genre.name === editFormData.categories[0]);
       const genreId = selectedGenre?.id || null;
       
@@ -308,8 +315,10 @@ export default function SongsManagement() {
       });
       
       console.log('Submitting update with data:', formDataForAPI);
+      console.log('Categories selected:', editFormData.categories);
+      console.log('Albums selected:', editFormData.albums);
       console.log('Artist names selected:', editFormData.artists);
-      console.log('Artist IDs to send:', artistIds);
+      console.log('Final genreId:', genreId, 'albumId:', albumId, 'artistIds:', artistIds);
       updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };
