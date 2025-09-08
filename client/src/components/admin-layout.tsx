@@ -163,13 +163,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-            </div>
-            
-            <div className="flex items-center gap-4">
+              
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 Last updated: {new Date().toLocaleDateString()}
               </span>
-              
+            </div>
+            
+            <div className="flex items-center gap-4">
               {/* Professional user profile */}
               <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
                 <div className="relative">
