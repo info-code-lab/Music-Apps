@@ -4,12 +4,23 @@ import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import MusicLibrary from "@/components/music-library";
+import SearchResults from "@/components/search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User } from "lucide-react";
-import type { Track, LegacyTrack } from "@shared/schema";
+import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
+
+// Define unified search result type
+interface SearchResult {
+  songs: Track[];
+  artists: Artist[];
+  albums: Album[];
+  genres: Genre[];
+  total: number;
+  query: string;
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,13 +38,13 @@ export default function Home() {
     enabled: selectedCategory !== "All Categories" && !searchQuery,
   });
 
-  const { data: searchResults = [] } = useQuery<Track[]>({
-    queryKey: [`/api/songs/search?q=${encodeURIComponent(searchQuery)}`],
+  const { data: searchResults } = useQuery<SearchResult>({
+    queryKey: [`/api/search?q=${encodeURIComponent(searchQuery)}`],
     enabled: !!searchQuery,
   });
 
   const displaySongs = searchQuery 
-    ? searchResults 
+    ? (searchResults?.songs || []) 
     : selectedCategory === "All Categories" 
       ? songs 
       : filteredSongs;
@@ -118,14 +129,22 @@ export default function Home() {
             </div>
           </header>
 
-          <MusicLibrary
-            songs={displaySongs}
-            isLoading={isLoading}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
-            searchQuery={searchQuery}
-          />
+          {searchQuery && searchResults ? (
+            <SearchResults 
+              searchResults={searchResults}
+              onPlaySong={handlePlaySong}
+              onCategorySelect={setSelectedCategory}
+            />
+          ) : (
+            <MusicLibrary
+              songs={displaySongs}
+              isLoading={isLoading}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
+              searchQuery={searchQuery}
+            />
+          )}
         </main>
       </div>
 
