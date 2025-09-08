@@ -21,7 +21,12 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
 
   const playMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/songs/${song.id}/play`);
+      try {
+        await apiRequest("POST", `/api/songs/${song.id}/play`);
+      } catch (error) {
+        // Ignore auth errors for now - still trigger onPlay callback
+        console.log("Play tracking failed (auth required):", error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
