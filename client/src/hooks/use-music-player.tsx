@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { LegacyTrack } from '@shared/schema';
 
 interface MusicPlayerContextType {
@@ -13,8 +13,37 @@ interface MusicPlayerContextType {
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
 
 export function MusicPlayerProvider({ children }: { children: ReactNode }) {
-  const [currentSong, setCurrentSong] = useState<LegacyTrack | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Initialize state from localStorage
+  const [currentSong, setCurrentSong] = useState<LegacyTrack | null>(() => {
+    try {
+      const saved = localStorage.getItem('music_player_current_song');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  
+  const [isPlaying, setIsPlaying] = useState(() => {
+    try {
+      const saved = localStorage.getItem('music_player_is_playing');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    if (currentSong) {
+      localStorage.setItem('music_player_current_song', JSON.stringify(currentSong));
+    } else {
+      localStorage.removeItem('music_player_current_song');
+    }
+  }, [currentSong]);
+
+  useEffect(() => {
+    localStorage.setItem('music_player_is_playing', isPlaying.toString());
+  }, [isPlaying]);
 
   const playTrack = (track: LegacyTrack) => {
     setCurrentSong(track);

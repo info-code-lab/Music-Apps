@@ -17,6 +17,7 @@ class AudioService {
   private currentSrc: string = '';
   private currentTrackId: string = '';
   private blobUrl: string | null = null;
+  private lastSaveTime: number = 0;
   
   private state: AudioState = {
     currentTime: 0,
@@ -33,6 +34,16 @@ class AudioService {
       return (globalThis as any).audioService;
     }
     (globalThis as any).audioService = this;
+    
+    // Load saved volume from localStorage
+    try {
+      const savedVolume = localStorage.getItem('audio_player_volume');
+      if (savedVolume) {
+        this.state.volume = Math.max(0, Math.min(1, parseFloat(savedVolume)));
+      }
+    } catch {
+      // Use default volume
+    }
   }
 
   subscribe(listener: AudioStateListener) {
@@ -141,6 +152,11 @@ class AudioService {
 
     this.audio.load();
     console.log("Audio service setting source:", this.audio.src);
+    
+    // Restore playback position after metadata is loaded
+    if (trackId) {
+      this.restorePlaybackPosition(trackId);
+    }
   }
 
   private handleLoadedMetadata = () => {
@@ -157,6 +173,11 @@ class AudioService {
       const currentTime = this.audio.currentTime;
       const progress = this.audio.duration ? currentTime / this.audio.duration : 0;
       this.updateState({ currentTime, progress });
+      
+      // Save current position to localStorage (throttled to avoid too many writes)
+      if (this.currentTrackId && currentTime > 0) {
+        this.savePlaybackPosition(currentTime);
+      }
     }
   };
 
@@ -220,10 +241,68 @@ class AudioService {
       // Avoid the squared curve which can make audio too quiet
       this.audio.volume = adjustedVolume;
     }
+    
+    // Save volume to localStorage
+    try {
+      localStorage.setItem('audio_player_volume', adjustedVolume.toString());
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   getCurrentState(): AudioState {
     return { ...this.state };
+  }
+
+  private savePlaybackPosition(currentTime: number) {
+    // Throttle saves to avoid too many localStorage writes
+    if (!this.lastSaveTime || Date.now() - this.lastSaveTime > 2000) {
+      try {
+        const positionData = {
+          trackId: this.currentTrackId,
+          currentTime: currentTime,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('audio_player_position', JSON.stringify(positionData));
+        this.lastSaveTime = Date.now();
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }
+
+  private restorePlaybackPosition(trackId: string) {
+    try {
+      const saved = localStorage.getItem('audio_player_position');
+      if (saved) {
+        const positionData = JSON.parse(saved);
+        // Only restore if it's the same track and was saved recently (within 7 days)
+        if (positionData.trackId === trackId && 
+            positionData.currentTime > 0 &&
+            (Date.now() - positionData.timestamp) < 7 * 24 * 60 * 60 * 1000) {
+          
+          // Wait for metadata to load before seeking
+          const restorePosition = () => {
+            if (this.audio && this.audio.duration > 0) {
+              this.audio.currentTime = Math.min(positionData.currentTime, this.audio.duration - 5);
+              this.audio.removeEventListener('loadedmetadata', restorePosition);
+            }
+          };
+          
+          if (this.audio) {
+            if (this.audio.duration > 0) {
+              // Metadata already loaded
+              restorePosition();
+            } else {
+              // Wait for metadata to load
+              this.audio.addEventListener('loadedmetadata', restorePosition);
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   cleanup() {
