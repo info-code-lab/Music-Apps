@@ -196,7 +196,8 @@ export default function SongsManagement() {
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       await apiRequest("PUT", `/api/songs/${id}`, data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful:', data);
       // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/songs"] });
@@ -207,8 +208,20 @@ export default function SongsManagement() {
       toast.success("Track updated successfully");
       setIsEditDialogOpen(false);
       setSelectedTrack(null);
+      // Reset form state
+      setEditFormData({
+        title: "",
+        artists: [],
+        categories: [],
+        duration: 0,
+        albums: [],
+        releaseDate: "",
+        isExplicit: false,
+        lyrics: ""
+      });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Update failed:', error);
       toast.error("Failed to update track");
     },
   });
@@ -230,10 +243,15 @@ export default function SongsManagement() {
 
   const handleEditTrack = (track: AdminTrack) => {
     setSelectedTrack(track);
-    // Convert single values to arrays for backwards compatibility
+    
+    // Convert single values to arrays for multi-select compatibility
     const artistsArray = track.artist ? [track.artist] : [];
     const categoriesArray = track.category ? [track.category] : [];
     const albumsArray = track.albumId ? [track.albumId] : [];
+    
+    console.log('Editing track:', track);
+    console.log('Setting form data with categories:', categoriesArray, 'albums:', albumsArray);
+    
     setEditFormData({
       title: track.title,
       artists: artistsArray,
@@ -250,16 +268,32 @@ export default function SongsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTrack) {
-      // Convert arrays back to single values for API compatibility
+      // Find genreId from selected category name
+      const selectedGenre = genres.find(genre => genre.name === editFormData.categories[0]);
+      const genreId = selectedGenre?.id || null;
+      
+      // Use the first selected album ID, or null if none selected
+      const albumId = editFormData.albums[0] || null;
+      
+      // Prepare data in the format expected by the API
       const formDataForAPI = {
-        ...editFormData,
-        artist: editFormData.artists.join(", "),
-        category: editFormData.categories[0] || "", // Take first category for now
-        albumId: editFormData.albums[0] || "" // Take first album for now
+        title: editFormData.title,
+        duration: editFormData.duration,
+        genreId: genreId,
+        albumId: albumId,
+        releaseDate: editFormData.releaseDate || null,
+        isExplicit: editFormData.isExplicit,
+        lyrics: editFormData.lyrics || null
       };
-      delete (formDataForAPI as any).artists;
-      delete (formDataForAPI as any).categories;
-      delete (formDataForAPI as any).albums;
+      
+      // Remove any undefined fields
+      Object.keys(formDataForAPI).forEach(key => {
+        if (formDataForAPI[key as keyof typeof formDataForAPI] === undefined) {
+          delete formDataForAPI[key as keyof typeof formDataForAPI];
+        }
+      });
+      
+      console.log('Submitting update with data:', formDataForAPI);
       updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };
