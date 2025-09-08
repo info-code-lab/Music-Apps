@@ -103,7 +103,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      console.log(`Starting URL upload for: ${url}`);
       
       // Return session ID immediately for progress tracking
       res.status(200).json({ sessionId, message: "Upload started" });
@@ -152,7 +151,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedData = insertTrackSchema.parse(trackData);
           const track = await storage.createTrack(validatedData);
           
-          console.log(`Successfully created track: ${track.title}`);
           
           progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}"`);
         } catch (error) {
