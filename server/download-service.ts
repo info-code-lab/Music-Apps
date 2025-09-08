@@ -305,11 +305,18 @@ export class DownloadService {
             let finalThumbnailFilename = thumbnailFilename;
             let finalLocalPath = localPath;
             
+            console.log('DEBUG: YouTube rename check - extractedMetadata:', extractedMetadata);
+            console.log('DEBUG: YouTube rename check - has title:', extractedMetadata && extractedMetadata.title);
+            
             if (extractedMetadata && extractedMetadata.title) {
+              console.log('DEBUG: Starting YouTube file renaming process');
               const sanitizedTitle = this.sanitizeFilename(extractedMetadata.title);
               const fileExtension = path.extname(downloadedFile);
               const newAudioFilename = `${sanitizedTitle}${fileExtension}`;
               const newAudioPath = path.join(this.uploadsDir, newAudioFilename);
+              
+              console.log('DEBUG: Sanitized title:', sanitizedTitle);
+              console.log('DEBUG: New audio filename:', newAudioFilename);
               
               try {
                 // Rename audio file
@@ -334,6 +341,8 @@ export class DownloadService {
               } catch (renameError) {
                 console.log('File rename failed, keeping original names:', renameError);
               }
+            } else {
+              console.log('DEBUG: Skipping YouTube rename - no metadata or title');
             }
             
             return { localPath: finalLocalPath, filename: finalAudioFilename, metadata: extractedMetadata, thumbnail: finalThumbnailFilename };
@@ -817,10 +826,31 @@ export class DownloadService {
                 });
               }
               
+              // Rename thumbnail to match the song filename (spotDL already creates good audio filenames)
+              let finalThumbnailFilename = thumbnailFilename;
+              if (thumbnailFilename && downloadedFile) {
+                try {
+                  const audioBaseName = path.basename(downloadedFile, path.extname(downloadedFile));
+                  const sanitizedBaseName = this.sanitizeFilename(audioBaseName);
+                  const thumbExtension = path.extname(thumbnailFilename);
+                  const newThumbnailFilename = `${sanitizedBaseName}_thumbnail${thumbExtension}`;
+                  const oldThumbnailPath = path.join(this.uploadsDir, thumbnailFilename);
+                  const newThumbnailPath = path.join(this.uploadsDir, newThumbnailFilename);
+                  
+                  if (fs.existsSync(oldThumbnailPath)) {
+                    fs.renameSync(oldThumbnailPath, newThumbnailPath);
+                    finalThumbnailFilename = newThumbnailFilename;
+                    console.log(`Spotify thumbnail renamed to: ${newThumbnailFilename}`);
+                  }
+                } catch (renameError) {
+                  console.log('Spotify thumbnail rename failed, keeping original name:', renameError);
+                }
+              }
+              
               resolve({ 
                 localPath, 
                 filename: downloadedFile,
-                thumbnail: thumbnailFilename,
+                thumbnail: finalThumbnailFilename,
                 metadata: {
                   title: metadata.title,
                   artist: metadata.artist,
@@ -839,11 +869,32 @@ export class DownloadService {
                 thumbnailFilename = undefined;
               }
               
+              // Rename thumbnail even in fallback case
+              let finalThumbnailFilename = thumbnailFilename;
+              if (thumbnailFilename && downloadedFile) {
+                try {
+                  const audioBaseName = path.basename(downloadedFile, path.extname(downloadedFile));
+                  const sanitizedBaseName = this.sanitizeFilename(audioBaseName);
+                  const thumbExtension = path.extname(thumbnailFilename);
+                  const newThumbnailFilename = `${sanitizedBaseName}_thumbnail${thumbExtension}`;
+                  const oldThumbnailPath = path.join(this.uploadsDir, thumbnailFilename);
+                  const newThumbnailPath = path.join(this.uploadsDir, newThumbnailFilename);
+                  
+                  if (fs.existsSync(oldThumbnailPath)) {
+                    fs.renameSync(oldThumbnailPath, newThumbnailPath);
+                    finalThumbnailFilename = newThumbnailFilename;
+                    console.log(`Spotify fallback thumbnail renamed to: ${newThumbnailFilename}`);
+                  }
+                } catch (renameError) {
+                  console.log('Spotify fallback thumbnail rename failed, keeping original name:', renameError);
+                }
+              }
+              
               // Fallback with basic info
               resolve({ 
                 localPath, 
                 filename: downloadedFile,
-                thumbnail: thumbnailFilename,
+                thumbnail: finalThumbnailFilename,
                 metadata: {
                   title: downloadedFile.replace(/\.[^/.]+$/, ''), // Remove extension
                   artist: 'Unknown Artist',
