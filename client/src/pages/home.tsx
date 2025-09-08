@@ -31,7 +31,6 @@ export default function Home() {
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
-    enabled: selectedCategory === "All Categories" && !searchQuery,
   });
 
   const { data: filteredSongs = [] } = useQuery<Track[]>({
