@@ -170,19 +170,6 @@ export default function MobileDrawer({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-border">
-            <Link href="/settings">
-              <button
-                className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-accent transition-colors text-left"
-                onClick={onClose}
-                data-testid="drawer-settings"
-              >
-                <Settings className="w-5 h-5 text-muted-foreground" />
-                <span className="font-medium">Settings</span>
-              </button>
-            </Link>
-          </div>
         </div>
       </div>
     </>
