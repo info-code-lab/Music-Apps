@@ -14,13 +14,23 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useAudioPlayer } from "@/hooks/use-audio-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
+
+interface AudioControls {
+  currentTime: number;
+  duration: number;
+  progress: number;
+  isLoading: boolean;
+  isPlayingOffline: boolean;
+  seek: (percentage: number) => void;
+  setVolumeLevel: (volume: number) => void;
+}
 
 interface MusicPlayerProps {
   song: Track;
   isPlaying: boolean;
+  audioControls: AudioControls;
   onPlayPause: () => void;
   onNext: () => void;
   onPrevious: () => void;
@@ -29,6 +39,7 @@ interface MusicPlayerProps {
 export default function MusicPlayer({ 
   song, 
   isPlaying, 
+  audioControls,
   onPlayPause, 
   onNext, 
   onPrevious 
@@ -46,7 +57,7 @@ export default function MusicPlayer({
     isPlayingOffline,
     seek,
     setVolumeLevel
-  } = useAudioPlayer(song.url, isPlaying, song.id);
+  } = audioControls;
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
