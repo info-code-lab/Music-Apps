@@ -399,6 +399,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/songs/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        res.status(400).json({ message: "Search query is required" });
+        return;
+      }
+      const songs = await storage.searchTracks(q);
+      res.json(songs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search songs" });
+    }
+  });
+
+  app.get("/api/songs/suggestions", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        res.status(400).json({ message: "Search query is required" });
+        return;
+      }
+      const suggestions = await storage.getSongSuggestions(q);
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get suggestions" });
+    }
+  });
+
   app.get("/api/songs/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -488,20 +516,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete song" });
-    }
-  });
-
-  app.get("/api/songs/search", async (req, res) => {
-    try {
-      const { q } = req.query;
-      if (!q || typeof q !== 'string') {
-        res.status(400).json({ message: "Search query is required" });
-        return;
-      }
-      const songs = await storage.searchTracks(q);
-      res.json(songs);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to search songs" });
     }
   });
 

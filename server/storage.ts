@@ -235,6 +235,17 @@ export class DatabaseStorage implements IStorage {
     return songsData.map(song => this.songToLegacyTrack(song));
   }
 
+  async getSongSuggestions(query: string): Promise<string[]> {
+    const searchTerm = `${query.toLowerCase()}%`;
+    
+    // Get song titles that start with the query for suggestions
+    const songsData = await db.select({ title: songs.title }).from(songs).where(
+      ilike(songs.title, searchTerm)
+    ).limit(5);
+    
+    return songsData.map(song => song.title);
+  }
+
   async getTracksByCategory(category: string): Promise<Track[]> {
     if (category === "All Categories") {
       return this.getAllTracks();
