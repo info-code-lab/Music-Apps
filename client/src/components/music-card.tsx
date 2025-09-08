@@ -63,12 +63,6 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={(e) => {
-        // Only trigger play if not clicking on action buttons
-        if (!e.target.closest('[data-action-button]')) {
-          onPlay();
-        }
-      }}
       data-testid={`card-song-${song.id}`}
     >
       <div className="relative">
@@ -115,7 +109,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             {/* Mobile: Show all buttons like desktop */}
-            <div className="md:hidden flex items-center gap-1" data-action-button="true">
+            <div className="md:hidden flex items-center gap-1">
               {/* File Download Button (to device) */}
               {isFileDownloadSupported && (
                 isDownloadingToDevice(song.id) ? (
@@ -204,7 +198,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             </div>
             
             {/* Desktop: Show all buttons */}
-            <div className="hidden md:flex items-center gap-1" data-action-button="true">
+            <div className="hidden md:flex items-center gap-1">
               {/* File Download Button (to device) */}
               {isFileDownloadSupported && (
                 isDownloadingToDevice(song.id) ? (
@@ -297,13 +291,8 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           <Button 
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Add menu functionality here
-            }}
             className="text-muted-foreground hover:text-foreground transition-colors"
             data-testid={`button-menu-${song.id}`}
-            data-action-button="true"
           >
             <MoreHorizontal className="w-4 h-4" />
           </Button>
