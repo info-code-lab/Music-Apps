@@ -17,6 +17,8 @@ export const contentStatusEnum = pgEnum('content_status', ['draft', 'pending_rev
 export const rightsScopeEnum = pgEnum('rights_scope', ['worldwide', 'regional', 'country_specific']);
 export const royaltyTypeEnum = pgEnum('royalty_type', ['mechanical', 'performance', 'synchronization', 'streaming']);
 export const qualityEnum = pgEnum('quality', ['lossy_64', 'lossy_128', 'lossy_320', 'lossless_16_44', 'lossless_24_48', 'lossless_24_96', 'master_quality']);
+export const streamingFormatEnum = pgEnum('streaming_format', ['aac_128', 'aac_320', 'ogg_vorbis', 'flac', 'mp3']);
+export const streamingProtocolEnum = pgEnum('streaming_protocol', ['hls', 'dash', 'progressive']);
 export const songMoodEnum = pgEnum('song_mood', ['happy', 'sad', 'energetic', 'chill', 'aggressive', 'romantic', 'melancholic', 'uplifting']);
 export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 'europe', 'asia_pacific', 'latin_america', 'africa', 'middle_east']);
 
@@ -127,6 +129,13 @@ export const songs = pgTable("songs", {
   audioFormat: varchar("audio_format", { length: 10 }), // mp3, flac, wav, etc.
   audioFingerprint: text("audio_fingerprint"), // For duplicate detection
   waveformData: text("waveform_data"), // JSON array of waveform points
+  // Streaming Infrastructure
+  streamingFormat: streamingFormatEnum("streaming_format").default('aac_128'),
+  streamingProtocol: streamingProtocolEnum("streaming_protocol").default('hls'),
+  hlsManifestUrl: varchar("hls_manifest_url", { length: 500 }), // HLS .m3u8 manifest URL
+  dashManifestUrl: varchar("dash_manifest_url", { length: 500 }), // DASH .mpd manifest URL
+  segmentUrls: json("segment_urls"), // Array of segment URLs for HLS/DASH
+  streamingQuality: qualityEnum("streaming_quality").default('lossy_128'),
   // Performance Metrics
   skipRate: decimal("skip_rate", { precision: 5, scale: 4 }).default('0.0000'), // Skip percentage
   completionRate: decimal("completion_rate", { precision: 5, scale: 4 }).default('0.0000'),
@@ -618,6 +627,61 @@ export type Follow = typeof follows.$inferSelect;
 export type ListeningHistory = typeof listeningHistory.$inferSelect;
 export type SearchLog = typeof searchLogs.$inferSelect;
 export type Recommendation = typeof recommendations.$inferSelect;
+
+// ========================
+// STREAMING & QUEUE MANAGEMENT
+// ========================
+
+export const playQueues = pgTable("play_queues", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  songId: varchar("song_id").notNull(),
+  position: integer("position").notNull(),
+  isShuffled: boolean("is_shuffled").default(false),
+  repeatMode: varchar("repeat_mode", { length: 20 }).default('none'), // none, track, queue
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const streamingSessions = pgTable("streaming_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  songId: varchar("song_id").notNull(),
+  deviceId: varchar("device_id"),
+  streamingFormat: streamingFormatEnum("streaming_format"),
+  qualityRequested: qualityEnum("quality_requested"),
+  qualityDelivered: qualityEnum("quality_delivered"),
+  bytesStreamed: integer("bytes_streamed").default(0),
+  secondsPlayed: integer("seconds_played").default(0),
+  bufferingEvents: integer("buffering_events").default(0),
+  skipReason: varchar("skip_reason", { length: 50 }), // user_skip, network_error, etc.
+  sessionStarted: timestamp("session_started").default(sql`CURRENT_TIMESTAMP`),
+  sessionEnded: timestamp("session_ended"),
+});
+
+export const recommendationCache = pgTable("recommendation_cache", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  baseSongId: varchar("base_song_id").notNull(),
+  recommendedSongIds: json("recommended_song_ids"), // Array of song IDs
+  algorithmUsed: varchar("algorithm_used", { length: 50 }), // collaborative, content_based, hybrid
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Streaming Types
+export const insertPlayQueueSchema = createInsertSchema(playQueues);
+export const insertStreamingSessionSchema = createInsertSchema(streamingSessions);
+export const insertRecommendationCacheSchema = createInsertSchema(recommendationCache);
+
+export type InsertPlayQueue = z.infer<typeof insertPlayQueueSchema>;
+export type PlayQueue = typeof playQueues.$inferSelect;
+
+export type InsertStreamingSession = z.infer<typeof insertStreamingSessionSchema>;
+export type StreamingSession = typeof streamingSessions.$inferSelect;
+
+export type InsertRecommendationCache = z.infer<typeof insertRecommendationCacheSchema>;
+export type RecommendationCache = typeof recommendationCache.$inferSelect;
 
 // ========================
 // RELATIONSHIPS & CONSTRAINTS
