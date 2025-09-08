@@ -46,6 +46,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   }, [isPlaying]);
 
   const playTrack = (track: LegacyTrack) => {
+    console.log("playTrack called with:", track.title);
     setCurrentSong(track);
     setIsPlaying(true);
   };
