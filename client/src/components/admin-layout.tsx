@@ -163,8 +163,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               >
                 <Menu className="h-5 w-5" />
               </Button>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Last updated: {new Date().toLocaleDateString()}
+              </span>
               
-              {/* User profile in header */}
+              {/* User profile in header right side */}
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                   <UserIcon className="h-4 w-4 text-purple-600" />
@@ -176,12 +182,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   </Badge>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Last updated: {new Date().toLocaleDateString()}
-              </span>
             </div>
           </div>
         </div>
