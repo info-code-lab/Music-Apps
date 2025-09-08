@@ -504,7 +504,7 @@ export default function SongsManagement() {
             <DialogTitle>Edit Track</DialogTitle>
             <DialogDescription>Update track information</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4">
+          <form onSubmit={handleEditSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
             <div>
               <label className="text-sm font-medium">Track Title</label>
               <Input
@@ -512,6 +512,7 @@ export default function SongsManagement() {
                 onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
                 placeholder="Enter track title"
                 required
+                data-testid="input-track-title"
               />
             </div>
             <div>
@@ -521,21 +522,84 @@ export default function SongsManagement() {
                 onChange={(e) => setEditFormData({...editFormData, artist: e.target.value})}
                 placeholder="Enter artist name"
                 required
+                data-testid="input-artist-name"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <select
+                  value={editFormData.category}
+                  onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
+                  required
+                  data-testid="select-category"
+                >
+                  <option value="">Select category</option>
+                  {genres.map(genre => (
+                    <option key={genre.name} value={genre.name}>{genre.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Duration (seconds)</label>
+                <Input
+                  type="number"
+                  value={editFormData.duration}
+                  onChange={(e) => setEditFormData({...editFormData, duration: parseInt(e.target.value) || 0})}
+                  placeholder="Duration in seconds"
+                  min="0"
+                  data-testid="input-duration"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Album</label>
+                <select
+                  value={editFormData.albumId}
+                  onChange={(e) => setEditFormData({...editFormData, albumId: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
+                  data-testid="select-album"
+                >
+                  <option value="">No Album</option>
+                  {albums.map(album => (
+                    <option key={album.id} value={album.id}>{album.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Release Date</label>
+                <Input
+                  type="date"
+                  value={editFormData.releaseDate}
+                  onChange={(e) => setEditFormData({...editFormData, releaseDate: e.target.value})}
+                  data-testid="input-release-date"
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="explicit-checkbox"
+                checked={editFormData.isExplicit}
+                onChange={(e) => setEditFormData({...editFormData, isExplicit: e.target.checked})}
+                className="rounded border-gray-300 dark:border-gray-700"
+                data-testid="checkbox-explicit"
+              />
+              <label htmlFor="explicit-checkbox" className="text-sm font-medium">
+                Explicit Content
+              </label>
+            </div>
             <div>
-              <label className="text-sm font-medium">Category</label>
-              <select
-                value={editFormData.category}
-                onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
-                required
-              >
-                <option value="">Select category</option>
-                {genres.map(genre => (
-                  <option key={genre.name} value={genre.name}>{genre.name}</option>
-                ))}
-              </select>
+              <label className="text-sm font-medium">Lyrics (Optional)</label>
+              <textarea
+                value={editFormData.lyrics}
+                onChange={(e) => setEditFormData({...editFormData, lyrics: e.target.value})}
+                placeholder="Enter song lyrics..."
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 min-h-[100px] resize-vertical"
+                data-testid="textarea-lyrics"
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button
