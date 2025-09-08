@@ -9,7 +9,10 @@ import {
   Heart,
   List,
   Volume2,
+  VolumeX,
+  Volume1,
   Expand,
+  Maximize,
   Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +40,7 @@ export default function MusicPlayer({
   const [isRepeat, setIsRepeat] = useState(false);
   const [volume, setVolume] = useState([70]);
   const [isMuted, setIsMuted] = useState(false);
-  
+
   const {
     currentTime,
     duration,
@@ -73,7 +76,74 @@ export default function MusicPlayer({
   return (
     <div className="fixed bottom-0 md:bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-20 mb-16 md:mb-0">
       <div className="max-w-full mx-auto">
-        <div className="flex items-center space-x-4">
+        {/* Mobile Layout - Simplified */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between gap-4">
+            {/* Playlist Button */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-muted-foreground hover:text-foreground transition-colors p-2"
+              data-testid="button-playlist-mobile"
+            >
+              <List className="w-5 h-5" />
+            </Button>
+
+            {/* Volume Control */}
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleMuteToggle}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                data-testid="button-mute-mobile"
+              >
+                {isMuted || volume[0] === 0 ? (
+                  <VolumeX className="w-4 h-4" />
+                ) : volume[0] < 50 ? (
+                  <Volume1 className="w-4 h-4" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+              </Button>
+              <div className="w-20">
+                <Slider
+                  value={volume}
+                  onValueChange={handleVolumeChange}
+                  max={100}
+                  step={1}
+                  className="cursor-pointer"
+                  data-testid="slider-volume-mobile"
+                />
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="flex-1 mx-4">
+              <Slider
+                value={[progress * 100]}
+                onValueChange={handleSeek}
+                max={100}
+                step={0.1}
+                className="cursor-pointer"
+                data-testid="slider-progress-mobile"
+              />
+            </div>
+
+            {/* Fullscreen Button */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-muted-foreground hover:text-foreground transition-colors p-2"
+              data-testid="button-fullscreen-mobile"
+            >
+              <Maximize className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop Layout - Full */}
+        <div className="hidden md:flex items-center space-x-4">
           {/* Currently Playing Info */}
           <div className="flex items-center space-x-3 min-w-0 flex-1">
             <img 
@@ -178,15 +248,15 @@ export default function MusicPlayer({
             </div>
           </div>
 
-          {/* Volume and Actions */}
-          <div className="flex items-center space-x-3 min-w-0 flex-1 justify-end">
-            {/* Audio Waveform Visualization */}
-            <div className="hidden sm:flex items-center space-x-1">
+          {/* Volume and Additional Controls */}
+          <div className="flex items-center space-x-3">
+            {/* Equalizer visualization */}
+            <div className="flex items-center space-x-1">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div 
+                <div
                   key={i}
-                  className={`w-1 bg-primary rounded-full waveform-bar ${isPlaying ? 'animate-waveform' : 'h-1'}`}
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  className="w-1 bg-primary rounded-full eq-bar"
+                  style={{ height: `${8 + (i % 3) * 4}px` }}
                 />
               ))}
             </div>
