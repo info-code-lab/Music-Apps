@@ -359,28 +359,38 @@ export class DatabaseStorage implements IStorage {
 
   // Enhanced methods for admin dashboard with full relationship data
   async getAllSongsWithDetails(): Promise<any[]> {
-    const result = await db
-      .select({
-        song: songs,
-        genre: genres,
-        album: albums,
-        artists: sql<string>`STRING_AGG(${artists.name}, ', ')`
-      })
-      .from(songs)
+    const allSongs = await db.select({
+      song: songs,
+      genre: genres,
+      album: albums
+    }).from(songs)
       .leftJoin(genres, eq(songs.genreId, genres.id))
       .leftJoin(albums, eq(songs.albumId, albums.id))
-      .leftJoin(songArtists, eq(songs.id, songArtists.songId))
-      .leftJoin(artists, eq(songArtists.artistId, artists.id))
-      .groupBy(songs.id, genres.id, albums.id)
       .orderBy(desc(songs.createdAt));
     
-    return result.map(row => ({
-      ...row.song,
-      artist: row.artists || 'Unknown Artist',
-      category: row.genre?.name || 'Music',
-      albumTitle: row.album?.title || null,
-      genreName: row.genre?.name || null
-    }));
+    // Get artists for each song separately to maintain array structure
+    const songsWithDetails = await Promise.all(
+      allSongs.map(async (row) => {
+        const songArtistsResult = await db
+          .select({ artist: artists })
+          .from(songArtists)
+          .innerJoin(artists, eq(songArtists.artistId, artists.id))
+          .where(eq(songArtists.songId, row.song.id));
+        
+        const artistNames = songArtistsResult.map(r => r.artist.name);
+        
+        return {
+          ...row.song,
+          artist: artistNames.length > 0 ? artistNames.join(', ') : 'Unknown Artist',
+          artistNames: artistNames, // Keep the array for multi-select
+          category: row.genre?.name || 'Music',
+          albumTitle: row.album?.title || null,
+          genreName: row.genre?.name || null
+        };
+      })
+    );
+    
+    return songsWithDetails;
   }
 
   async getAllAlbumsWithDetails(): Promise<any[]> {

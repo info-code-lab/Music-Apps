@@ -65,6 +65,7 @@ type AdminTrack = {
   id: string;
   title: string;
   artist: string;
+  artistNames?: string[]; // Array of artist names for multi-select
   category: string;
   duration: number;
   albumId: string | null;
@@ -244,13 +245,17 @@ export default function SongsManagement() {
   const handleEditTrack = (track: AdminTrack) => {
     setSelectedTrack(track);
     
-    // Convert single values to arrays for multi-select compatibility
-    const artistsArray = track.artist ? [track.artist] : [];
+    // Use artistNames array if available, otherwise fall back to parsing artist string
+    const artistsArray = track.artistNames && track.artistNames.length > 0 
+      ? track.artistNames 
+      : (track.artist && track.artist !== 'Unknown Artist' ? track.artist.split(', ') : []);
+    
     const categoriesArray = track.category ? [track.category] : [];
     const albumsArray = track.albumId ? [track.albumId] : [];
     
     console.log('Editing track:', track);
-    console.log('Setting form data with categories:', categoriesArray, 'albums:', albumsArray);
+    console.log('Artist names from backend:', track.artistNames);
+    console.log('Setting form data with artists:', artistsArray, 'categories:', categoriesArray, 'albums:', albumsArray);
     
     setEditFormData({
       title: track.title,
