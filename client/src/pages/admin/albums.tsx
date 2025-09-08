@@ -83,6 +83,11 @@ type AlbumFormData = z.infer<typeof albumFormSchema>;
 export default function AlbumsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isTracksDialogOpen, setIsTracksDialogOpen] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [albumTracks, setAlbumTracks] = useState([]);
   const queryClient = useQueryClient();
 
   const { data: albums = [], isLoading } = useQuery<Album[]>({
@@ -148,8 +153,69 @@ export default function AlbumsManagement() {
     createAlbumMutation.mutate(data);
   };
 
+  const updateAlbumMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: AlbumFormData }) => {
+      await apiRequest("PUT", `/api/albums/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
+      toast.success("Album updated successfully");
+      setIsEditDialogOpen(false);
+      setSelectedAlbum(null);
+      form.reset();
+    },
+    onError: () => {
+      toast.error("Failed to update album");
+    },
+  });
+
   const handleDeleteAlbum = (albumId: string) => {
-    deleteAlbumMutation.mutate(albumId);
+    if (confirm('Are you sure you want to delete this album?')) {
+      deleteAlbumMutation.mutate(albumId);
+    }
+  };
+
+  const handleViewAlbum = (album: Album) => {
+    setSelectedAlbum(album);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleEditAlbum = (album: Album) => {
+    setSelectedAlbum(album);
+    form.reset({
+      title: album.title,
+      artistId: album.artistId,
+      releaseDate: album.releaseDate || "",
+      coverArt: album.coverArt || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleViewTracks = async (album: Album) => {
+    try {
+      // Mock tracks data - in real app this would fetch from API
+      const mockTracks = [
+        { id: '1', title: 'Track 1', duration: 180, artist: album.artistName },
+        { id: '2', title: 'Track 2', duration: 210, artist: album.artistName },
+        { id: '3', title: 'Track 3', duration: 195, artist: album.artistName }
+      ];
+      setAlbumTracks(mockTracks);
+      setSelectedAlbum(album);
+      setIsTracksDialogOpen(true);
+    } catch (error) {
+      toast.error('Failed to load album tracks');
+    }
+  };
+
+  const handlePlayAlbum = (album: Album) => {
+    toast.success(`Playing album: ${album.title}`);
+    // In a real app, this would start playing all tracks in the album
+  };
+
+  const onEditSubmit = (data: AlbumFormData) => {
+    if (selectedAlbum) {
+      updateAlbumMutation.mutate({ id: selectedAlbum.id, data });
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -408,19 +474,19 @@ export default function AlbumsManagement() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleViewAlbum(album)}>
                               <Eye className="h-4 w-4" />
                               View Album
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleEditAlbum(album)}>
                               <Pencil className="h-4 w-4" />
                               Edit Album
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleViewTracks(album)}>
                               <Music className="h-4 w-4" />
                               View Songs
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handlePlayAlbum(album)}>
                               <Play className="h-4 w-4" />
                               Play Album
                             </DropdownMenuItem>
@@ -461,6 +527,186 @@ export default function AlbumsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Album Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Album Details</DialogTitle>
+            <DialogDescription>View detailed album information</DialogDescription>
+          </DialogHeader>
+          {selectedAlbum && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                  {selectedAlbum.coverArt ? (
+                    <img
+                      src={selectedAlbum.coverArt}
+                      alt={selectedAlbum.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Disc className="h-8 w-8 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedAlbum.title}</h3>
+                  <p className="text-sm text-gray-500">by {selectedAlbum.artistName}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Songs</label>
+                  <p className="text-gray-900 dark:text-white">{selectedAlbum.trackCount || 0}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Duration</label>
+                  <p className="text-gray-900 dark:text-white">{formatDuration(selectedAlbum.duration || 0)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Release Date</label>
+                  <p className="text-gray-900 dark:text-white">
+                    {selectedAlbum.releaseDate ? new Date(selectedAlbum.releaseDate).toLocaleDateString() : "Unknown"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Album ID</label>
+                  <p className="text-sm text-gray-500 font-mono">{selectedAlbum.id}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Album Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Album</DialogTitle>
+            <DialogDescription>Update album information</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Album Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter album title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="artistId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Artist</FormLabel>
+                    <FormControl>
+                      <select {...field} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
+                        <option value="">Select an artist</option>
+                        {artists.map((artist) => (
+                          <option key={artist.id} value={artist.id}>
+                            {artist.name}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="releaseDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Release Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="coverArt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cover Art URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://example.com/cover.jpg" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateAlbumMutation.isPending}
+                  className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+                >
+                  {updateAlbumMutation.isPending ? "Updating..." : "Update Album"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Album Tracks Dialog */}
+      <Dialog open={isTracksDialogOpen} onOpenChange={setIsTracksDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Album Tracks</DialogTitle>
+            <DialogDescription>
+              {selectedAlbum ? `Tracks in "${selectedAlbum.title}"` : 'Album tracks'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {albumTracks.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No tracks found in this album</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {albumTracks.map((track: any, index: number) => (
+                  <div key={track.id || index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">{index + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white">{track.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{track.artist}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {track.duration ? `${Math.floor(track.duration / 60)}:${(track.duration % 60).toString().padStart(2, '0')}` : '--:--'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
