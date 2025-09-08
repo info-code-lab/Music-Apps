@@ -26,6 +26,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
@@ -35,7 +36,23 @@ export default function Home() {
 
   const { data: filteredSongs = [] } = useQuery<Track[]>({
     queryKey: ["/api/songs/genre", selectedCategory],
-    enabled: selectedCategory !== "All Categories" && !searchQuery,
+    enabled: selectedCategory !== "All Categories" && !searchQuery && filterBy.type === 'none',
+  });
+
+  // Query for filtered songs by artist, album, or genre
+  const { data: filteredByArtist = [] } = useQuery<Track[]>({
+    queryKey: ["/api/songs/artist", filterBy.id],
+    enabled: filterBy.type === 'artist' && !!filterBy.id,
+  });
+
+  const { data: filteredByAlbum = [] } = useQuery<Track[]>({
+    queryKey: ["/api/songs/album", filterBy.id],
+    enabled: filterBy.type === 'album' && !!filterBy.id,
+  });
+
+  const { data: filteredByGenre = [] } = useQuery<Track[]>({
+    queryKey: ["/api/songs/genre", filterBy.id],
+    enabled: filterBy.type === 'genre' && !!filterBy.id,
   });
 
   const { data: searchResults } = useQuery<SearchResult>({
@@ -45,9 +62,15 @@ export default function Home() {
 
   const displaySongs = searchQuery 
     ? (searchResults?.songs || []) 
-    : selectedCategory === "All Categories" 
-      ? songs 
-      : filteredSongs;
+    : filterBy.type === 'artist' 
+      ? filteredByArtist
+      : filterBy.type === 'album'
+        ? filteredByAlbum 
+        : filterBy.type === 'genre'
+          ? filteredByGenre
+          : selectedCategory === "All Categories" 
+            ? songs 
+            : filteredSongs;
 
   const handlePlaySong = (song: LegacyTrack) => {
     playTrack(song);
@@ -72,6 +95,27 @@ export default function Home() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    if (query === "") {
+      setFilterBy({type: 'none'}); // Clear any filters when search is cleared
+    }
+  };
+
+  const handleViewArtist = (artist: Artist) => {
+    setSearchQuery(""); // Clear search
+    setSelectedCategory("All Categories"); // Reset category
+    setFilterBy({type: 'artist', id: artist.id});
+  };
+
+  const handleViewAlbum = (album: Album) => {
+    setSearchQuery(""); // Clear search
+    setSelectedCategory("All Categories"); // Reset category
+    setFilterBy({type: 'album', id: album.id});
+  };
+
+  const handleCategorySelect = (categoryName: string) => {
+    setSearchQuery(""); // Clear search
+    setFilterBy({type: 'none'}); // Clear any other filters
+    setSelectedCategory(categoryName);
   };
 
   return (
@@ -133,7 +177,9 @@ export default function Home() {
             <SearchResults 
               searchResults={searchResults}
               onPlaySong={handlePlaySong}
-              onCategorySelect={setSelectedCategory}
+              onViewArtist={handleViewArtist}
+              onViewAlbum={handleViewAlbum}
+              onCategorySelect={handleCategorySelect}
             />
           ) : (
             <MusicLibrary
