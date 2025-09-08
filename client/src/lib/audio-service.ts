@@ -66,7 +66,9 @@ class AudioService {
   }
 
   async setSrc(src: string, trackId?: string) {
+    console.log("🎧 AudioService setSrc:", { src, trackId, currentSrc: this.currentSrc });
     if (this.currentSrc === src && this.currentTrackId === (trackId || '')) {
+      console.log("🎧 Same source, skipping");
       return; // No change needed
     }
 
@@ -206,15 +208,22 @@ class AudioService {
   };
 
   async play() {
+    console.log("🎧 AudioService play():", { 
+      hasAudio: !!this.audio, 
+      isLoading: this.state.isLoading, 
+      audioSrc: this.audio?.src 
+    });
     if (this.audio && !this.state.isLoading) {
       try {
         await this.audio.play();
+        console.log("🎧 Audio play() successful");
         return true;
       } catch (error) {
-        console.error("Audio playback failed:", error);
+        console.error("🎧 Audio playback failed:", error);
         return false;
       }
     }
+    console.log("🎧 Cannot play - no audio or still loading");
     return false;
   }
 
