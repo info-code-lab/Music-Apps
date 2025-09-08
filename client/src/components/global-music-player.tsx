@@ -1,5 +1,4 @@
 import { useMusicPlayer } from '@/hooks/use-music-player';
-import { useAudioPlayer } from '@/hooks/use-audio-player';
 import MusicPlayer from '@/components/music-player';
 import MobileMusicPlayer from '@/components/mobile-music-player';
 import { useQuery } from '@tanstack/react-query';
@@ -25,9 +24,6 @@ export default function GlobalMusicPlayer() {
   });
 
   if (!currentSong) return null;
-  
-  // Single audio player instance to prevent double playback
-  const audioControls = useAudioPlayer(currentSong.url, isPlaying, currentSong.id);
 
   // Convert songs to legacy format
   const activeTrackList = songs.map((song: any): LegacyTrack => ({
@@ -83,7 +79,6 @@ export default function GlobalMusicPlayer() {
         <MusicPlayer
           song={currentSong}
           isPlaying={isPlaying}
-          audioControls={audioControls}
           onPlayPause={handlePlayPause}
           onNext={handleNext}
           onPrevious={handlePrevious}
@@ -95,7 +90,6 @@ export default function GlobalMusicPlayer() {
         <MobileMusicPlayer
           song={currentSong}
           isPlaying={isPlaying}
-          audioControls={audioControls}
           onPlayPause={handlePlayPause}
           onNext={handleNext}
           onPrevious={handlePrevious}
