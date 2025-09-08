@@ -227,8 +227,8 @@ export default function AlbumsManagement() {
 
   const stats = [
     { title: "Total Albums", value: albums.length, icon: Disc, color: "text-purple-600" },
-    { title: "Total Songs", value: albums.reduce((acc, a) => acc + (a.trackCount || 0), 0), icon: Music, color: "text-blue-600" },
-    { title: "Total Duration", value: formatDuration(albums.reduce((acc, a) => acc + (a.duration || 0), 0)), icon: Clock, color: "text-green-600" },
+    { title: "Total Songs", value: albums.reduce((acc, a) => acc + (a.songCount || 0), 0), icon: Music, color: "text-blue-600" },
+    { title: "Total Duration", value: formatDuration(albums.reduce((acc, a) => acc + (a.totalDuration || 0), 0)), icon: Clock, color: "text-green-600" },
     { title: "Latest Release", value: albums.sort((a, b) => new Date(b.releaseDate || '').getTime() - new Date(a.releaseDate || '').getTime())[0]?.title || "-", icon: Calendar, color: "text-orange-600" }
   ];
 
@@ -448,13 +448,13 @@ export default function AlbumsManagement() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Music className="h-4 w-4 text-purple-500" />
-                          <span className="font-medium">{album.trackCount || 0}</span>
+                          <span className="font-medium">{album.songCount || 0}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4 text-green-500" />
-                          <span className="font-medium">{formatDuration(album.duration || 0)}</span>
+                          <span className="font-medium">{formatDuration(album.totalDuration || 0)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
