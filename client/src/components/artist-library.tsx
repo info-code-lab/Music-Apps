@@ -20,56 +20,26 @@ export default function ArtistLibrary({
 
   if (isLoading) {
     return (
-      <section className="px-6 pb-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">Artists</h2>
-            <p className="text-muted-foreground font-serif">Loading artists...</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
-              <Skeleton className="w-full h-48" />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-4 w-4" />
-                </div>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
+            <Skeleton className="w-full h-32 md:h-48" />
+            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+              <Skeleton className="h-4 md:h-6 w-3/4" />
+              <Skeleton className="h-3 md:h-4 w-1/2" />
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 md:h-6 w-12 md:w-16" />
+                <Skeleton className="h-3 md:h-4 w-3 md:w-4" />
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        ))}
+      </div>
     );
   }
 
   return (
-    <section className="px-6 pb-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">
-            {searchQuery ? `Artist Search Results for "${searchQuery}"` : "Artists"}
-          </h2>
-          <p className="text-muted-foreground font-serif">
-            {searchQuery 
-              ? `Found ${artists.length} artists`
-              : "Discover and explore music artists"
-            }
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="secondary" size="sm" data-testid="button-grid-view">
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" data-testid="button-list-view">
-            <List className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
+    <>
       {artists.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -86,16 +56,16 @@ export default function ArtistLibrary({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {artists.map((artist) => (
-            <ArtistCard 
-              key={artist.id} 
-              artist={artist} 
-              onViewArtist={onViewArtist}
+            <ArtistCard
+              key={artist.id}
+              artist={artist}
+              onViewArtist={() => onViewArtist(artist)}
             />
           ))}
         </div>
       )}
-    </section>
+    </>
   );
 }

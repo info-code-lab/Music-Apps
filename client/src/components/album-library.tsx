@@ -20,56 +20,26 @@ export default function AlbumLibrary({
 
   if (isLoading) {
     return (
-      <section className="px-6 pb-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">Albums</h2>
-            <p className="text-muted-foreground font-serif">Loading albums...</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
-              <Skeleton className="w-full h-48" />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-4 w-4" />
-                </div>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
+            <Skeleton className="w-full h-32 md:h-48" />
+            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+              <Skeleton className="h-4 md:h-6 w-3/4" />
+              <Skeleton className="h-3 md:h-4 w-1/2" />
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 md:h-6 w-12 md:w-16" />
+                <Skeleton className="h-3 md:h-4 w-3 md:w-4" />
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        ))}
+      </div>
     );
   }
 
   return (
-    <section className="px-6 pb-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">
-            {searchQuery ? `Album Search Results for "${searchQuery}"` : "Albums"}
-          </h2>
-          <p className="text-muted-foreground font-serif">
-            {searchQuery 
-              ? `Found ${albums.length} albums`
-              : "Explore music albums and collections"
-            }
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="secondary" size="sm" data-testid="button-grid-view">
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" data-testid="button-list-view">
-            <List className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
+    <>
       {albums.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -81,21 +51,21 @@ export default function AlbumLibrary({
           <p className="text-muted-foreground font-serif">
             {searchQuery 
               ? "Try adjusting your search query"
-              : "Albums will appear here as music is organized"
+              : "Albums will appear here as music is uploaded"
             }
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {albums.map((album) => (
-            <AlbumCard 
-              key={album.id} 
-              album={album} 
-              onViewAlbum={onViewAlbum}
+            <AlbumCard
+              key={album.id}
+              album={album}
+              onViewAlbum={() => onViewAlbum(album)}
             />
           ))}
         </div>
       )}
-    </section>
+    </>
   );
 }
