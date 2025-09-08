@@ -547,6 +547,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========================
+  // UNIFIED SEARCH ROUTES
+  // ========================
+
+  app.get("/api/search", async (req, res) => {
+    try {
+      const { q, limit = "50", offset = "0" } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        res.status(400).json({ message: "Search query is required" });
+        return;
+      }
+
+      const searchLimit = parseInt(limit as string) || 50;
+      const searchOffset = parseInt(offset as string) || 0;
+      
+      const results = await searchService.search(q, {}, searchLimit, searchOffset);
+      res.json(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      res.status(500).json({ message: "Search failed" });
+    }
+  });
+
+  // ========================
   // PLAYLIST ROUTES
   // ========================
 
