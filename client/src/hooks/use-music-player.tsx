@@ -6,7 +6,7 @@ interface MusicPlayerContextType {
   isPlaying: boolean;
   setCurrentSong: (song: LegacyTrack | null) => void;
   setIsPlaying: (playing: boolean) => void;
-  playTrack: (track: LegacyTrack) => void;
+  playTrack: (track: LegacyTrack, isUserInitiated?: boolean) => void;
   togglePlayPause: () => void;
 }
 
@@ -49,12 +49,29 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('music_player_is_playing', isPlaying.toString());
   }, [isPlaying]);
 
-  const playTrack = (track: LegacyTrack) => {
-    console.log("playTrack called with:", track.title);
+  const playTrack = async (track: LegacyTrack, isUserInitiated = false) => {
+    console.log("playTrack called with:", track.title, "userInitiated:", isUserInitiated);
     console.log("Setting currentSong to:", track);
-    console.log("Setting isPlaying to true");
     setCurrentSong(track);
-    setIsPlaying(true);
+    
+    if (isUserInitiated) {
+      // For user-initiated playback, immediately try to play to satisfy browser autoplay policy
+      console.log("User initiated - attempting immediate playback");
+      const { audioService } = await import('@/lib/audio-service');
+      const songUrl = track.url.startsWith('/uploads/') ? track.url : `/uploads/${track.url}`;
+      await audioService.setSrc(songUrl, track.id);
+      const playSuccess = await audioService.play();
+      if (playSuccess) {
+        console.log("Immediate playback successful");
+        setIsPlaying(true);
+      } else {
+        console.log("Immediate playback failed, will try again through state update");
+        setIsPlaying(true);
+      }
+    } else {
+      console.log("Setting isPlaying to true");
+      setIsPlaying(true);
+    }
     console.log("playTrack completed - state should be updated");
   };
 

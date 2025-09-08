@@ -73,7 +73,7 @@ export default function Home() {
 
   const handlePlaySong = (song: LegacyTrack) => {
     console.log("handlePlaySong called with song:", song);
-    playTrack(song);
+    playTrack(song, true); // true = user initiated
   };
 
   // Convert Track to LegacyTrack format for compatibility
