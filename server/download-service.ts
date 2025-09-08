@@ -139,17 +139,9 @@ export class DownloadService {
           }
           
           const ytMetadata = result.metadata;
-          let title = ytMetadata.title || 'Unknown';
-          let artist = ytMetadata.uploader || ytMetadata.channel || 'Unknown Artist';
-          
-          // Try to parse "Artist - Song" format in title
-          if (title.includes(' - ') && !title.startsWith('Unknown')) {
-            const parts = title.split(' - ', 2);
-            if (parts.length === 2) {
-              artist = parts[0].trim();
-              title = parts[1].trim();
-            }
-          }
+          // Use original metadata as-is without parsing
+          const title = ytMetadata.title || 'Unknown';
+          const artist = ytMetadata.uploader || ytMetadata.channel || 'Unknown Artist';
           
           const metadata = {
             duration: Math.round(ytMetadata.duration || 0),
