@@ -223,13 +223,15 @@ export class DatabaseStorage implements IStorage {
 
   async searchTracks(query: string): Promise<Track[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
+    
+    // Search in songs directly by title, lyrics, and tags
     const songsData = await db.select().from(songs).where(
       or(
         ilike(songs.title, searchTerm),
-        // Note: artist search would need to join with artists table
-        // For now, search in tags if they contain artist info
+        ilike(songs.lyrics, searchTerm)
       )
     );
+    
     return songsData.map(song => this.songToLegacyTrack(song));
   }
 

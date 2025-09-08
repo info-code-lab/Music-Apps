@@ -498,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ message: "Search query is required" });
         return;
       }
-      const songs = await storage.searchSongs(q);
+      const songs = await storage.searchTracks(q);
       res.json(songs);
     } catch (error) {
       res.status(500).json({ message: "Failed to search songs" });

@@ -28,7 +28,7 @@ export default function Home() {
   });
 
   const { data: searchResults = [] } = useQuery<Track[]>({
-    queryKey: ["/api/songs/search", { q: searchQuery }],
+    queryKey: [`/api/songs/search?q=${encodeURIComponent(searchQuery)}`],
     enabled: !!searchQuery,
   });
 
