@@ -41,48 +41,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster
-            position="top-center"
-            reverseOrder={false}
-            gutter={8}
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#363636',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '16px',
-                fontSize: '14px',
-                fontWeight: '500',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
-                },
-                style: {
-                  background: '#fff',
-                  color: '#065f46',
-                  border: '1px solid #d1fae5',
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
-                },
-                style: {
-                  background: '#fff',
-                  color: '#991b1b',
-                  border: '1px solid #fecaca',
-                },
-              },
-            }}
-          />
+          <Toaster />
           <Router />
         </TooltipProvider>
       </AuthProvider>
