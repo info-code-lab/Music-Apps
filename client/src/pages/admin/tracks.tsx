@@ -57,7 +57,12 @@ export default function SongsManagement() {
   const [editFormData, setEditFormData] = useState({
     title: "",
     artist: "",
-    category: ""
+    category: "",
+    duration: 0,
+    albumId: "",
+    releaseDate: "",
+    isExplicit: false,
+    lyrics: ""
   });
   const queryClient = useQueryClient();
 
@@ -74,6 +79,15 @@ export default function SongsManagement() {
     queryKey: ["/api/genres"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/genres");
+      return res.json();
+    }
+  });
+
+  // Fetch albums for dropdown
+  const { data: albums = [] } = useQuery<{id: string; title: string}[]>({
+    queryKey: ["/api/albums"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/albums");
       return res.json();
     }
   });
