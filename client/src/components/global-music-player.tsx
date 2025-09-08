@@ -30,6 +30,9 @@ export default function GlobalMusicPlayer() {
     const nextTrack = tracks[currentIndex + 1];
     if (nextTrack) {
       setCurrentSong(nextTrack);
+    } else {
+      // If no next track, stop playing
+      setIsPlaying(false);
     }
   };
 
@@ -38,6 +41,9 @@ export default function GlobalMusicPlayer() {
     const prevTrack = tracks[currentIndex - 1];
     if (prevTrack) {
       setCurrentSong(prevTrack);
+    } else {
+      // If no previous track, stop playing
+      setIsPlaying(false);
     }
   };
 
