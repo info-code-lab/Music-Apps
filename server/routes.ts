@@ -521,15 +521,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/songs/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
-      const song = await storage.updateSong(id, req.body);
+      const { artistIds, ...songData } = req.body;
+      
+      console.log('Updating song with data:', songData, 'artistIds:', artistIds);
+      
+      // Update the song data
+      const song = await storage.updateSong(id, songData);
       
       if (!song) {
         res.status(404).json({ message: "Song not found" });
         return;
       }
       
+      // If artist IDs are provided, update the song-artist relationships
+      if (artistIds && Array.isArray(artistIds)) {
+        console.log('Updating song-artist relationships for song', id, 'with artists:', artistIds);
+        await storage.updateSongArtists(id, artistIds);
+      }
+      
       res.json(song);
     } catch (error) {
+      console.error("Failed to update song:", error);
       res.status(500).json({ message: "Failed to update song" });
     }
   });

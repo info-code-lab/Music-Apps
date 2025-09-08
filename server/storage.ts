@@ -53,6 +53,8 @@ export interface IStorage {
   deleteSong(id: string): Promise<boolean>;
   searchSongs(query: string): Promise<Song[]>;
   incrementPlayCount(songId: string): Promise<void>;
+  updateSongArtists(songId: string, artistIds: string[]): Promise<void>;
+  getSongArtists(songId: string): Promise<Artist[]>;
 
   // Genre operations
   getAllGenres(): Promise<Genre[]>;
@@ -461,6 +463,30 @@ export class DatabaseStorage implements IStorage {
       .where(eq(songs.id, id))
       .returning();
     return song || undefined;
+  }
+
+  // Song-Artist relationship management
+  async updateSongArtists(songId: string, artistIds: string[]): Promise<void> {
+    // Delete existing song-artist relationships
+    await db.delete(songArtists).where(eq(songArtists.songId, songId));
+    
+    // Insert new song-artist relationships
+    if (artistIds.length > 0) {
+      const songArtistData = artistIds.map(artistId => ({
+        songId,
+        artistId
+      }));
+      await db.insert(songArtists).values(songArtistData);
+    }
+  }
+
+  async getSongArtists(songId: string): Promise<Artist[]> {
+    const result = await db
+      .select({ artist: artists })
+      .from(songArtists)
+      .innerJoin(artists, eq(songArtists.artistId, artists.id))
+      .where(eq(songArtists.songId, songId));
+    return result.map(r => r.artist);
   }
 
   async deleteSong(id: string): Promise<boolean> {

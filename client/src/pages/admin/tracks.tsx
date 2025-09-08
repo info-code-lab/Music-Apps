@@ -275,6 +275,14 @@ export default function SongsManagement() {
       // Use the first selected album ID, or null if none selected
       const albumId = editFormData.albums[0] || null;
       
+      // Convert artist names to artist IDs
+      const artistIds = editFormData.artists
+        .map(artistName => {
+          const artist = allArtists.find(a => a.name === artistName);
+          return artist?.id;
+        })
+        .filter(Boolean); // Remove any undefined values
+      
       // Prepare data in the format expected by the API
       const formDataForAPI = {
         title: editFormData.title,
@@ -283,7 +291,8 @@ export default function SongsManagement() {
         albumId: albumId,
         releaseDate: editFormData.releaseDate || null,
         isExplicit: editFormData.isExplicit,
-        lyrics: editFormData.lyrics || null
+        lyrics: editFormData.lyrics || null,
+        artistIds: artistIds // Add artist IDs for the backend
       };
       
       // Remove any undefined fields
@@ -294,6 +303,8 @@ export default function SongsManagement() {
       });
       
       console.log('Submitting update with data:', formDataForAPI);
+      console.log('Artist names selected:', editFormData.artists);
+      console.log('Artist IDs to send:', artistIds);
       updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };
