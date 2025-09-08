@@ -20,6 +20,7 @@ export function useSharedAudioPlayer(src: string, isPlaying: boolean, trackId?: 
 
   useEffect(() => {
     // Handle play/pause state changes
+    console.log("useSharedAudioPlayer isPlaying effect triggered with:", isPlaying);
     if (isPlaying) {
       console.log("Calling audioService.play()");
       audioService.play();
