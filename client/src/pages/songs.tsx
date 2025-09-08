@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Grid3X3, List, Search, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Grid3X3, List, Search } from "lucide-react";
 import SongCard from "@/components/song-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Song } from "@shared/schema";
@@ -79,12 +78,6 @@ export default function Songs() {
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm" data-testid="button-back">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
             <div>
               <h1 className="text-2xl font-bold text-foreground font-sans">Songs</h1>
               <p className="text-muted-foreground font-serif">

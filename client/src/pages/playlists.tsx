@@ -7,8 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Search, ArrowLeft, Plus } from "lucide-react";
-import { Link } from "wouter";
+import { Search, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,12 +77,6 @@ export default function Playlists() {
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm" data-testid="button-back">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
             <div>
               <h1 className="text-2xl font-bold text-foreground font-sans">Playlists</h1>
               <p className="text-muted-foreground font-serif">Create and discover music playlists</p>
