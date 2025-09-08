@@ -58,7 +58,7 @@ export default function MobileMusicPlayer({
   return (
     <>
       {/* Compact Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-30">
+      <div className="fixed bottom-16 left-0 right-0 bg-card border-t border-border z-30">
         {/* Progress Bar (always visible at top) */}
         <div className="px-4 pt-1 pb-0">
           <Slider
@@ -187,9 +187,6 @@ export default function MobileMusicPlayer({
           </div>
         )}
       </div>
-
-      {/* Spacing for fixed bottom player */}
-      <div className="h-16 w-full"></div>
     </>
   );
 }
