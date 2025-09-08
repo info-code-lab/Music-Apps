@@ -107,6 +107,12 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           {song.artist}
         </p>
         <div className="flex items-center justify-between">
+          <span 
+            className={`inline-block text-xs px-2 py-1 rounded-full font-mono ${getCategoryColor(song.category)}`}
+            data-testid={`text-category-${song.id}`}
+          >
+            {song.category}
+          </span>
           <div className="flex items-center gap-1">
             {/* Mobile: Show only favorite button */}
             <div className="md:hidden">
