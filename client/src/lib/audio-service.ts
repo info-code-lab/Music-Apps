@@ -18,6 +18,7 @@ class AudioService {
   private currentTrackId: string = '';
   private blobUrl: string | null = null;
   private lastSaveTime: number = 0;
+  private pendingPlay: boolean = false;
   
   private state: AudioState = {
     currentTime: 0,
@@ -72,6 +73,7 @@ class AudioService {
 
     this.currentSrc = src;
     this.currentTrackId = trackId || '';
+    this.pendingPlay = false; // Reset pending play for new source
     
     this.updateState({ isLoading: true });
 
@@ -180,8 +182,20 @@ class AudioService {
     }
   };
 
-  private handleCanPlay = () => {
+  private handleCanPlay = async () => {
     this.updateState({ isLoading: false });
+    
+    // If there was a pending play request, play now
+    if (this.pendingPlay) {
+      console.log("Audio finished loading, playing automatically");
+      this.pendingPlay = false;
+      try {
+        await this.audio?.play();
+        console.log("Pending play successful");
+      } catch (error) {
+        console.error("Pending play failed:", error);
+      }
+    }
   };
 
   private handleError = async () => {
@@ -211,13 +225,20 @@ class AudioService {
         console.log("Attempting to play audio...");
         await this.audio.play();
         console.log("Audio play successful");
+        this.pendingPlay = false;
         return true;
       } catch (error) {
         console.error("Audio playback failed:", error);
+        this.pendingPlay = false;
         return false;
       }
     } else {
-      console.log("Cannot play - audio:", !!this.audio, "isLoading:", this.state.isLoading);
+      if (this.state.isLoading) {
+        console.log("Audio still loading, setting pendingPlay = true");
+        this.pendingPlay = true;
+      } else {
+        console.log("Cannot play - audio:", !!this.audio, "isLoading:", this.state.isLoading);
+      }
     }
     return false;
   }
