@@ -46,6 +46,16 @@ export class DownloadService {
     }
   }
 
+  private sanitizeFilename(filename: string): string {
+    // Remove invalid characters and limit length
+    return filename
+      .replace(/[<>:"/\\|?*]/g, '') // Remove invalid characters
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim()
+      .substring(0, 100) // Limit length to avoid filesystem issues
+      .replace(/\.$/, ''); // Remove trailing dots
+  }
+
   private isSpotifyUrl(url: string): boolean {
     try {
       const urlObj = new URL(url);
@@ -290,7 +300,43 @@ export class DownloadService {
               }
             }
             
-            return { localPath, filename: downloadedFile, metadata: extractedMetadata, thumbnail: thumbnailFilename };
+            // Rename files to use meaningful names based on metadata
+            let finalAudioFilename = downloadedFile;
+            let finalThumbnailFilename = thumbnailFilename;
+            let finalLocalPath = localPath;
+            
+            if (extractedMetadata && extractedMetadata.title) {
+              const sanitizedTitle = this.sanitizeFilename(extractedMetadata.title);
+              const fileExtension = path.extname(downloadedFile);
+              const newAudioFilename = `${sanitizedTitle}${fileExtension}`;
+              const newAudioPath = path.join(this.uploadsDir, newAudioFilename);
+              
+              try {
+                // Rename audio file
+                fs.renameSync(localPath, newAudioPath);
+                finalAudioFilename = newAudioFilename;
+                finalLocalPath = newAudioPath;
+                console.log(`Audio file renamed to: ${newAudioFilename}`);
+                
+                // Rename thumbnail if it exists
+                if (thumbnailFilename) {
+                  const thumbExtension = path.extname(thumbnailFilename);
+                  const newThumbnailFilename = `${sanitizedTitle}_thumbnail${thumbExtension}`;
+                  const oldThumbnailPath = path.join(this.uploadsDir, thumbnailFilename);
+                  const newThumbnailPath = path.join(this.uploadsDir, newThumbnailFilename);
+                  
+                  if (fs.existsSync(oldThumbnailPath)) {
+                    fs.renameSync(oldThumbnailPath, newThumbnailPath);
+                    finalThumbnailFilename = newThumbnailFilename;
+                    console.log(`Thumbnail renamed to: ${newThumbnailFilename}`);
+                  }
+                }
+              } catch (renameError) {
+                console.log('File rename failed, keeping original names:', renameError);
+              }
+            }
+            
+            return { localPath: finalLocalPath, filename: finalAudioFilename, metadata: extractedMetadata, thumbnail: finalThumbnailFilename };
           }
         } else {
           console.log(`Attempt ${i + 1} failed:`, result.stderr);
@@ -401,6 +447,44 @@ export class DownloadService {
             const localPath = path.join(this.uploadsDir, result.filename);
             console.log(`Python download successful: ${localPath}`);
             
+            // Rename files to use meaningful names based on metadata
+            let finalAudioFilename = result.filename;
+            let finalThumbnailFilename = result.thumbnail;
+            let finalLocalPath = localPath;
+            
+            if (result.title) {
+              const sanitizedTitle = this.sanitizeFilename(result.title);
+              const fileExtension = path.extname(result.filename);
+              const newAudioFilename = `${sanitizedTitle}${fileExtension}`;
+              const newAudioPath = path.join(this.uploadsDir, newAudioFilename);
+              
+              try {
+                // Rename audio file
+                if (fs.existsSync(localPath)) {
+                  fs.renameSync(localPath, newAudioPath);
+                  finalAudioFilename = newAudioFilename;
+                  finalLocalPath = newAudioPath;
+                  console.log(`Python audio file renamed to: ${newAudioFilename}`);
+                }
+                
+                // Rename thumbnail if it exists
+                if (result.thumbnail) {
+                  const thumbExtension = path.extname(result.thumbnail);
+                  const newThumbnailFilename = `${sanitizedTitle}_thumbnail${thumbExtension}`;
+                  const oldThumbnailPath = path.join(this.uploadsDir, result.thumbnail);
+                  const newThumbnailPath = path.join(this.uploadsDir, newThumbnailFilename);
+                  
+                  if (fs.existsSync(oldThumbnailPath)) {
+                    fs.renameSync(oldThumbnailPath, newThumbnailPath);
+                    finalThumbnailFilename = newThumbnailFilename;
+                    console.log(`Python thumbnail renamed to: ${newThumbnailFilename}`);
+                  }
+                }
+              } catch (renameError) {
+                console.log('Python file rename failed, keeping original names:', renameError);
+              }
+            }
+            
             if (sessionId) {
               progressEmitter.emit(sessionId, {
                 type: 'status',
@@ -411,9 +495,9 @@ export class DownloadService {
             }
             
             resolve({ 
-              localPath, 
-              filename: result.filename,
-              thumbnail: result.thumbnail,
+              localPath: finalLocalPath, 
+              filename: finalAudioFilename,
+              thumbnail: finalThumbnailFilename,
               metadata: {
                 title: result.title,
                 uploader: result.artist,
