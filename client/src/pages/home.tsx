@@ -72,6 +72,7 @@ export default function Home() {
             : filteredSongs;
 
   const handlePlaySong = (song: LegacyTrack) => {
+    console.log("handlePlaySong called with song:", song);
     playTrack(song);
   };
 

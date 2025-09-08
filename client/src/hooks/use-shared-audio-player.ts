@@ -13,6 +13,7 @@ export function useSharedAudioPlayer(src: string, isPlaying: boolean, trackId?: 
   useEffect(() => {
     // Update audio source when src or trackId changes
     if (src) {
+      console.log("Setting audio source:", src, "trackId:", trackId);
       audioService.setSrc(src, trackId);
     }
   }, [src, trackId]);
@@ -20,8 +21,10 @@ export function useSharedAudioPlayer(src: string, isPlaying: boolean, trackId?: 
   useEffect(() => {
     // Handle play/pause state changes
     if (isPlaying) {
+      console.log("Calling audioService.play()");
       audioService.play();
     } else {
+      console.log("Calling audioService.pause()");
       audioService.pause();
     }
   }, [isPlaying]);
