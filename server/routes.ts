@@ -142,11 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return 'Electronic';
           };
 
-          // Use filename (without extension) as track title to match the downloaded file
-          const filenameWithoutExt = metadata.filename ? metadata.filename.replace(/\.[^/.]+$/, '') : metadata.title;
-          
           const trackData = {
-            title: title || filenameWithoutExt || "Unknown Title",
+            title: title || metadata.title || "Unknown Title",
             duration: metadata.duration,
             filePath: `/uploads/${metadata.filename}`, // Updated field name for songs table
             coverArt: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
