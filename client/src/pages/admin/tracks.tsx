@@ -79,7 +79,12 @@ export default function SongsManagement() {
       await apiRequest("DELETE", `/api/songs/${trackId}`);
     },
     onSuccess: () => {
+      // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === "/api/songs/genre" || 
+        query.queryKey[0] === "/api/songs/search"
+      });
       toast.success("Song deleted successfully");
     },
     onError: () => {
@@ -92,7 +97,12 @@ export default function SongsManagement() {
       await apiRequest("PATCH", `/api/songs/${trackId}/favorite`);
     },
     onSuccess: () => {
+      // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === "/api/songs/genre" || 
+        query.queryKey[0] === "/api/songs/search"
+      });
       toast.success("Favorite status updated");
     },
     onError: () => {
@@ -121,7 +131,12 @@ export default function SongsManagement() {
       await apiRequest("PUT", `/api/songs/${id}`, data);
     },
     onSuccess: () => {
+      // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === "/api/songs/genre" || 
+        query.queryKey[0] === "/api/songs/search"
+      });
       toast.success("Track updated successfully");
       setIsEditDialogOpen(false);
       setSelectedTrack(null);

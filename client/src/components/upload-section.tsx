@@ -43,7 +43,12 @@ export default function UploadSection() {
         setShowProgress(true);
       }
       setUrlData({ url: "", title: "", artist: "", category: "" });
+      // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === "/api/songs/genre" || 
+        query.queryKey[0] === "/api/songs/search"
+      });
     },
     onError: () => {
       toast.error("URL upload failed");
@@ -74,7 +79,12 @@ export default function UploadSection() {
       toast.success('Song uploaded successfully!');
       setFileData({ title: "", artist: "", category: "" });
       setSelectedFile(null);
+      // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === "/api/songs/genre" || 
+        query.queryKey[0] === "/api/songs/search"
+      });
     },
     onError: () => {
       toast.error("File upload failed");
