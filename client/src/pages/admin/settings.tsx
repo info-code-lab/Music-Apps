@@ -332,7 +332,7 @@ export default function AdminSettings() {
                         />
                       </div>
 
-                      <Button type="submit" disabled={isLoading} className="w-full" data-testid="save-general-settings">
+                      <Button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg" data-testid="save-general-settings">
                         {isLoading ? (
                           <>
                             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -450,7 +450,7 @@ export default function AdminSettings() {
                         />
                       </div>
 
-                      <Button type="submit" disabled={isLoading} className="w-full" data-testid="save-security-settings">
+                      <Button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg" data-testid="save-security-settings">
                         {isLoading ? (
                           <>
                             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -552,7 +552,7 @@ export default function AdminSettings() {
                         />
                       </div>
 
-                      <Button type="submit" disabled={isLoading} className="w-full" data-testid="save-notification-settings">
+                      <Button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg" data-testid="save-notification-settings">
                         {isLoading ? (
                           <>
                             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

@@ -262,8 +262,8 @@ export default function CategoriesPage() {
               <div className="flex justify-end space-x-2">
                 <Button 
                   type="button" 
-                  variant="outline" 
                   onClick={() => setIsCreateOpen(false)}
+                  className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                   data-testid="button-cancel"
                 >
                   Cancel
@@ -271,6 +271,7 @@ export default function CategoriesPage() {
                 <Button 
                   type="submit" 
                   disabled={createGenreMutation.isPending}
+                  className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                   data-testid="button-save-category"
                 >
                   {createGenreMutation.isPending ? "Creating..." : "Create Category"}
@@ -422,8 +423,8 @@ export default function CategoriesPage() {
               <div className="flex justify-end space-x-2">
                 <Button 
                   type="button" 
-                  variant="outline" 
                   onClick={() => setEditingGenre(null)}
+                  className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                   data-testid="button-cancel-edit"
                 >
                   Cancel
@@ -431,6 +432,7 @@ export default function CategoriesPage() {
                 <Button 
                   type="submit" 
                   disabled={updateGenreMutation.isPending}
+                  className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                   data-testid="button-save-edit"
                 >
                   {updateGenreMutation.isPending ? "Saving..." : "Save Changes"}
@@ -452,7 +454,7 @@ export default function CategoriesPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Create your first music category to start organizing your content
             </p>
-            <Button onClick={() => setIsCreateOpen(true)}>
+            <Button onClick={() => setIsCreateOpen(true)} className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg">
               <Plus className="h-4 w-4 mr-2" />
               Create Category
             </Button>

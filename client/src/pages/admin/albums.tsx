@@ -175,7 +175,7 @@ export default function AlbumsManagement() {
           <p className="text-gray-600 dark:text-gray-400">Manage music albums and collections</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
+          <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg gap-2">
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -255,16 +255,15 @@ export default function AlbumsManagement() {
                   <div className="flex gap-2 pt-4">
                     <Button
                       type="button"
-                      variant="outline"
                       onClick={() => setIsCreateDialogOpen(false)}
-                      className="flex-1"
+                      className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
                       disabled={createAlbumMutation.isPending}
-                      className="flex-1"
+                      className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                       data-testid="create-album-submit"
                     >
                       {createAlbumMutation.isPending ? "Creating..." : "Create Album"}

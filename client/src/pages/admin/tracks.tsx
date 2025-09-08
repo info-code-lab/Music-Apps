@@ -136,7 +136,7 @@ export default function SongsManagement() {
           <p className="text-gray-600 dark:text-gray-400">Manage your music library and song content</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
+          <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg gap-2">
             <Download className="h-4 w-4" />
             Export
           </Button>
