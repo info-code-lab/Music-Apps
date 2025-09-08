@@ -24,7 +24,6 @@ export default function Artists() {
 
   const handleViewArtist = (artist: Artist) => {
     // TODO: Navigate to artist detail page
-    console.log("View artist:", artist);
   };
 
   return (

@@ -31,7 +31,6 @@ export default function Songs() {
 
   const handlePlaySong = (song: Song) => {
     // TODO: Integrate with music player
-    console.log("Play song:", song);
   };
 
   const genreOptions = ["All Genres", ...genres.map(g => g.name)];

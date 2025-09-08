@@ -24,7 +24,6 @@ export default function Albums() {
 
   const handleViewAlbum = (album: Album) => {
     // TODO: Navigate to album detail page
-    console.log("View album:", album);
   };
 
   return (
