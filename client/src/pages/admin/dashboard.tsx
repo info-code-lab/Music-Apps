@@ -146,7 +146,7 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { 
-      title: "Upload Track", 
+      title: "Upload Songs", 
       description: "Add new music to library",
       icon: Upload, 
       color: "bg-gradient-to-r from-slate-700 to-slate-800",

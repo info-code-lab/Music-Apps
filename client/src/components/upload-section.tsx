@@ -193,8 +193,7 @@ export default function UploadSection() {
               </p>
               <Button
                 type="button"
-                variant="outline"
-                className="bg-background"
+                className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
                 onClick={() => document.getElementById('file-input')?.click()}
               >
                 Choose File
@@ -254,7 +253,7 @@ export default function UploadSection() {
             <Button 
               type="submit"
               disabled={fileUploadMutation.isPending || !selectedFile}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 font-medium"
+              className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg py-3 font-medium"
               data-testid="button-upload-file"
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -287,7 +286,7 @@ export default function UploadSection() {
             <Button 
               type="submit"
               disabled={urlUploadMutation.isPending || !urlData.url}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 font-medium"
+              className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg py-3 font-medium"
               data-testid="button-upload-url"
             >
               <CloudUpload className="w-4 h-4 mr-2" />
