@@ -58,16 +58,26 @@ export default function MobileMusicPlayer({
     <>
       {/* Compact Bottom Bar */}
       <div className="fixed bottom-16 left-0 right-0 bg-card border-t border-border z-30">
-        {/* Progress Bar (always visible at top) */}
-        <div className="px-4 pt-1 pb-0">
-          <Slider
-            value={[progress * 100]}
-            onValueChange={handleSeek}
-            max={100}
-            step={0.1}
-            className="cursor-pointer h-1"
-            data-testid="slider-progress-mobile"
-          />
+        {/* Progress Bar with Time Display */}
+        <div className="px-4 py-3">
+          <div className="flex items-center space-x-3">
+            <span className="text-xs text-muted-foreground font-mono min-w-[35px]" data-testid="text-current-time-mobile">
+              {formatDuration(currentTime)}
+            </span>
+            <div className="flex-1 relative">
+              <Slider
+                value={[progress * 100]}
+                onValueChange={handleSeek}
+                max={100}
+                step={0.1}
+                className="cursor-pointer"
+                data-testid="slider-progress-mobile"
+              />
+            </div>
+            <span className="text-xs text-muted-foreground font-mono min-w-[35px]" data-testid="text-duration-mobile">
+              {formatDuration(duration)}
+            </span>
+          </div>
         </div>
 
         {/* Main Player Bar */}
@@ -94,16 +104,9 @@ export default function MobileMusicPlayer({
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground truncate" data-testid="text-current-artist-mobile">
-                  {song.artist}
-                </p>
-                <div className="flex items-center space-x-1 text-xs text-muted-foreground font-mono ml-2">
-                  <span data-testid="text-current-time-display-mobile">{formatDuration(currentTime)}</span>
-                  <span>:</span>
-                  <span data-testid="text-duration-display-mobile">{formatDuration(duration)}</span>
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground truncate" data-testid="text-current-artist-mobile">
+                {song.artist}
+              </p>
             </div>
           </div>
 
