@@ -184,25 +184,9 @@ def download_youtube_audio(url, output_dir):
                 for ext in ['mp3', 'm4a', 'webm', 'ogg']:
                     potential_file = os.path.join(output_dir, f"{file_id}.{ext}")
                     if os.path.exists(potential_file):
-                        # Extract better metadata
+                        # Use original metadata as-is without parsing
                         title = info.get('title', 'Unknown')
-                        
-                        # Try to extract artist from title (common formats: "Artist - Song", "Artist: Song")
-                        artist = info.get('uploader', 'Unknown')
-                        if ' - ' in title:
-                            parts = title.split(' - ', 1)
-                            if len(parts) == 2:
-                                artist = parts[0].strip()
-                                title = parts[1].strip()
-                        elif ': ' in title:
-                            parts = title.split(': ', 1)
-                            if len(parts) == 2:
-                                artist = parts[0].strip()
-                                title = parts[1].strip()
-                        
-                        # Try to get artist from channel name if uploader looks like an artist
-                        if artist == 'Unknown' or 'Records' in artist or 'Music' in artist:
-                            artist = info.get('channel', info.get('uploader', 'Unknown'))
+                        artist = info.get('uploader', info.get('channel', 'Unknown'))
                             
                         return {
                             'success': True,
