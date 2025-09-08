@@ -18,15 +18,15 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
     const setupAudio = async () => {
       setIsLoading(true);
       
-      // Reuse existing audio element or create new one
-      let audio = audioRef.current;
-      if (!audio) {
-        audio = new Audio();
-        audioRef.current = audio;
-      } else {
-        // Pause current playback before changing source
-        audio.pause();
+      // Always create a fresh audio element for each new source
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
       }
+      
+      const audio = new Audio();
+      audio.preload = 'auto'; // Preload the audio for faster playback
+      audioRef.current = audio;
 
       const handleLoadedMetadata = () => {
         if (isMounted) {
@@ -45,6 +45,15 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
       const handleCanPlay = () => {
         if (isMounted) {
           setIsLoading(false);
+          // Try to play immediately if user requested playback
+          if (isPlaying) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch((error) => {
+                console.error("Auto-play failed:", error.message || error);
+              });
+            }
+          }
         }
       };
 
@@ -104,10 +113,12 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
 
       // Only proceed if we have a valid source
       if (!src || src.trim() === '') {
-        console.warn("Empty audio source provided");
+        console.warn("Empty audio source provided:", src);
         setIsLoading(false);
         return;
       }
+      
+      console.log("Setting audio source:", src);
 
       // Determine which source to use
       if (isOffline && trackId) {
@@ -158,22 +169,17 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || isLoading) return;
+    if (!audio) return;
 
-    if (isPlaying) {
-      // Wait a bit to ensure the audio is properly loaded before trying to play
-      const playTimeout = setTimeout(() => {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.error("Audio playback failed:", error.message || error);
-            // Don't try to play again immediately to avoid loops
-          });
-        }
-      }, 100);
-
-      return () => clearTimeout(playTimeout);
-    } else {
+    if (isPlaying && !isLoading) {
+      // Try to play immediately if audio is loaded
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("Audio playback failed:", error.message || error);
+        });
+      }
+    } else if (!isPlaying) {
       audio.pause();
     }
   }, [isPlaying, isLoading]);
