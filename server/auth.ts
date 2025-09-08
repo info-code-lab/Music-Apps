@@ -102,7 +102,6 @@ export async function login(req: Request, res: Response) {
       user: userWithoutPassword
     });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 }
@@ -137,7 +136,6 @@ export async function register(req: Request, res: Response) {
       user: userWithoutPassword
     });
   } catch (error) {
-    console.error('Registration error:', error);
     if (error instanceof Error && error.message.includes('validation')) {
       return res.status(400).json({ error: 'Invalid user data' });
     }
