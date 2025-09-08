@@ -63,7 +63,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tracks = await storage.getAllTracks();
       res.json(tracks);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tracks" });
+      console.error("Error fetching tracks:", error);
+      res.status(500).json({ message: "Failed to fetch tracks", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
