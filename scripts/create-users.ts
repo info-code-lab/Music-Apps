@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
-import * as schema from "../shared/schema.js";
+import { users } from "../shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool, schema });
+const db = drizzle({ client: pool, schema: { users } });
 
 async function createUsers() {
   try {
@@ -22,7 +22,7 @@ async function createUsers() {
     const userPassword = await bcrypt.hash('user123', 10);
 
     // Create admin user
-    const adminResult = await db.insert(schema.users)
+    await db.insert(users)
       .values({
         username: 'admin',
         email: 'admin@example.com',
@@ -31,25 +31,19 @@ async function createUsers() {
         status: 'active'
       })
       .onConflictDoUpdate({
-        target: schema.users.username,
+        target: users.username,
         set: {
           email: 'admin@example.com',
           password: adminPassword,
           role: 'admin',
           status: 'active'
         }
-      })
-      .returning();
+      });
 
-    console.log('✓ Admin user created/updated:', {
-      username: 'admin',
-      email: 'admin@example.com',
-      password: 'admin123',
-      role: 'admin'
-    });
+    console.log('✓ Admin user created/updated');
 
     // Create regular user
-    const userResult = await db.insert(schema.users)
+    await db.insert(users)
       .values({
         username: 'user',
         email: 'user@example.com',
@@ -58,22 +52,16 @@ async function createUsers() {
         status: 'active'
       })
       .onConflictDoUpdate({
-        target: schema.users.username,
+        target: users.username,
         set: {
           email: 'user@example.com',
           password: userPassword,
           role: 'user',
           status: 'active'
         }
-      })
-      .returning();
+      });
 
-    console.log('✓ Regular user created/updated:', {
-      username: 'user',
-      email: 'user@example.com',
-      password: 'user123',
-      role: 'user'
-    });
+    console.log('✓ Regular user created/updated');
 
     console.log('\n=== User Credentials ===');
     console.log('Admin User:');
