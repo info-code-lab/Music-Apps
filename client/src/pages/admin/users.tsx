@@ -20,6 +20,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Users, 
   Search, 
@@ -54,7 +61,7 @@ export default function UsersManagement() {
     email: "",
     role: "user" as "user" | "admin" | "artist"
   });
-  const [userActivity, setUserActivity] = useState([]);
+  const [userActivity, setUserActivity] = useState<Array<{action: string, timestamp: string, details: string}>>([]);
   const queryClient = useQueryClient();
 
 
@@ -350,12 +357,12 @@ export default function UsersManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getRoleColor(user.role)}>
+                        <Badge className={getRoleColor(user.role || 'user')}>
                           {user.role}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(user.status)}>
+                        <Badge className={getStatusColor(user.status || 'active')}>
                           {user.status}
                         </Badge>
                       </TableCell>
