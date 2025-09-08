@@ -187,7 +187,12 @@ export default function SongsManagement() {
     setEditFormData({
       title: track.title,
       artist: track.artist,
-      category: track.category
+      category: track.category,
+      duration: track.duration || 0,
+      albumId: track.albumId || "",
+      releaseDate: track.releaseDate || "",
+      isExplicit: track.isExplicit || false,
+      lyrics: track.lyrics || ""
     });
     setIsEditDialogOpen(true);
   };
