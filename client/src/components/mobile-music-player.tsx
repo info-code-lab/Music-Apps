@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
+import { useSimpleAudioPlayer } from "@/hooks/use-simple-audio-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -40,10 +40,9 @@ export default function MobileMusicPlayer({
     duration,
     progress,
     isLoading,
-    isPlayingOffline,
     seek,
-    setVolumeLevel
-  } = useSharedAudioPlayer(song.url, isPlaying, song.id);
+    setVolume: setVolumeLevel
+  } = useSimpleAudioPlayer(song.url, song.id, isPlaying);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
@@ -98,11 +97,6 @@ export default function MobileMusicPlayer({
                 <p className="text-sm font-semibold text-foreground truncate" data-testid="text-current-title-mobile">
                   {song.title}
                 </p>
-                {isPlayingOffline && (
-                  <div className="bg-green-600 text-white px-1.5 py-0.5 rounded-full text-xs flex items-center gap-1">
-                    <Wifi className="w-2.5 h-2.5" />
-                  </div>
-                )}
               </div>
               <p className="text-xs text-muted-foreground truncate" data-testid="text-current-artist-mobile">
                 {song.artist}

@@ -6,7 +6,9 @@ export function useSimpleAudioPlayer(src: string | null, trackId?: string, isPla
 
   useEffect(() => {
     const unsubscribe = simpleAudioService.subscribe(setAudioState);
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -32,7 +34,11 @@ export function useSimpleAudioPlayer(src: string | null, trackId?: string, isPla
   };
 
   return {
-    ...audioState,
+    currentTime: audioState.currentTime,
+    duration: audioState.duration,
+    progress: audioState.progress,
+    isLoading: audioState.isLoading,
+    volume: audioState.volume,
     seek,
     setVolume,
   };
