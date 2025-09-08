@@ -1,5 +1,8 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar";
+import MobileHeader from "@/components/mobile-header";
+import MobileBottomNav from "@/components/mobile-bottom-nav";
+import MobileDrawer from "@/components/mobile-drawer";
 import MusicPlayer from "@/components/music-player";
 import MusicLibrary from "@/components/music-library";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +16,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [currentSong, setCurrentSong] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/tracks"],
@@ -46,16 +50,34 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex flex-1">
-        <Sidebar 
-          onCategorySelect={setSelectedCategory}
-          selectedCategory={selectedCategory}
-          recentSongs={songs.slice(0, 2)}
-        />
+      {/* Mobile Header */}
+      <MobileHeader 
+        onSearch={handleSearch}
+        searchQuery={searchQuery}
+        onMenuToggle={() => setIsMobileDrawerOpen(true)}
+      />
 
-        <main className="flex-1 overflow-auto pb-32 custom-scrollbar">
-          {/* Header with Search */}
-          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6">
+      {/* Mobile Drawer */}
+      <MobileDrawer 
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        onCategorySelect={setSelectedCategory}
+        selectedCategory={selectedCategory}
+      />
+
+      <div className="flex flex-1">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <Sidebar 
+            onCategorySelect={setSelectedCategory}
+            selectedCategory={selectedCategory}
+            recentSongs={songs.slice(0, 2)}
+          />
+        </div>
+
+        <main className="flex-1 overflow-auto pb-20 md:pb-32 custom-scrollbar">
+          {/* Desktop Header with Search */}
+          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
               <div className="flex-1 max-w-md">
                 <div className="relative">
@@ -91,6 +113,9 @@ export default function Home() {
           />
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {currentSong && (
         <MusicPlayer
