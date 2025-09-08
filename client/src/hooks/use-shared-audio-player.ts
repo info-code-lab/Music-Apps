@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { audioService } from '@/lib/audio-service';
 
 export function useSharedAudioPlayer(src: string, isPlaying: boolean, trackId?: string) {
+  console.log("useSharedAudioPlayer hook called with - src:", src, "isPlaying:", isPlaying, "trackId:", trackId);
   const [state, setState] = useState(audioService.getCurrentState());
 
   useEffect(() => {
