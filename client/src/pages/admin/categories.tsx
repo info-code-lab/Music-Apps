@@ -176,7 +176,7 @@ export default function CategoriesPage() {
         
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700" data-testid="button-create-category">
+            <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 shadow-lg" data-testid="button-create-category">
               <Plus className="h-4 w-4 mr-2" />
               Add Category
             </Button>
