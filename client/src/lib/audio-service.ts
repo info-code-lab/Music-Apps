@@ -205,14 +205,19 @@ class AudioService {
   };
 
   async play() {
+    console.log("audioService.play() called - audio exists:", !!this.audio, "isLoading:", this.state.isLoading);
     if (this.audio && !this.state.isLoading) {
       try {
+        console.log("Attempting to play audio...");
         await this.audio.play();
+        console.log("Audio play successful");
         return true;
       } catch (error) {
         console.error("Audio playback failed:", error);
         return false;
       }
+    } else {
+      console.log("Cannot play - audio:", !!this.audio, "isLoading:", this.state.isLoading);
     }
     return false;
   }
