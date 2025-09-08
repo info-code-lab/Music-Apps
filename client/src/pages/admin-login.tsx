@@ -24,7 +24,7 @@ export default function AdminLogin() {
   }
 
   // Redirect to home if logged in as regular user
-  if (user && user.role !== ('admin' as const)) {
+  if (user && user.role !== 'admin') {
     toast.error("Admin access required");
     setLocation("/");
     return null;

@@ -15,7 +15,7 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Genre {
@@ -51,7 +51,6 @@ export default function CategoriesPage() {
     displayOrder: 0
   });
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch all genres
@@ -73,17 +72,10 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });
       setIsCreateOpen(false);
       resetForm();
-      toast({
-        title: "Success",
-        description: "Category created successfully"
-      });
+      toast.success("Category created successfully");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create category",
-        variant: "destructive"
-      });
+      toast.error("Failed to create category");
     }
   });
 
@@ -97,17 +89,10 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });
       setEditingGenre(null);
       resetForm();
-      toast({
-        title: "Success",
-        description: "Category updated successfully"
-      });
+      toast.success("Category updated successfully");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update category",
-        variant: "destructive"
-      });
+      toast.error("Failed to update category");
     }
   });
 
@@ -119,17 +104,10 @@ export default function CategoriesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });
-      toast({
-        title: "Success",
-        description: "Category deleted successfully"
-      });
+      toast.success("Category deleted successfully");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete category",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete category");
     }
   });
 

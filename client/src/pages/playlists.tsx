@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 import { insertPlaylistSchema } from "@shared/schema";
 import { z } from "zod";
 import type { Playlist } from "@shared/schema";
@@ -24,7 +24,6 @@ type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: playlists = [], isLoading } = useQuery<Playlist[]>({
@@ -53,17 +52,10 @@ export default function Playlists() {
       queryClient.invalidateQueries({ queryKey: ["/api/playlists"] });
       setShowCreateDialog(false);
       form.reset();
-      toast({
-        title: "Playlist created",
-        description: "Your new playlist has been created successfully.",
-      });
+      toast.success("Your new playlist has been created successfully.");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create playlist",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to create playlist");
     },
   });
 
