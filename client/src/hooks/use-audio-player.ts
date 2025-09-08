@@ -67,15 +67,8 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
       const handleCanPlay = () => {
         if (isMounted) {
           setIsLoading(false);
-          // Try to play immediately if user requested playback
-          if (isPlaying) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.catch((error) => {
-                console.error("Auto-play failed:", error.message || error);
-              });
-            }
-          }
+          // Don't auto-play here to avoid duplicate playback
+          // Let the main useEffect handle playback when isPlaying changes
         }
       };
 
