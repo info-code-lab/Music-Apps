@@ -111,6 +111,7 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist created successfully");
       setIsCreateDialogOpen(false);
       form.reset();
@@ -126,6 +127,7 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist updated successfully");
       setIsEditDialogOpen(false);
       setSelectedArtist(null);
@@ -142,6 +144,7 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist deleted successfully");
     },
     onError: () => {

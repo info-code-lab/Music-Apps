@@ -85,6 +85,7 @@ export default function SongsManagement() {
     onSuccess: () => {
       // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/songs"] });
       queryClient.invalidateQueries({ predicate: (query) => 
         query.queryKey[0] === "/api/songs/genre" || 
         query.queryKey[0] === "/api/songs/search"
@@ -103,6 +104,7 @@ export default function SongsManagement() {
     onSuccess: () => {
       // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/songs"] });
       queryClient.invalidateQueries({ predicate: (query) => 
         query.queryKey[0] === "/api/songs/genre" || 
         query.queryKey[0] === "/api/songs/search"
@@ -137,6 +139,7 @@ export default function SongsManagement() {
     onSuccess: () => {
       // Invalidate all song-related caches to show updates immediately
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/songs"] });
       queryClient.invalidateQueries({ predicate: (query) => 
         query.queryKey[0] === "/api/songs/genre" || 
         query.queryKey[0] === "/api/songs/search"

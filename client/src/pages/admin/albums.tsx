@@ -122,6 +122,7 @@ export default function AlbumsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
       toast.success("Album created successfully");
       setIsCreateDialogOpen(false);
       form.reset();
@@ -137,6 +138,7 @@ export default function AlbumsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
       toast.success("Album deleted successfully");
     },
     onError: () => {
@@ -159,6 +161,7 @@ export default function AlbumsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/albums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
       toast.success("Album updated successfully");
       setIsEditDialogOpen(false);
       setSelectedAlbum(null);
