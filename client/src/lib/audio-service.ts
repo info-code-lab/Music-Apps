@@ -67,9 +67,7 @@ class AudioService {
   }
 
   async setSrc(src: string, trackId?: string) {
-    console.log("🎧 AudioService setSrc:", { src, trackId, currentSrc: this.currentSrc });
     if (this.currentSrc === src && this.currentTrackId === (trackId || '')) {
-      console.log("🎧 Same source, skipping");
       return; // No change needed
     }
 
@@ -174,7 +172,7 @@ class AudioService {
       if (this.pendingPlay) {
         this.pendingPlay = false;
         this.audio.play().catch(error => {
-          console.error("🎧 Pending play failed:", error);
+          console.error("Pending play failed:", error);
         });
       }
     }
@@ -201,7 +199,7 @@ class AudioService {
       this.pendingPlay = false;
       if (this.audio) {
         this.audio.play().catch(error => {
-          console.error("🎧 Pending play failed:", error);
+          console.error("Pending play failed:", error);
         });
       }
     }
@@ -228,29 +226,20 @@ class AudioService {
   };
 
   async play() {
-    console.log("🎧 AudioService play():", { 
-      hasAudio: !!this.audio, 
-      isLoading: this.state.isLoading, 
-      audioSrc: this.audio?.src 
-    });
-    
     if (this.audio && !this.state.isLoading) {
       try {
         await this.audio.play();
-        console.log("🎧 Audio play() successful");
         return true;
       } catch (error) {
-        console.error("🎧 Audio playback failed:", error);
+        console.error("Audio playback failed:", error);
         return false;
       }
     } else if (this.state.isLoading) {
       // Queue the play request until audio is ready
-      console.log("🎧 Audio still loading, queuing play request");
       this.pendingPlay = true;
       return true;
     }
     
-    console.log("🎧 Cannot play - no audio element");
     return false;
   }
 
