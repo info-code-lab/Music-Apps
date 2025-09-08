@@ -32,6 +32,14 @@ export function useStreamingPlayer(
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const eventHandlersRef = useRef<{
+    handleLoadedMetadata: () => void;
+    handleTimeUpdate: () => void;
+    handleWaiting: () => void;
+    handleCanPlay: () => void;
+    handleProgress: () => void;
+    handleError: () => void;
+  } | null>(null);
 
   // Cleanup HLS instance
   const cleanupHls = useCallback(() => {
@@ -120,10 +128,28 @@ export function useStreamingPlayer(
       setIsLoading(true);
       setNetworkState('loading');
       
-      // Cleanup previous audio
+      // Cleanup previous audio element completely
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+        const oldAudio = audioRef.current;
+        
+        // Stop playback and remove all event listeners
+        oldAudio.pause();
+        oldAudio.currentTime = 0;
+        oldAudio.src = '';
+        
+        // Remove event listeners using stored references
+        if (eventHandlersRef.current) {
+          oldAudio.removeEventListener('loadedmetadata', eventHandlersRef.current.handleLoadedMetadata);
+          oldAudio.removeEventListener('timeupdate', eventHandlersRef.current.handleTimeUpdate);
+          oldAudio.removeEventListener('waiting', eventHandlersRef.current.handleWaiting);
+          oldAudio.removeEventListener('canplay', eventHandlersRef.current.handleCanPlay);
+          oldAudio.removeEventListener('progress', eventHandlersRef.current.handleProgress);
+          oldAudio.removeEventListener('error', eventHandlersRef.current.handleError);
+        }
+        
+        // Force garbage collection
+        oldAudio.load();
+        audioRef.current = null;
       }
       
       cleanupHls();
@@ -186,6 +212,16 @@ export function useStreamingPlayer(
         setNetworkState('idle');
       };
 
+      // Store event handler references for proper cleanup
+      eventHandlersRef.current = {
+        handleLoadedMetadata,
+        handleTimeUpdate,
+        handleWaiting,
+        handleCanPlay,
+        handleProgress,
+        handleError
+      };
+
       // Attach event listeners
       audio.addEventListener('loadedmetadata', handleLoadedMetadata);
       audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -222,10 +258,32 @@ export function useStreamingPlayer(
 
     return () => {
       isMounted = false;
+      const audio = audioRef.current;
+      if (audio) {
+        // Remove event listeners using stored references
+        if (eventHandlersRef.current) {
+          audio.removeEventListener('loadedmetadata', eventHandlersRef.current.handleLoadedMetadata);
+          audio.removeEventListener('timeupdate', eventHandlersRef.current.handleTimeUpdate);
+          audio.removeEventListener('waiting', eventHandlersRef.current.handleWaiting);
+          audio.removeEventListener('canplay', eventHandlersRef.current.handleCanPlay);
+          audio.removeEventListener('progress', eventHandlersRef.current.handleProgress);
+          audio.removeEventListener('error', eventHandlersRef.current.handleError);
+        }
+        
+        // Stop and cleanup audio
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+        audio.load(); // Force reset
+      }
+      
       cleanupHls();
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
+      
+      // Clear event handler references
+      eventHandlersRef.current = null;
     };
   }, [src, options.enableHLS, isHLSSource, setupHLS, cleanupHls]);
 

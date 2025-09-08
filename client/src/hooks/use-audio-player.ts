@@ -10,6 +10,12 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
   const [isPlayingOffline, setIsPlayingOffline] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
+  const eventHandlersRef = useRef<{
+    handleLoadedMetadata: () => void;
+    handleTimeUpdate: () => void;
+    handleCanPlay: () => void;
+    handleError: (event: Event) => void;
+  } | null>(null);
   const { isOffline } = useOffline();
 
   useEffect(() => {
@@ -18,10 +24,32 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
     const setupAudio = async () => {
       setIsLoading(true);
       
-      // Always create a fresh audio element for each new source
+      // Cleanup previous audio element completely
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+        const oldAudio = audioRef.current;
+        
+        // Stop playback and remove all event listeners
+        oldAudio.pause();
+        oldAudio.currentTime = 0;
+        oldAudio.src = '';
+        
+        // Remove event listeners using stored references
+        if (eventHandlersRef.current) {
+          oldAudio.removeEventListener("loadedmetadata", eventHandlersRef.current.handleLoadedMetadata);
+          oldAudio.removeEventListener("timeupdate", eventHandlersRef.current.handleTimeUpdate);
+          oldAudio.removeEventListener("canplay", eventHandlersRef.current.handleCanPlay);
+          oldAudio.removeEventListener("error", eventHandlersRef.current.handleError);
+        }
+        
+        // Force garbage collection
+        oldAudio.load();
+        audioRef.current = null;
+      }
+      
+      // Cleanup previous blob URL
+      if (blobUrlRef.current) {
+        offlineStorage.revokeBlobUrl(blobUrlRef.current);
+        blobUrlRef.current = null;
       }
       
       const audio = new Audio();
@@ -84,6 +112,14 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
         }
       };
 
+      // Store event handler references for proper cleanup
+      eventHandlersRef.current = {
+        handleLoadedMetadata,
+        handleTimeUpdate,
+        handleCanPlay,
+        handleError
+      };
+
       const tryOfflinePlayback = async () => {
         if (!trackId) return;
         
@@ -114,12 +150,6 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
         audio.load();
       };
 
-      // Remove existing listeners first
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("canplay", handleCanPlay);
-      audio.removeEventListener("error", handleError);
-      
       // Add event listeners
       audio.addEventListener("loadedmetadata", handleLoadedMetadata);
       audio.addEventListener("timeupdate", handleTimeUpdate);
@@ -166,12 +196,19 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
       isMounted = false;
       const audio = audioRef.current;
       if (audio) {
-        audio.removeEventListener("loadedmetadata", () => {});
-        audio.removeEventListener("timeupdate", () => {});
-        audio.removeEventListener("canplay", () => {});
-        audio.removeEventListener("error", () => {});
+        // Remove event listeners using stored references
+        if (eventHandlersRef.current) {
+          audio.removeEventListener("loadedmetadata", eventHandlersRef.current.handleLoadedMetadata);
+          audio.removeEventListener("timeupdate", eventHandlersRef.current.handleTimeUpdate);
+          audio.removeEventListener("canplay", eventHandlersRef.current.handleCanPlay);
+          audio.removeEventListener("error", eventHandlersRef.current.handleError);
+        }
+        
+        // Stop and cleanup audio
         audio.pause();
+        audio.currentTime = 0;
         audio.src = "";
+        audio.load(); // Force reset
       }
       
       // Cleanup blob URL
@@ -179,6 +216,9 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
         offlineStorage.revokeBlobUrl(blobUrlRef.current);
         blobUrlRef.current = null;
       }
+      
+      // Clear event handler references
+      eventHandlersRef.current = null;
     };
   }, [src, trackId, isOffline]);
 
