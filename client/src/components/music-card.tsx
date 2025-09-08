@@ -69,7 +69,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         <img 
           src={song.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
           alt={song.title}
-          className="w-full h-48 object-cover" 
+          className="w-full h-32 md:h-48 object-cover" 
         />
         <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
           isHovered ? 'opacity-100' : 'opacity-0'
@@ -99,11 +99,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           </div>
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-foreground mb-1 font-sans" data-testid={`text-title-${song.id}`}>
+      <div className="p-2 md:p-4">
+        <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
           {song.title}
         </h3>
-        <p className="text-muted-foreground text-sm mb-2 font-serif" data-testid={`text-artist-${song.id}`}>
+        <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif line-clamp-1" data-testid={`text-artist-${song.id}`}>
           {song.artist}
         </p>
         <div className="flex items-center justify-between">
@@ -114,18 +114,79 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             {song.category}
           </span>
           <div className="flex items-center gap-1">
-            {/* File Download Button (to device) */}
-            {isFileDownloadSupported && (
-              isDownloadingToDevice(song.id) ? (
+            {/* Mobile: Show only favorite button */}
+            <div className="md:hidden">
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  favoriteMutation.mutate();
+                }}
+                disabled={favoriteMutation.isPending}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                data-testid={`button-favorite-${song.id}`}
+              >
+                <Heart className={`w-3 h-3 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
+              </Button>
+            </div>
+            
+            {/* Desktop: Show all buttons */}
+            <div className="hidden md:flex items-center gap-1">
+              {/* File Download Button (to device) */}
+              {isFileDownloadSupported && (
+                isDownloadingToDevice(song.id) ? (
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    className="text-purple-600 hover:text-purple-700 transition-colors"
+                    title={`Downloading to device: ${Math.round(getFileDownloadProgress(song.id))}%`}
+                    data-testid={`button-downloading-file-${song.id}`}
+                  >
+                    <HardDrive className="w-4 h-4 animate-pulse" />
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadToDevice(song);
+                    }}
+                    className="text-muted-foreground hover:text-purple-600 transition-colors"
+                    title="Download MP3 to your device"
+                    data-testid={`button-download-file-${song.id}`}
+                  >
+                    <HardDrive className="w-4 h-4" />
+                  </Button>
+                )
+              )}
+              
+              {/* Offline Storage Download Button */}
+              {isDownloading(song.id) ? (
                 <Button 
                   variant="ghost"
                   size="sm"
                   disabled
-                  className="text-purple-600 hover:text-purple-700 transition-colors"
-                  title={`Downloading to device: ${Math.round(getFileDownloadProgress(song.id))}%`}
-                  data-testid={`button-downloading-file-${song.id}`}
+                  className="text-blue-600 hover:text-blue-700 transition-colors"
+                  data-testid={`button-downloading-${song.id}`}
                 >
-                  <HardDrive className="w-4 h-4 animate-pulse" />
+                  <Download className="w-4 h-4 animate-pulse" />
+                </Button>
+              ) : isDownloaded(song.id) ? (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSong(song.id);
+                  }}
+                  className="text-green-600 hover:text-red-600 transition-colors"
+                  title="Remove offline version"
+                  data-testid={`button-delete-offline-${song.id}`}
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
               ) : (
                 <Button 
@@ -133,72 +194,31 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    downloadToDevice(song);
+                    downloadSong(song);
                   }}
-                  className="text-muted-foreground hover:text-purple-600 transition-colors"
-                  title="Download MP3 to your device"
-                  data-testid={`button-download-file-${song.id}`}
+                  className="text-muted-foreground hover:text-blue-600 transition-colors"
+                  title="Download for offline playback"
+                  data-testid={`button-download-${song.id}`}
                 >
-                  <HardDrive className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
-              )
-            )}
-            
-            {/* Offline Storage Download Button */}
-            {isDownloading(song.id) ? (
-              <Button 
-                variant="ghost"
-                size="sm"
-                disabled
-                className="text-blue-600 hover:text-blue-700 transition-colors"
-                data-testid={`button-downloading-${song.id}`}
-              >
-                <Download className="w-4 h-4 animate-pulse" />
-              </Button>
-            ) : isDownloaded(song.id) ? (
+              )}
+              
+              {/* Favorite Button */}
               <Button 
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteSong(song.id);
+                  favoriteMutation.mutate();
                 }}
-                className="text-green-600 hover:text-red-600 transition-colors"
-                title="Remove offline version"
-                data-testid={`button-delete-offline-${song.id}`}
+                disabled={favoriteMutation.isPending}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                data-testid={`button-favorite-${song.id}`}
               >
-                <Check className="w-4 h-4" />
+                <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
               </Button>
-            ) : (
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadSong(song);
-                }}
-                className="text-muted-foreground hover:text-blue-600 transition-colors"
-                title="Download for offline playback"
-                data-testid={`button-download-${song.id}`}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-            )}
-            
-            {/* Favorite Button */}
-            <Button 
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                favoriteMutation.mutate();
-              }}
-              disabled={favoriteMutation.isPending}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid={`button-favorite-${song.id}`}
-            >
-              <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
-            </Button>
+            </div>
           </div>
         </div>
       </div>

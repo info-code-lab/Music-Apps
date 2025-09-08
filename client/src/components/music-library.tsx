@@ -45,16 +45,16 @@ export default function MusicLibrary({
             <p className="text-muted-foreground font-serif">Loading your music collection...</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
-              <Skeleton className="w-full h-48" />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="w-full h-32 md:h-48" />
+              <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                <Skeleton className="h-4 md:h-6 w-3/4" />
+                <Skeleton className="h-3 md:h-4 w-1/2" />
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 md:h-6 w-12 md:w-16" />
+                  <Skeleton className="h-3 md:h-4 w-3 md:w-4" />
                 </div>
               </div>
             </div>
@@ -65,38 +65,57 @@ export default function MusicLibrary({
   }
 
   return (
-    <section className="px-6 pb-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">
-            {searchQuery ? `Search Results for "${searchQuery}"` : "Your Library"}
+    <section className="px-4 md:px-6 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
+        <div className="mb-4 md:mb-0">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
+            {searchQuery ? `Search Results` : "Your Library"}
           </h2>
-          <p className="text-muted-foreground font-serif">
+          <p className="text-sm md:text-base text-muted-foreground font-serif">
             {searchQuery 
-              ? `Found ${songs.length} songs`
+              ? `Found ${songs.length} songs for "${searchQuery}"`
               : "Browse and organize your music collection"
             }
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Select value={selectedCategory} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-[180px] bg-input border-border font-mono text-sm" data-testid="select-category">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="secondary" size="sm" data-testid="button-grid-view">
-            <Grid3X3 className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" data-testid="button-list-view">
-            <List className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center justify-between md:justify-end md:space-x-2">
+          {/* Mobile: Only show category select */}
+          <div className="md:hidden flex-1">
+            <Select value={selectedCategory} onValueChange={onCategoryChange}>
+              <SelectTrigger className="w-full bg-input border-border font-mono text-sm" data-testid="select-category-mobile">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Desktop: Show all controls */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Select value={selectedCategory} onValueChange={onCategoryChange}>
+              <SelectTrigger className="w-[180px] bg-input border-border font-mono text-sm" data-testid="select-category">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="secondary" size="sm" data-testid="button-grid-view">
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" data-testid="button-list-view">
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -116,7 +135,7 @@ export default function MusicLibrary({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {songs.map((song) => (
             <MusicCard 
               key={song.id} 
