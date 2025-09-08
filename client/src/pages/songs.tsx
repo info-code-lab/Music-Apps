@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useMusicPlayer } from "@/hooks/use-music-player";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
-import MusicPlayer from "@/components/music-player";
-import MobileMusicPlayer from "@/components/mobile-music-player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,8 +17,7 @@ export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [currentSong, setCurrentSong] = useState<LegacyTrack | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
     queryKey: ["/api/songs"],
@@ -54,8 +52,7 @@ export default function Songs() {
   const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
 
   const handlePlaySong = (track: LegacyTrack) => {
-    setCurrentSong(track);
-    setIsPlaying(true);
+    playTrack(track);
   };
 
   const genreOptions = ["All Genres", ...genres.map(g => g.name)];
@@ -254,56 +251,6 @@ export default function Songs() {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
       
-      {/* Music Player */}
-      {currentSong && (
-        <>
-          {/* Mobile Music Player */}
-          <div className="md:hidden">
-            <MobileMusicPlayer
-              song={currentSong}
-              isPlaying={isPlaying}
-              onPlayPause={() => setIsPlaying(!isPlaying)}
-              onNext={() => {
-                const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
-                const nextTrack = displayLegacyTracks[currentIndex + 1];
-                if (nextTrack) {
-                  setCurrentSong(nextTrack);
-                }
-              }}
-              onPrevious={() => {
-                const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
-                const prevTrack = displayLegacyTracks[currentIndex - 1];
-                if (prevTrack) {
-                  setCurrentSong(prevTrack);
-                }
-              }}
-            />
-          </div>
-          
-          {/* Desktop Music Player */}
-          <div className="hidden md:block">
-            <MusicPlayer
-              song={currentSong}
-              isPlaying={isPlaying}
-              onPlayPause={() => setIsPlaying(!isPlaying)}
-              onNext={() => {
-                const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
-                const nextTrack = displayLegacyTracks[currentIndex + 1];
-                if (nextTrack) {
-                  setCurrentSong(nextTrack);
-                }
-              }}
-              onPrevious={() => {
-                const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
-                const prevTrack = displayLegacyTracks[currentIndex - 1];
-                if (prevTrack) {
-                  setCurrentSong(prevTrack);
-                }
-              }}
-            />
-          </div>
-        </>
-      )}
     </div>
   );
 }
