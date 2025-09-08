@@ -170,16 +170,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 Last updated: {new Date().toLocaleDateString()}
               </span>
               
-              {/* User profile in header right side */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <UserIcon className="h-4 w-4 text-purple-600" />
+              {/* Professional user profile */}
+              <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
+                <div className="relative">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-lg">
+                    <UserIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
                 </div>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</p>
-                  <Badge variant="outline" className="text-xs text-purple-600 border-purple-600">
-                    Admin
-                  </Badge>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{user.username}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 border-0">
+                      Administrator
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
