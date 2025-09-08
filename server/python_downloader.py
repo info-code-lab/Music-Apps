@@ -146,10 +146,12 @@ def download_youtube_audio(url, output_dir):
     ]
     
     base_options = {
-        'format': 'bestaudio/best',
+        'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
         'extractaudio': True,
         'audioformat': 'mp3',
-        'audioquality': 0,
+        'audioquality': 0,  # Best quality (0 = highest, 9 = lowest)
+        'prefer_ffmpeg': True,  # Use ffmpeg for better quality conversion
+        'postprocessor_args': ['-ar', '44100', '-ac', '2'],  # 44.1kHz stereo for better quality
         'outtmpl': output_template,
         'quiet': False,  # Enable progress reporting
         'no_warnings': True,

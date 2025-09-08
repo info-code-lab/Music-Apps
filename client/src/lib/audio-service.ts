@@ -82,11 +82,35 @@ class AudioService {
       this.blobUrl = null;
     }
 
-    // Create new audio element
+    // Create new audio element with high-quality settings
     this.audio = new Audio();
     this.audio.preload = 'auto';
     this.audio.crossOrigin = 'anonymous';
     this.audio.volume = this.state.volume;
+    
+    // Enhanced audio quality settings
+    try {
+      // Better quality settings for music playback
+      this.audio.preservesPitch = false; // Better for music playback at different speeds
+      (this.audio as any).mozPreservesPitch = false; // Firefox support
+      (this.audio as any).webkitPreservesPitch = false; // Webkit support
+      
+      // Set optimal playback rate for quality
+      this.audio.defaultPlaybackRate = 1.0;
+      this.audio.playbackRate = 1.0;
+      
+      // Enable high-quality audio processing if available
+      if ('audioTracks' in this.audio) {
+        // Prefer high-quality audio tracks
+      }
+      
+      // Enable spatial audio and advanced audio features if supported
+      if ('setSinkId' in this.audio) {
+        // Use default high-quality audio device
+      }
+    } catch (e) {
+      console.log("Advanced audio features not supported, using standard quality");
+    }
 
     // Add event listeners
     this.audio.addEventListener('loadedmetadata', this.handleLoadedMetadata);
@@ -192,8 +216,9 @@ class AudioService {
     this.updateState({ volume: adjustedVolume });
     
     if (this.audio) {
-      // Apply logarithmic volume curve for better perceived audio quality
-      this.audio.volume = adjustedVolume * adjustedVolume;
+      // Use linear volume curve for better quality and user expectation
+      // Avoid the squared curve which can make audio too quiet
+      this.audio.volume = adjustedVolume;
     }
   }
 

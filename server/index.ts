@@ -6,8 +6,36 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files statically with optimized settings for audio quality
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+    // Optimize for audio files
+    if (path.endsWith('.mp3') || path.endsWith('.wav') || path.endsWith('.flac') || path.endsWith('.m4a') || path.endsWith('.ogg')) {
+      // Disable compression for audio files to maintain quality
+      res.setHeader('Content-Encoding', 'identity');
+      // Set proper audio content types
+      if (path.endsWith('.mp3')) {
+        res.setHeader('Content-Type', 'audio/mpeg');
+      } else if (path.endsWith('.wav')) {
+        res.setHeader('Content-Type', 'audio/wav');
+      } else if (path.endsWith('.flac')) {
+        res.setHeader('Content-Type', 'audio/flac');
+      } else if (path.endsWith('.m4a')) {
+        res.setHeader('Content-Type', 'audio/mp4');
+      } else if (path.endsWith('.ogg')) {
+        res.setHeader('Content-Type', 'audio/ogg');
+      }
+      // Enable range requests for better streaming
+      res.setHeader('Accept-Ranges', 'bytes');
+      // Cache for better performance but not too long
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  },
+  // Don't use etag for audio files as they should be immutable
+  etag: false,
+  // Enable range support for audio streaming
+  acceptRanges: true
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
