@@ -20,6 +20,7 @@ interface SearchResultsProps {
   onViewArtist?: (artist: Artist) => void;
   onViewAlbum?: (album: Album) => void;
   onCategorySelect?: (category: string) => void;
+  onGenreSelect?: (genre: Genre) => void;
 }
 
 export default function SearchResults({ 
@@ -27,7 +28,8 @@ export default function SearchResults({
   onPlaySong, 
   onViewArtist,
   onViewAlbum,
-  onCategorySelect 
+  onCategorySelect,
+  onGenreSelect 
 }: SearchResultsProps) {
   const { songs, artists, albums, genres, total, query } = searchResults;
 
@@ -84,7 +86,7 @@ export default function SearchResults({
                 variant="outline" 
                 className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
                 style={{ borderColor: genre.color, color: genre.color }}
-                onClick={() => onCategorySelect?.(genre.name)}
+                onClick={() => onGenreSelect?.(genre)}
                 data-testid={`badge-genre-${genre.id}`}
               >
                 {genre.name}

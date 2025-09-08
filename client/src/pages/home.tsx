@@ -118,6 +118,12 @@ export default function Home() {
     setSelectedCategory(categoryName);
   };
 
+  const handleGenreSelect = (genre: Genre) => {
+    setSearchQuery(""); // Clear search
+    setSelectedCategory("All Categories"); // Reset category
+    setFilterBy({type: 'genre', id: genre.id});
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Mobile Header */}
@@ -131,7 +137,7 @@ export default function Home() {
       <MobileDrawer 
         isOpen={isMobileDrawerOpen}
         onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={setSelectedCategory}
+        onCategorySelect={handleCategorySelect}
         selectedCategory={selectedCategory}
       />
 
@@ -139,7 +145,7 @@ export default function Home() {
         {/* Desktop Sidebar */}
         <div className="hidden md:block">
           <Sidebar 
-            onCategorySelect={setSelectedCategory}
+            onCategorySelect={handleCategorySelect}
             selectedCategory={selectedCategory}
             recentSongs={songs.slice(0, 2)}
           />
@@ -180,13 +186,14 @@ export default function Home() {
               onViewArtist={handleViewArtist}
               onViewAlbum={handleViewAlbum}
               onCategorySelect={handleCategorySelect}
+              onGenreSelect={handleGenreSelect}
             />
           ) : (
             <MusicLibrary
               songs={displaySongs}
               isLoading={isLoading}
               selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
+              onCategoryChange={handleCategorySelect}
               onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
               searchQuery={searchQuery}
             />
