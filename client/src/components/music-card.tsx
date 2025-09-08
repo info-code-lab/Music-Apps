@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Heart, Download, Check, X, Wifi, WifiOff } from "lucide-react";
+import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,7 +30,16 @@ const getCategoryColor = (category: string) => {
 export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const queryClient = useQueryClient();
-  const { downloadSong, deleteSong, isDownloaded, isDownloading } = useDownload();
+  const { 
+    downloadSong, 
+    deleteSong, 
+    isDownloaded, 
+    isDownloading,
+    downloadToDevice,
+    isDownloadingToDevice,
+    getFileDownloadProgress,
+    isFileDownloadSupported
+  } = useDownload();
   const { isOffline } = useOffline();
 
   const favoriteMutation = useMutation({
@@ -105,7 +114,37 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             {song.category}
           </span>
           <div className="flex items-center gap-1">
-            {/* Download Button */}
+            {/* File Download Button (to device) */}
+            {isFileDownloadSupported && (
+              isDownloadingToDevice(song.id) ? (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  className="text-purple-600 hover:text-purple-700 transition-colors"
+                  title={`Downloading to device: ${Math.round(getFileDownloadProgress(song.id))}%`}
+                  data-testid={`button-downloading-file-${song.id}`}
+                >
+                  <HardDrive className="w-4 h-4 animate-pulse" />
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadToDevice(song);
+                  }}
+                  className="text-muted-foreground hover:text-purple-600 transition-colors"
+                  title="Download MP3 to your device"
+                  data-testid={`button-download-file-${song.id}`}
+                >
+                  <HardDrive className="w-4 h-4" />
+                </Button>
+              )
+            )}
+            
+            {/* Offline Storage Download Button */}
             {isDownloading(song.id) ? (
               <Button 
                 variant="ghost"

@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { offlineStorage, type DownloadProgress } from '@/lib/offline-storage';
+import { FileDownloader, type DownloadProgress as FileDownloadProgress } from '@/lib/file-download';
 import toast from 'react-hot-toast';
 import type { LegacyTrack as Track } from '@shared/schema';
 
 export function useDownload() {
   const [downloadingTracks, setDownloadingTracks] = useState<Set<string>>(new Set());
+  const [fileDownloadingTracks, setFileDownloadingTracks] = useState<Set<string>>(new Set());
+  const [downloadProgress, setDownloadProgress] = useState<Map<string, number>>(new Map());
   const queryClient = useQueryClient();
 
   // Get offline songs
@@ -158,7 +161,58 @@ export function useDownload() {
     return await offlineStorage.getStorageSize();
   }, []);
 
+  // File download mutation (downloads to device storage)
+  const fileDownloadMutation = useMutation({
+    mutationFn: async (track: Track) => {
+      if (!track.url) {
+        throw new Error('No audio URL available');
+      }
+
+      setFileDownloadingTracks(prev => new Set(prev).add(track.id));
+
+      try {
+        await FileDownloader.downloadToDevice(track, (progress) => {
+          setDownloadProgress(prev => new Map(prev).set(track.id, progress.percentage));
+        });
+        return track.id;
+      } finally {
+        setFileDownloadingTracks(prev => {
+          const next = new Set(prev);
+          next.delete(track.id);
+          return next;
+        });
+        setDownloadProgress(prev => {
+          const next = new Map(prev);
+          next.delete(track.id);
+          return next;
+        });
+      }
+    },
+    onSuccess: () => {
+      toast.success('Song downloaded to your device successfully!');
+    },
+    onError: (error: Error) => {
+      toast.error(`Download failed: ${error.message}`);
+    }
+  });
+
+  const downloadToDevice = useCallback((track: Track) => {
+    if (fileDownloadingTracks.has(track.id)) {
+      return;
+    }
+    fileDownloadMutation.mutate(track);
+  }, [fileDownloadMutation, fileDownloadingTracks]);
+
+  const isDownloadingToDevice = useCallback((trackId: string) => {
+    return fileDownloadingTracks.has(trackId);
+  }, [fileDownloadingTracks]);
+
+  const getFileDownloadProgress = useCallback((trackId: string) => {
+    return downloadProgress.get(trackId) || 0;
+  }, [downloadProgress]);
+
   return {
+    // Offline storage functions
     downloadSong,
     deleteSong,
     isDownloaded,
@@ -166,6 +220,12 @@ export function useDownload() {
     getOfflineSong,
     getStorageSize,
     offlineSongs,
-    downloadingTracks: Array.from(downloadingTracks)
+    downloadingTracks: Array.from(downloadingTracks),
+    
+    // File download functions
+    downloadToDevice,
+    isDownloadingToDevice,
+    getFileDownloadProgress,
+    isFileDownloadSupported: FileDownloader.isSupported()
   };
 }
