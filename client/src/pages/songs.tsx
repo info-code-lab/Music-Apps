@@ -4,6 +4,7 @@ import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
+import MusicPlayer from "@/components/music-player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,8 @@ export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
     queryKey: ["/api/songs"],
@@ -34,8 +37,8 @@ export default function Songs() {
   const displaySongs = searchQuery ? searchResults : songs;
 
   const handlePlaySong = (song: Song) => {
-    console.log("Playing song:", song.title);
-    // TODO: Integrate with actual music player
+    setCurrentSong(song);
+    setIsPlaying(true);
   };
 
   const genreOptions = ["All Genres", ...genres.map(g => g.name)];
@@ -233,6 +236,29 @@ export default function Songs() {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+      
+      {/* Music Player */}
+      {currentSong && (
+        <MusicPlayer
+          song={currentSong}
+          isPlaying={isPlaying}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          onNext={() => {
+            const currentIndex = displaySongs.findIndex(s => s.id === currentSong.id);
+            const nextSong = displaySongs[currentIndex + 1];
+            if (nextSong) {
+              setCurrentSong(nextSong);
+            }
+          }}
+          onPrevious={() => {
+            const currentIndex = displaySongs.findIndex(s => s.id === currentSong.id);
+            const prevSong = displaySongs[currentIndex - 1];
+            if (prevSong) {
+              setCurrentSong(prevSong);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
