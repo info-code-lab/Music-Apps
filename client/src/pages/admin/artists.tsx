@@ -80,6 +80,11 @@ type ArtistFormData = z.infer<typeof artistFormSchema>;
 export default function ArtistsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isTracksDialogOpen, setIsTracksDialogOpen] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [artistTracks, setArtistTracks] = useState([]);
   const queryClient = useQueryClient();
 
 
@@ -115,6 +120,22 @@ export default function ArtistsManagement() {
     },
   });
 
+  const updateArtistMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: ArtistFormData }) => {
+      await apiRequest("PUT", `/api/artists/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
+      toast.success("Artist updated successfully");
+      setIsEditDialogOpen(false);
+      setSelectedArtist(null);
+      form.reset();
+    },
+    onError: () => {
+      toast.error("Failed to update artist");
+    },
+  });
+
   const deleteArtistMutation = useMutation({
     mutationFn: async (artistId: string) => {
       await apiRequest("DELETE", `/api/artists/${artistId}`);
@@ -138,7 +159,42 @@ export default function ArtistsManagement() {
   };
 
   const handleDeleteArtist = (artistId: string) => {
-    deleteArtistMutation.mutate(artistId);
+    if (confirm('Are you sure you want to delete this artist?')) {
+      deleteArtistMutation.mutate(artistId);
+    }
+  };
+
+  const handleViewProfile = (artist: Artist) => {
+    setSelectedArtist(artist);
+    setIsProfileDialogOpen(true);
+  };
+
+  const handleEditArtist = (artist: Artist) => {
+    setSelectedArtist(artist);
+    form.reset({
+      name: artist.name,
+      bio: artist.bio || "",
+      profilePic: artist.profilePic || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleViewTracks = async (artist: Artist) => {
+    try {
+      const response = await apiRequest("GET", `/api/tracks?artist=${encodeURIComponent(artist.name)}`);
+      const tracks = await response.json();
+      setArtistTracks(tracks);
+      setSelectedArtist(artist);
+      setIsTracksDialogOpen(true);
+    } catch (error) {
+      toast.error('Failed to load artist tracks');
+    }
+  };
+
+  const onEditSubmit = (data: ArtistFormData) => {
+    if (selectedArtist) {
+      updateArtistMutation.mutate({ id: selectedArtist.id, data });
+    }
   };
 
   const stats = [
@@ -369,15 +425,15 @@ export default function ArtistsManagement() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleViewProfile(artist)}>
                               <Eye className="h-4 w-4" />
                               View Profile
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleEditArtist(artist)}>
                               <Pencil className="h-4 w-4" />
                               Edit Artist
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleViewTracks(artist)}>
                               <Music className="h-4 w-4" />
                               View Tracks
                             </DropdownMenuItem>
@@ -418,6 +474,171 @@ export default function ArtistsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* View Profile Dialog */}
+      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Artist Profile</DialogTitle>
+            <DialogDescription>View detailed artist information</DialogDescription>
+          </DialogHeader>
+          {selectedArtist && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  {selectedArtist.profilePic ? (
+                    <img
+                      src={selectedArtist.profilePic}
+                      alt={selectedArtist.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon className="h-8 w-8 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedArtist.name}</h3>
+                  <p className="text-sm text-gray-500">ID: {selectedArtist.id}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Biography</label>
+                  <p className="text-gray-900 dark:text-white mt-1">
+                    {selectedArtist.bio || "No biography available"}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedArtist.trackCount || 0}</p>
+                    <p className="text-sm text-gray-500">Tracks</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedArtist.followers?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-gray-500">Followers</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {selectedArtist.createdAt ? new Date(selectedArtist.createdAt).toLocaleDateString() : "Unknown"}
+                    </p>
+                    <p className="text-sm text-gray-500">Joined</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Artist Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Artist</DialogTitle>
+            <DialogDescription>Update artist information</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Artist Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter artist name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Biography</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter artist biography" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="profilePic"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profile Picture URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://example.com/image.jpg" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateArtistMutation.isPending}
+                  className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+                >
+                  {updateArtistMutation.isPending ? "Updating..." : "Update Artist"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Tracks Dialog */}
+      <Dialog open={isTracksDialogOpen} onOpenChange={setIsTracksDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Artist Tracks</DialogTitle>
+            <DialogDescription>
+              {selectedArtist ? `Tracks by ${selectedArtist.name}` : 'Artist tracks'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {artistTracks.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No tracks found for this artist</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {artistTracks.map((track: any, index: number) => (
+                  <div key={track.id || index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <Music className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white">{track.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{track.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {track.duration ? `${Math.floor(track.duration / 60)}:${(track.duration % 60).toString().padStart(2, '0')}` : '--:--'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
