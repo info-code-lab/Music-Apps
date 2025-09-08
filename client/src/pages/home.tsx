@@ -9,7 +9,7 @@ import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, User } from "lucide-react";
+import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
 import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
 
 // Define unified search result type
@@ -118,6 +118,12 @@ export default function Home() {
     setSelectedCategory(categoryName);
   };
 
+  const handleBackToHome = () => {
+    setSelectedCategory("All Categories");
+    setFilterBy({type: 'none'});
+    setSearchQuery("");
+  };
+
   const handleGenreSelect = (genre: Genre) => {
     setSearchQuery(""); // Clear search
     setSelectedCategory("All Categories"); // Reset category
@@ -182,12 +188,52 @@ export default function Home() {
           {searchQuery && searchResults ? (
             <SearchResults 
               searchResults={searchResults}
-              onPlaySong={handlePlaySong}
+              onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
               onViewArtist={handleViewArtist}
               onViewAlbum={handleViewAlbum}
               onCategorySelect={handleCategorySelect}
               onGenreSelect={handleGenreSelect}
             />
+          ) : selectedCategory !== "All Categories" || filterBy.type !== 'none' ? (
+            // Show category/filter view
+            <section className="px-4 md:px-6 pb-6">
+              <div className="mb-4 md:mb-6">
+                <Button 
+                  variant="ghost" 
+                  onClick={handleBackToHome}
+                  className="mb-4 p-2 hover:bg-accent"
+                  data-testid="button-back-to-home"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Button>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-20 h-20 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Music className="w-10 h-10 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 font-sans">
+                      {filterBy.type === 'artist' ? 'Artist Songs' :
+                       filterBy.type === 'album' ? 'Album Songs' :
+                       filterBy.type === 'genre' ? 'Genre Songs' :
+                       selectedCategory}
+                    </h2>
+                    <p className="text-sm md:text-base text-muted-foreground font-serif">
+                      {displaySongs.length} songs
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <MusicLibrary
+                songs={displaySongs}
+                isLoading={isLoading}
+                selectedCategory="All Categories"
+                onCategoryChange={() => {}}
+                onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
+                searchQuery=""
+              />
+            </section>
           ) : (
             <MusicLibrary
               songs={displaySongs}
