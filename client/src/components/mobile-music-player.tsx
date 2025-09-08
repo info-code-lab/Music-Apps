@@ -7,7 +7,7 @@ import {
   Heart,
   Volume2,
   ChevronUp,
-  MoreHorizontal,
+  Plus,
   Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ export default function MobileMusicPlayer({
   onExpand
 }: MobileMusicPlayerProps) {
   const [volume, setVolume] = useState([70]);
-  const [showControls, setShowControls] = useState(false);
   
   const {
     currentTime,
@@ -95,9 +94,16 @@ export default function MobileMusicPlayer({
                   </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground truncate" data-testid="text-current-artist-mobile">
-                {song.artist}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground truncate" data-testid="text-current-artist-mobile">
+                  {song.artist}
+                </p>
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground font-mono ml-2">
+                  <span data-testid="text-current-time-display-mobile">{formatDuration(currentTime)}</span>
+                  <span>:</span>
+                  <span data-testid="text-duration-display-mobile">{formatDuration(duration)}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -145,47 +151,13 @@ export default function MobileMusicPlayer({
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => setShowControls(!showControls)}
               className="text-muted-foreground hover:text-foreground transition-colors p-2"
-              data-testid="button-more-mobile"
+              data-testid="button-add-playlist-mobile"
             >
-              <MoreHorizontal className="w-5 h-5" />
+              <Plus className="w-5 h-5" />
             </Button>
           </div>
         </div>
-
-        {/* Extended Controls (collapsible) */}
-        {showControls && (
-          <div className="px-4 pb-3 border-t border-border/30">
-            <div className="flex items-center justify-between pt-3">
-              {/* Time Display */}
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-muted-foreground font-mono" data-testid="text-current-time-mobile">
-                  {formatDuration(currentTime)}
-                </span>
-                <span className="text-xs text-muted-foreground">/</span>
-                <span className="text-xs text-muted-foreground font-mono" data-testid="text-duration-mobile">
-                  {formatDuration(duration)}
-                </span>
-              </div>
-
-              {/* Volume Control */}
-              <div className="flex items-center space-x-3">
-                <Volume2 className="w-4 h-4 text-muted-foreground" />
-                <div className="w-20">
-                  <Slider
-                    value={volume}
-                    onValueChange={handleVolumeChange}
-                    max={100}
-                    step={1}
-                    className="cursor-pointer"
-                    data-testid="slider-volume-mobile"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
