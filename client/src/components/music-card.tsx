@@ -108,8 +108,80 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         </p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            {/* Mobile: Show only favorite button */}
-            <div className="md:hidden">
+            {/* Mobile: Show all buttons like desktop */}
+            <div className="md:hidden flex items-center gap-1">
+              {/* File Download Button (to device) */}
+              {isFileDownloadSupported && (
+                isDownloadingToDevice(song.id) ? (
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    className="text-purple-600 hover:text-purple-700 transition-colors p-1"
+                    title={`Downloading to device: ${Math.round(getFileDownloadProgress(song.id))}%`}
+                    data-testid={`button-downloading-file-mobile-${song.id}`}
+                  >
+                    <HardDrive className="w-3 h-3 animate-pulse" />
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadToDevice(song);
+                    }}
+                    className="text-muted-foreground hover:text-purple-600 transition-colors p-1"
+                    title="Download MP3 to your device"
+                    data-testid={`button-download-file-mobile-${song.id}`}
+                  >
+                    <HardDrive className="w-3 h-3" />
+                  </Button>
+                )
+              )}
+              
+              {/* Offline Storage Download Button */}
+              {isDownloading(song.id) ? (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  className="text-blue-600 hover:text-blue-700 transition-colors p-1"
+                  data-testid={`button-downloading-mobile-${song.id}`}
+                >
+                  <Download className="w-3 h-3 animate-pulse" />
+                </Button>
+              ) : isDownloaded(song.id) ? (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSong(song.id);
+                  }}
+                  className="text-green-600 hover:text-red-600 transition-colors p-1"
+                  title="Remove offline version"
+                  data-testid={`button-delete-offline-mobile-${song.id}`}
+                >
+                  <Check className="w-3 h-3" />
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadSong(song);
+                  }}
+                  className="text-muted-foreground hover:text-blue-600 transition-colors p-1"
+                  title="Download for offline playback"
+                  data-testid={`button-download-mobile-${song.id}`}
+                >
+                  <Download className="w-3 h-3" />
+                </Button>
+              )}
+              
+              {/* Favorite Button */}
               <Button 
                 variant="ghost"
                 size="sm"
@@ -119,7 +191,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 }}
                 disabled={favoriteMutation.isPending}
                 className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                data-testid={`button-favorite-${song.id}`}
+                data-testid={`button-favorite-mobile-${song.id}`}
               >
                 <Heart className={`w-3 h-3 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
               </Button>
