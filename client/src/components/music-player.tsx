@@ -71,7 +71,7 @@ export default function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-20">
+    <div className="fixed bottom-0 md:bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-20 mb-16 md:mb-0">
       <div className="max-w-full mx-auto">
         <div className="flex items-center space-x-4">
           {/* Currently Playing Info */}
