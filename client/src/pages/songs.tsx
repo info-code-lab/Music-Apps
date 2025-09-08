@@ -12,6 +12,7 @@ import { Grid3X3, List, Search, Bell, User } from "lucide-react";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Song, LegacyTrack } from "@shared/schema";
+import { convertToLegacyTrack } from "@/lib/song-utils";
 
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,21 +36,7 @@ export default function Songs() {
 
   const displaySongs = searchQuery ? searchResults : songs;
 
-  // Convert Song to LegacyTrack format for MusicCard compatibility
-  const convertToLegacyTrack = (song: Song): LegacyTrack => ({
-    id: song.id,
-    title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from genres table
-    duration: song.duration,
-    url: song.filePath ? encodeURI(song.filePath) : "",
-    artwork: song.coverArt,
-    isFavorite: false, // TODO: Get from favorites table
-    uploadType: "file",
-    createdAt: song.createdAt || undefined,
-  });
-
-  const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
+  const displayLegacyTracks = displaySongs.map(song => convertToLegacyTrack(song));
 
   const handlePlaySong = (track: LegacyTrack) => {
     playTrack(track);
