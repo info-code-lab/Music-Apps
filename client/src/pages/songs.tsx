@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Grid3X3, List, Search, Bell, User } from "lucide-react";
-import SongCard from "@/components/song-card";
+import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Song } from "@shared/schema";
+import type { Song, LegacyTrack } from "@shared/schema";
 
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [currentSong, setCurrentSong] = useState<LegacyTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
@@ -36,8 +36,24 @@ export default function Songs() {
 
   const displaySongs = searchQuery ? searchResults : songs;
 
-  const handlePlaySong = (song: Song) => {
-    setCurrentSong(song);
+  // Convert Song to LegacyTrack format for MusicCard compatibility
+  const convertToLegacyTrack = (song: Song): LegacyTrack => ({
+    id: song.id,
+    title: song.title,
+    artist: "Unknown Artist", // TODO: Get from artists table
+    category: "Music", // TODO: Get from genres table
+    duration: song.duration,
+    url: song.filePath,
+    artwork: song.coverArt,
+    isFavorite: false, // TODO: Get from favorites table
+    uploadType: "file",
+    createdAt: song.createdAt || undefined,
+  });
+
+  const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
+
+  const handlePlaySong = (track: LegacyTrack) => {
+    setCurrentSong(track);
     setIsPlaying(true);
   };
 
@@ -202,13 +218,13 @@ export default function Songs() {
               </h2>
               <p className="text-sm md:text-base text-muted-foreground font-serif">
                 {searchQuery 
-                  ? `Found ${displaySongs.length} songs for "${searchQuery}"`
+                  ? `Found ${displayLegacyTracks.length} songs for "${searchQuery}"`
                   : "Discover and play your favorite songs"
                 }
               </p>
             </div>
             
-            {displaySongs.length === 0 ? (
+            {displayLegacyTracks.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                   <Grid3X3 className="w-8 h-8 text-muted-foreground" />
@@ -225,8 +241,8 @@ export default function Songs() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-                {displaySongs.map((song) => (
-                  <SongCard key={song.id} song={song} onPlay={() => handlePlaySong(song)} />
+                {displayLegacyTracks.map((track) => (
+                  <MusicCard key={track.id} song={track} onPlay={() => handlePlaySong(track)} />
                 ))}
               </div>
             )}
@@ -244,17 +260,17 @@ export default function Songs() {
           isPlaying={isPlaying}
           onPlayPause={() => setIsPlaying(!isPlaying)}
           onNext={() => {
-            const currentIndex = displaySongs.findIndex(s => s.id === currentSong.id);
-            const nextSong = displaySongs[currentIndex + 1];
-            if (nextSong) {
-              setCurrentSong(nextSong);
+            const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
+            const nextTrack = displayLegacyTracks[currentIndex + 1];
+            if (nextTrack) {
+              setCurrentSong(nextTrack);
             }
           }}
           onPrevious={() => {
-            const currentIndex = displaySongs.findIndex(s => s.id === currentSong.id);
-            const prevSong = displaySongs[currentIndex - 1];
-            if (prevSong) {
-              setCurrentSong(prevSong);
+            const currentIndex = displayLegacyTracks.findIndex(t => t.id === currentSong.id);
+            const prevTrack = displayLegacyTracks[currentIndex - 1];
+            if (prevTrack) {
+              setCurrentSong(prevTrack);
             }
           }}
         />
