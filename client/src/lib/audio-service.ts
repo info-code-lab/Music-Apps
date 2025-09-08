@@ -151,7 +151,6 @@ class AudioService {
     }
 
     this.audio.load();
-    console.log("Audio service setting source:", this.audio.src);
     
     // Restore playback position after metadata is loaded
     if (trackId) {

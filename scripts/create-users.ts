@@ -1,6 +1,6 @@
 //npx tsx scripts/create-users.ts
 //npx tsx scripts/import-songs.ts
-//npx tsx scripts/
+//npx tsx scripts/populate-database.ts
 import bcrypt from "bcryptjs";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
