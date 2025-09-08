@@ -18,14 +18,12 @@ interface Song {
 export default function GlobalMusicPlayer() {
   const { currentSong, isPlaying, setCurrentSong, setIsPlaying } = useMusicPlayer();
 
-  // Get all songs for navigation
+  // Get all songs for navigation - ALWAYS call hooks first
   const { data: songs = [] } = useQuery<any[]>({
     queryKey: ['/api/songs'],
   });
 
-  if (!currentSong) return null;
-
-  // Convert songs to legacy format
+  // Convert songs to legacy format - ALWAYS do this before conditional return
   const activeTrackList = songs.map((song: any): LegacyTrack => ({
     id: song.id,
     title: song.title,
@@ -38,6 +36,9 @@ export default function GlobalMusicPlayer() {
     uploadType: "file",
     createdAt: song.createdAt,
   }));
+
+  // CONDITIONAL RETURN AFTER ALL HOOKS
+  if (!currentSong) return null;
 
 
   const handleNext = () => {
