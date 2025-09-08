@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Heart } from "lucide-react";
+import { Play, Heart, Download, Check, X, Wifi, WifiOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
+import { useDownload } from "@/hooks/use-download";
+import { useOffline } from "@/hooks/use-offline";
 import toast from "react-hot-toast";
-import type { Track } from "@shared/schema";
+import type { LegacyTrack as Track } from "@shared/schema";
 
 interface MusicCardProps {
   song: Track;
@@ -27,6 +30,8 @@ const getCategoryColor = (category: string) => {
 export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const queryClient = useQueryClient();
+  const { downloadSong, deleteSong, isDownloaded, isDownloading } = useDownload();
+  const { isOffline } = useOffline();
 
   const favoriteMutation = useMutation({
     mutationFn: async () => {
@@ -71,8 +76,18 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
           </Button>
         </div>
-        <div className="absolute top-2 right-2 bg-secondary/80 text-secondary-foreground px-2 py-1 rounded text-xs font-mono">
-          <span data-testid={`text-duration-${song.id}`}>{formatDuration(song.duration)}</span>
+        <div className="absolute top-2 right-2 flex items-center gap-2">
+          {/* Offline Status Indicator */}
+          {isDownloaded(song.id) && (
+            <div className="bg-green-600/90 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 font-mono">
+              <WifiOff className="w-3 h-3" />
+              Offline
+            </div>
+          )}
+          {/* Duration */}
+          <div className="bg-secondary/80 text-secondary-foreground px-2 py-1 rounded text-xs font-mono">
+            <span data-testid={`text-duration-${song.id}`}>{formatDuration(song.duration)}</span>
+          </div>
         </div>
       </div>
       <div className="p-4">
@@ -89,19 +104,63 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           >
             {song.category}
           </span>
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              favoriteMutation.mutate();
-            }}
-            disabled={favoriteMutation.isPending}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            data-testid={`button-favorite-${song.id}`}
-          >
-            <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-1">
+            {/* Download Button */}
+            {isDownloading(song.id) ? (
+              <Button 
+                variant="ghost"
+                size="sm"
+                disabled
+                className="text-blue-600 hover:text-blue-700 transition-colors"
+                data-testid={`button-downloading-${song.id}`}
+              >
+                <Download className="w-4 h-4 animate-pulse" />
+              </Button>
+            ) : isDownloaded(song.id) ? (
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteSong(song.id);
+                }}
+                className="text-green-600 hover:text-red-600 transition-colors"
+                title="Remove offline version"
+                data-testid={`button-delete-offline-${song.id}`}
+              >
+                <Check className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadSong(song);
+                }}
+                className="text-muted-foreground hover:text-blue-600 transition-colors"
+                title="Download for offline playback"
+                data-testid={`button-download-${song.id}`}
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Favorite Button */}
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                favoriteMutation.mutate();
+              }}
+              disabled={favoriteMutation.isPending}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              data-testid={`button-favorite-${song.id}`}
+            >
+              <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

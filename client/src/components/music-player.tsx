@@ -9,7 +9,8 @@ import {
   Heart,
   List,
   Volume2,
-  Expand
+  Expand,
+  Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -81,9 +82,17 @@ export default function MusicPlayer({
               className="w-12 h-12 rounded object-cover" 
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground font-sans truncate" data-testid="text-current-title">
-                {song.title}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground font-sans truncate" data-testid="text-current-title">
+                  {song.title}
+                </p>
+                {isPlayingOffline && (
+                  <div className="bg-green-600 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
+                    <Wifi className="w-3 h-3" />
+                    Offline
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground font-serif truncate" data-testid="text-current-artist">
                 {song.artist}
               </p>
