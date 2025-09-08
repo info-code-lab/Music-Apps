@@ -65,7 +65,6 @@ export class DownloadService {
 
   async downloadAndExtractMetadata(url: string, sessionId?: string): Promise<AudioMetadata> {
     try {
-      console.log(`Processing URL: ${url}`);
       
       if (sessionId) {
         progressEmitter.emit(sessionId, {
@@ -149,7 +148,6 @@ export class DownloadService {
             artist,
             album: undefined
           };
-          console.log('Using yt-dlp metadata:', metadata);
           
           return {
             ...metadata,
@@ -201,7 +199,6 @@ export class DownloadService {
     
     // Clean URL (remove playlist parameters that might cause issues)
     const cleanUrl = url.split('&list=')[0].split('&start_radio=')[0];
-    console.log(`Cleaned URL: ${cleanUrl}`);
     
     // Try multiple approaches to bypass YouTube restrictions
     const attempts = [
@@ -232,7 +229,6 @@ export class DownloadService {
     
     for (let i = 0; i < attempts.length; i++) {
       const command = attempts[i];
-      console.log(`Attempt ${i + 1}: ${command}`);
       
       try {
         const result = await new Promise<{success: boolean, stdout?: string, stderr?: string}>((resolve) => {
@@ -246,7 +242,6 @@ export class DownloadService {
         });
         
         if (result.success) {
-          console.log(`Success on attempt ${i + 1}`);
           
           // Try to extract metadata from yt-dlp JSON output
           let extractedMetadata = null;
@@ -257,14 +252,9 @@ export class DownloadService {
               const jsonLine = lines.find(line => line.trim().startsWith('{'));
               if (jsonLine) {
                 extractedMetadata = JSON.parse(jsonLine.trim());
-                console.log('Extracted metadata:', {
-                  title: extractedMetadata.title,
-                  uploader: extractedMetadata.uploader,
-                  channel: extractedMetadata.channel
-                });
               }
             } catch (e) {
-              console.log('Failed to parse yt-dlp JSON output:', e);
+              // Failed to parse yt-dlp JSON output
             }
           }
           
@@ -277,41 +267,34 @@ export class DownloadService {
           
           if (downloadedFile) {
             const localPath = path.join(this.uploadsDir, downloadedFile);
-            console.log(`File downloaded to: ${localPath}`);
             
             // Download thumbnail separately using yt-dlp
             let thumbnailFilename = undefined;
             if (extractedMetadata) {
               try {
-                console.log('Downloading thumbnail...');
                 thumbnailFilename = await this.downloadThumbnailWithYtDlp(cleanUrl, filename.replace('.%(ext)s', ''));
               } catch (thumbError) {
-                console.log('Thumbnail download failed:', thumbError);
+                // Thumbnail download failed
               }
             }
             
             return { localPath, filename: downloadedFile, metadata: extractedMetadata, thumbnail: thumbnailFilename };
           }
-        } else {
-          console.log(`Attempt ${i + 1} failed:`, result.stderr);
         }
       } catch (attemptError) {
-        console.log(`Attempt ${i + 1} error:`, attemptError);
+        // Attempt failed, continue to next strategy
       }
     }
     
     // All Node.js yt-dlp attempts failed, try Python as fallback
-    console.log("All Node.js attempts failed, trying Python downloader...");
     try {
       return await this.downloadWithPython(url, sessionId);
     } catch (pythonError) {
-      console.log("Python downloader also failed:", pythonError);
       throw new Error("YouTube is currently blocking downloads due to bot detection. Try again later or use a different video URL. Some videos may be restricted.");
     }
   }
 
   private async downloadWithPython(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any, thumbnail?: string}> {
-    console.log("Trying Python downloader for:", url);
     
     if (sessionId) {
       progressEmitter.emit(sessionId, {
@@ -324,10 +307,6 @@ export class DownloadService {
 
     return new Promise((resolve, reject) => {
       const pythonScript = path.join(__dirname, 'python_downloader.py');
-      const command = `python3 "${pythonScript}" "${url}" "${this.uploadsDir}"`;
-      
-      console.log("Python command:", command);
-      
       const child = spawn('python3', [pythonScript, url, this.uploadsDir]);
       
       let stdout = '';
@@ -370,8 +349,6 @@ export class DownloadService {
       
       child.on('close', (code: number) => {
         if (code !== 0) {
-          console.log("Python script error - exit code:", code);
-          console.log("Python stderr:", stderr);
           reject(new Error(`Python downloader failed with exit code ${code}`));
           return;
         }
@@ -389,17 +366,14 @@ export class DownloadService {
           });
           
           if (!jsonLine) {
-            console.log("No valid JSON found in Python output:", stdout);
             reject(new Error('No valid JSON result from Python downloader'));
             return;
           }
           
           const result = JSON.parse(jsonLine);
-          console.log("Python result:", result);
           
           if (result.success) {
             const localPath = path.join(this.uploadsDir, result.filename);
-            console.log(`Python download successful: ${localPath}`);
             
             if (sessionId) {
               progressEmitter.emit(sessionId, {
@@ -424,7 +398,6 @@ export class DownloadService {
             reject(new Error(result.error || 'Python download failed'));
           }
         } catch (parseError) {
-          console.log("Failed to parse Python output:", stdout);
           reject(new Error('Failed to parse Python downloader response'));
         }
       });
@@ -453,7 +426,6 @@ export class DownloadService {
     const localPath = path.join(this.uploadsDir, filename);
 
     await writeFile(localPath, Buffer.from(response.data));
-    console.log(`Direct file saved to: ${localPath}`);
     
     if (sessionId) {
       progressEmitter.emit(sessionId, {
@@ -498,11 +470,9 @@ export class DownloadService {
       const thumbnailPath = path.join(this.uploadsDir, `${fileId}_thumbnail.%(ext)s`);
       const command = `yt-dlp --write-thumbnail --skip-download --convert-thumbnails jpg -o "${thumbnailPath}" "${url}"`;
       
-      console.log('Thumbnail command:', command);
       
       exec(command, { timeout: 30000 }, (error, stdout, stderr) => {
         if (error) {
-          console.log('Thumbnail download error:', error.message);
           resolve(undefined);
           return;
         }
@@ -516,14 +486,11 @@ export class DownloadService {
           );
           
           if (thumbnailFile) {
-            console.log(`Thumbnail downloaded: ${thumbnailFile}`);
             resolve(thumbnailFile);
           } else {
-            console.log('No thumbnail file found after download');
             resolve(undefined);
           }
         } catch (readError) {
-          console.log('Error finding thumbnail file:', readError);
           resolve(undefined);
         }
       });
@@ -570,7 +537,6 @@ export class DownloadService {
   }
 
   private async downloadFromSpotify(url: string, sessionId?: string): Promise<{localPath: string, filename: string, metadata?: any, thumbnail?: string}> {
-    console.log("Downloading from Spotify using spotDL:", url);
     
     if (sessionId) {
       progressEmitter.emit(sessionId, {
@@ -586,7 +552,6 @@ export class DownloadService {
       // Let spotDL use its default naming, we'll find the file afterwards
       const outputDir = this.uploadsDir;
       
-      console.log("spotDL command for:", url);
       
       // Record files before download to identify new ones
       const filesBefore = new Set(fs.readdirSync(this.uploadsDir));
@@ -601,13 +566,11 @@ export class DownloadService {
       child.stdout.on('data', (data: Buffer) => {
         const output = data.toString();
         stdout += output;
-        console.log('spotDL stdout:', output.trim());
         
         // Extract YouTube URL from spotDL output for thumbnail download
         const urlMatch = output.match(/https:\/\/(?:music\.)?youtube\.com\/watch\?v=[A-Za-z0-9_-]+/);
         if (urlMatch) {
           youtubeUrl = urlMatch[0];
-          console.log('Found YouTube URL for thumbnail:', youtubeUrl);
         }
         
         // Parse progress updates from spotDL output
@@ -638,14 +601,11 @@ export class DownloadService {
       child.stderr.on('data', (data: Buffer) => {
         const output = data.toString();
         stderr += output;
-        console.log('spotDL stderr:', output.trim());
       });
       
       child.on('close', (code: number) => {
-        console.log(`spotDL process exited with code ${code}`);
         
         if (code !== 0) {
-          console.log("spotDL error - stderr:", stderr);
           reject(new Error(`spotDL failed with exit code ${code}: ${stderr}`));
           return;
         }
@@ -654,7 +614,6 @@ export class DownloadService {
           // Find the newly downloaded file by comparing before/after
           const filesAfter = fs.readdirSync(this.uploadsDir);
           const newFiles = filesAfter.filter(file => !filesBefore.has(file));
-          console.log('New files after spotDL:', newFiles);
           
           // Look for new audio files
           const newAudioFiles = newFiles.filter(file => 
@@ -662,7 +621,6 @@ export class DownloadService {
           );
           
           if (newAudioFiles.length === 0) {
-            console.log('No new audio files found, looking for most recent...');
             // Fallback: find most recently modified audio file
             const allAudioFiles = filesAfter.filter(file => 
               file.endsWith('.mp3') || file.endsWith('.m4a') || file.endsWith('.flac')
@@ -690,10 +648,8 @@ export class DownloadService {
           }
           
           const downloadedFile = newAudioFiles[0];
-          console.log('Downloaded file found:', downloadedFile);
           
           const localPath = path.join(this.uploadsDir, downloadedFile);
-          console.log(`spotDL download successful: ${localPath}`);
           
           // Download thumbnail from YouTube if we found the URL (async operation)
           const downloadThumbnail = async (): Promise<string | undefined> => {
@@ -710,10 +666,8 @@ export class DownloadService {
             
             try {
               const thumb = await this.downloadThumbnailWithYtDlp(youtubeUrl, fileId);
-              console.log('Thumbnail downloaded for Spotify track:', thumb);
               return thumb;
             } catch (thumbError) {
-              console.log('Thumbnail download failed for Spotify track:', thumbError);
               return undefined;
             }
           };
@@ -746,7 +700,6 @@ export class DownloadService {
               });
             })
             .catch(async (error) => {
-              console.log('Metadata or thumbnail extraction failed, using basic info:', error);
               // Still try to get thumbnail even if metadata fails
               let thumbnailFilename: string | undefined;
               try {
@@ -768,7 +721,6 @@ export class DownloadService {
               });
             });
         } catch (error) {
-          console.log("Error processing spotDL download:", error);
           reject(new Error('Failed to process spotDL download'));
         }
       });
