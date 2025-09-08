@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useAudioPlayer } from "@/hooks/use-audio-player";
+import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -46,7 +46,7 @@ export default function MusicPlayer({
     isPlayingOffline,
     seek,
     setVolumeLevel
-  } = useAudioPlayer(song.url, isPlaying, song.id);
+  } = useSharedAudioPlayer(song.url, isPlaying, song.id);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
