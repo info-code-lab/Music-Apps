@@ -3,7 +3,6 @@ import MusicPlayer from '@/components/music-player';
 import MobileMusicPlayer from '@/components/mobile-music-player';
 import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
-import { convertToLegacyTrack } from '@/lib/song-utils';
 
 interface Song {
   id: string;
@@ -25,7 +24,18 @@ export default function GlobalMusicPlayer() {
   });
 
   // Convert songs to legacy format - ALWAYS do this before conditional return
-  const activeTrackList = songs.map(song => convertToLegacyTrack(song));
+  const activeTrackList = songs.map((song: any): LegacyTrack => ({
+    id: song.id,
+    title: song.title,
+    artist: "Unknown Artist",
+    category: "Music", 
+    duration: song.duration || 0,
+    url: song.filePath || "",
+    artwork: song.coverArt,
+    isFavorite: false,
+    uploadType: "file",
+    createdAt: song.createdAt,
+  }));
 
   // CONDITIONAL RETURN AFTER ALL HOOKS
   if (!currentSong) return null;

@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
 import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
-import { convertToLegacyTrack } from "@/lib/song-utils";
 
 // Define unified search result type
 interface SearchResult {
@@ -77,8 +76,22 @@ export default function Home() {
     playTrack(song);
   };
 
+  // Convert Track to LegacyTrack format for compatibility
+  const convertToLegacyTrack = (song: Track): LegacyTrack => ({
+    id: song.id,
+    title: song.title,
+    artist: "Unknown Artist", // TODO: Get from artists table
+    category: "Music", // TODO: Get from categories table
+    duration: song.duration || 0,
+    url: song.filePath ? encodeURI(song.filePath) : "",
+    artwork: song.coverArt || null,
+    isFavorite: false, // TODO: Get from favorites table
+    uploadType: "file",
+    createdAt: song.createdAt || undefined,
+  });
+
   // Convert songs to legacy format
-  const displayLegacyTracks = displaySongs.map(song => convertToLegacyTrack(song));
+  const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

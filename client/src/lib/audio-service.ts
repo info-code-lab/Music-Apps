@@ -18,8 +18,6 @@ class AudioService {
   private currentTrackId: string = '';
   private blobUrl: string | null = null;
   private lastSaveTime: number = 0;
-  private pendingPlay: boolean = false;
-  private userInteracted: boolean = false;
   
   private state: AudioState = {
     currentTime: 0,
@@ -46,9 +44,6 @@ class AudioService {
     } catch {
       // Use default volume
     }
-    
-    // Listen for user interaction to enable audio playback
-    this.setupUserInteractionHandlers();
   }
 
   subscribe(listener: AudioStateListener) {
@@ -69,32 +64,6 @@ class AudioService {
     this.state = { ...this.state, ...updates };
     this.notifyListeners();
   }
-  
-  private setupUserInteractionHandlers() {
-    const enableAudio = () => {
-      this.userInteracted = true;
-      
-      // Create a dummy audio element to "unlock" audio context
-      if (!this.audio) {
-        const dummyAudio = new Audio();
-        dummyAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-        dummyAudio.play().catch(() => {});
-      }
-      
-      // Try to play pending audio if any
-      if (this.pendingPlay && this.audio && !this.state.isLoading) {
-        this.pendingPlay = false;
-        this.audio.play().catch(error => {
-          console.error("Delayed play failed:", error);
-        });
-      }
-    };
-    
-    // Listen for any user interaction
-    ['click', 'touchstart', 'keydown'].forEach(event => {
-      document.addEventListener(event, enableAudio, { once: true, passive: true });
-    });
-  }
 
   async setSrc(src: string, trackId?: string) {
     if (this.currentSrc === src && this.currentTrackId === (trackId || '')) {
@@ -103,7 +72,6 @@ class AudioService {
 
     this.currentSrc = src;
     this.currentTrackId = trackId || '';
-    this.pendingPlay = false; // Reset pending play state for new track
     
     this.updateState({ isLoading: true });
 
@@ -197,14 +165,6 @@ class AudioService {
         duration: this.audio.duration,
         isLoading: false,
       });
-      
-      // If play was requested while loading, play now
-      if (this.pendingPlay && this.userInteracted) {
-        this.pendingPlay = false;
-        this.audio.play().catch(error => {
-          console.error("Pending play failed:", error);
-        });
-      }
     }
   };
 
@@ -223,16 +183,6 @@ class AudioService {
 
   private handleCanPlay = () => {
     this.updateState({ isLoading: false });
-    
-    // If play was requested while loading, play now
-    if (this.pendingPlay && this.userInteracted) {
-      this.pendingPlay = false;
-      if (this.audio) {
-        this.audio.play().catch(error => {
-          console.error("Pending play failed:", error);
-        });
-      }
-    }
   };
 
   private handleError = async () => {
@@ -258,32 +208,13 @@ class AudioService {
   async play() {
     if (this.audio && !this.state.isLoading) {
       try {
-        // Ensure user has interacted before trying to play
-        if (!this.userInteracted) {
-          console.warn("Cannot play audio: user interaction required");
-          this.pendingPlay = true;
-          return false;
-        }
-        
         await this.audio.play();
         return true;
       } catch (error) {
         console.error("Audio playback failed:", error);
-        
-        // If it's an interaction error, wait for user interaction
-        if (error instanceof Error && error.name === 'NotAllowedError') {
-          this.pendingPlay = true;
-          this.userInteracted = false;
-          this.setupUserInteractionHandlers();
-        }
         return false;
       }
-    } else if (this.state.isLoading) {
-      // Queue the play request until audio is ready
-      this.pendingPlay = true;
-      return true;
     }
-    
     return false;
   }
 
@@ -291,10 +222,6 @@ class AudioService {
     if (this.audio) {
       this.audio.pause();
     }
-  }
-
-  needsUserInteraction(): boolean {
-    return !this.userInteracted;
   }
 
   seek(percentage: number) {
