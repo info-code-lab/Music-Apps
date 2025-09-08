@@ -26,8 +26,11 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(() => {
     try {
       const saved = localStorage.getItem('music_player_is_playing');
-      return saved === 'true';
+      const initialValue = saved === 'true';
+      console.log("Initial isPlaying state:", initialValue);
+      return initialValue;
     } catch {
+      console.log("Initial isPlaying state: false (fallback)");
       return false;
     }
   });
@@ -42,13 +45,17 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   }, [currentSong]);
 
   useEffect(() => {
+    console.log("isPlaying state changed to:", isPlaying);
     localStorage.setItem('music_player_is_playing', isPlaying.toString());
   }, [isPlaying]);
 
   const playTrack = (track: LegacyTrack) => {
     console.log("playTrack called with:", track.title);
+    console.log("Setting currentSong to:", track);
+    console.log("Setting isPlaying to true");
     setCurrentSong(track);
     setIsPlaying(true);
+    console.log("playTrack completed - state should be updated");
   };
 
   const togglePlayPause = () => {

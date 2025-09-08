@@ -38,6 +38,8 @@ export default function MusicPlayer({
   const [volume, setVolume] = useState([70]);
   const [isMuted, setIsMuted] = useState(false);
   
+  console.log("MusicPlayer component - isPlaying prop:", isPlaying, "song.url:", song.url);
+  
   const {
     currentTime,
     duration,
