@@ -51,6 +51,14 @@ export default function SongsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    artist: "",
+    category: ""
+  });
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
@@ -108,12 +116,61 @@ export default function SongsManagement() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const updateTrackMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      await apiRequest("PUT", `/api/tracks/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      toast.success("Track updated successfully");
+      setIsEditDialogOpen(false);
+      setSelectedTrack(null);
+    },
+    onError: () => {
+      toast.error("Failed to update track");
+    },
+  });
+
   const handleDeleteTrack = (trackId: string) => {
-    deleteTrackMutation.mutate(trackId);
+    if (confirm('Are you sure you want to delete this track?')) {
+      deleteTrackMutation.mutate(trackId);
+    }
   };
 
   const handleToggleFavorite = (trackId: string) => {
     toggleFavoriteMutation.mutate(trackId);
+  };
+
+  const handleViewDetails = (track: Track) => {
+    setSelectedTrack(track);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleEditTrack = (track: Track) => {
+    setSelectedTrack(track);
+    setEditFormData({
+      title: track.title,
+      artist: track.artist,
+      category: track.category
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedTrack) {
+      updateTrackMutation.mutate({ id: selectedTrack.id, data: editFormData });
+    }
+  };
+
+  const handlePlayTrack = (track: Track) => {
+    if (track.audioUrl) {
+      const audio = new Audio(track.audioUrl);
+      audio.play().catch(() => toast.error('Failed to play track'));
+      toast.success(`Now playing: ${track.title}`);
+    } else {
+      toast.error('Audio file not available');
+    }
   };
 
   const getUploadTypeColor = (uploadType: string) => {
@@ -295,13 +352,17 @@ export default function SongsManagement() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleViewDetails(track)}>
                               <Eye className="h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => handleEditTrack(track)}>
                               <Pencil className="h-4 w-4" />
                               Edit Track
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => handlePlayTrack(track)}>
+                              <Play className="h-4 w-4" />
+                              Play Track
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="gap-2"
@@ -347,6 +408,113 @@ export default function SongsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Track Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Track Details</DialogTitle>
+            <DialogDescription>View detailed track information</DialogDescription>
+          </DialogHeader>
+          {selectedTrack && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <Music className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedTrack.title}</h3>
+                  <p className="text-sm text-gray-500">by {selectedTrack.artist}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Category</label>
+                  <p className="text-gray-900 dark:text-white">{selectedTrack.category}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Duration</label>
+                  <p className="text-gray-900 dark:text-white">{formatDuration(selectedTrack.duration)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Upload Type</label>
+                  <p className="text-gray-900 dark:text-white">{selectedTrack.uploadType}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Favorite</label>
+                  <p className="text-gray-900 dark:text-white">{selectedTrack.isFavorite ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Track ID</label>
+                <p className="text-sm text-gray-500 font-mono">{selectedTrack.id}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Track Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Track</DialogTitle>
+            <DialogDescription>Update track information</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Track Title</label>
+              <Input
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                placeholder="Enter track title"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Artist</label>
+              <Input
+                value={editFormData.artist}
+                onChange={(e) => setEditFormData({...editFormData, artist: e.target.value})}
+                placeholder="Enter artist name"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Category</label>
+              <select
+                value={editFormData.category}
+                onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
+                required
+              >
+                <option value="">Select category</option>
+                {genres.map(genre => (
+                  <option key={genre.name} value={genre.name}>{genre.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateTrackMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg"
+              >
+                {updateTrackMutation.isPending ? "Updating..." : "Update Track"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
