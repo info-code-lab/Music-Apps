@@ -62,7 +62,11 @@ export default function SongsManagement() {
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
-    queryKey: ["/api/songs"],
+    queryKey: ["/api/admin/songs"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/songs");
+      return res.json();
+    }
   });
 
   // Fetch categories from database

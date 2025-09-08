@@ -91,9 +91,9 @@ export default function AlbumsManagement() {
   const queryClient = useQueryClient();
 
   const { data: albums = [], isLoading } = useQuery<Album[]>({
-    queryKey: ["/api/albums"],
+    queryKey: ["/api/admin/albums"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/albums");
+      const res = await apiRequest("GET", "/api/admin/albums");
       return res.json();
     }
   });
