@@ -9,6 +9,7 @@ import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
 import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
 import { streamingService } from "./streaming-service";
+import { searchService } from "./search-service";
 import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -1218,6 +1219,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Cleanup completed" });
     } catch (error) {
       res.status(500).json({ error: "Cleanup failed" });
+    }
+  });
+
+  // ================================
+  // SEARCH & RECOMMENDATIONS API
+  // ================================
+
+  // Advanced search with filters
+  app.get("/api/search", async (req, res) => {
+    try {
+      const { q: query, genre, artist, album, limit = "50", offset = "0" } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+
+      const filters = {
+        genre: genre as string,
+        artist: artist as string,
+        album: album as string
+      };
+
+      const results = await searchService.search(
+        query, 
+        filters, 
+        parseInt(limit as string), 
+        parseInt(offset as string)
+      );
+
+      res.json(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      res.status(500).json({ error: "Search failed" });
+    }
+  });
+
+  // Get music recommendations
+  app.get("/api/recommendations", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { baseSongId, algorithm = "hybrid", limit = "10" } = req.query;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const recommendations = await searchService.getRecommendations({
+        userId,
+        baseSongId: baseSongId as string,
+        algorithm: algorithm as 'collaborative' | 'content_based' | 'hybrid',
+        limit: parseInt(limit as string),
+        diversityBoost: 0.3
+      });
+
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Recommendations error:", error);
+      res.status(500).json({ error: "Failed to get recommendations" });
+    }
+  });
+
+  // Get search analytics (Admin only)
+  app.get("/api/search/analytics", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const analytics = searchService.getSearchAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get search analytics" });
+    }
+  });
+
+  // Get trending songs
+  app.get("/api/trending", async (req, res) => {
+    try {
+      const { limit = "20" } = req.query;
+      
+      // For now, return most played songs from recent period
+      const allSongs = await storage.getAllSongs();
+      const trending = allSongs
+        .sort((a, b) => (b.playCount || 0) - (a.playCount || 0))
+        .slice(0, parseInt(limit as string));
+
+      res.json(trending);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get trending songs" });
     }
   });
 
