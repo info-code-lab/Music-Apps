@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/hooks/use-audio-player";
 import { formatDuration } from "@/lib/audio-utils";
-import type { Track } from "@shared/schema";
+import type { LegacyTrack as Track } from "@shared/schema";
 
 interface MusicPlayerProps {
   song: Track;
@@ -42,9 +42,10 @@ export default function MusicPlayer({
     duration,
     progress,
     isLoading,
+    isPlayingOffline,
     seek,
     setVolumeLevel
-  } = useAudioPlayer(song.url, isPlaying);
+  } = useAudioPlayer(song.url, isPlaying, song.id);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);

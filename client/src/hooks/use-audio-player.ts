@@ -1,54 +1,140 @@
 import { useState, useEffect, useRef } from "react";
+import { offlineStorage } from '@/lib/offline-storage';
+import { useOffline } from './use-offline';
 
-export function useAudioPlayer(src: string, isPlaying: boolean) {
+export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlayingOffline, setIsPlayingOffline] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+  const { isOffline } = useOffline();
 
   useEffect(() => {
-    // Create audio element
-    const audio = new Audio();
-    audioRef.current = audio;
+    let isMounted = true;
+    
+    const setupAudio = async () => {
+      setIsLoading(true);
+      
+      // Create audio element
+      const audio = new Audio();
+      audioRef.current = audio;
 
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsLoading(false);
+      const handleLoadedMetadata = () => {
+        if (isMounted) {
+          setDuration(audio.duration);
+          setIsLoading(false);
+        }
+      };
+
+      const handleTimeUpdate = () => {
+        if (isMounted) {
+          setCurrentTime(audio.currentTime);
+          setProgress(audio.duration ? audio.currentTime / audio.duration : 0);
+        }
+      };
+
+      const handleCanPlay = () => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      };
+
+      const handleError = (event: Event) => {
+        if (isMounted) {
+          setIsLoading(false);
+          console.error("Audio loading failed:", (event.target as HTMLAudioElement)?.error?.message || "Unknown audio error");
+          
+          // If online source fails and we have trackId, try offline version
+          if (trackId && !isPlayingOffline) {
+            tryOfflinePlayback();
+          }
+        }
+      };
+
+      const tryOfflinePlayback = async () => {
+        if (!trackId) return;
+        
+        try {
+          const offlineSong = await offlineStorage.getSong(trackId);
+          if (offlineSong) {
+            // Cleanup previous blob URL
+            if (blobUrlRef.current) {
+              offlineStorage.revokeBlobUrl(blobUrlRef.current);
+            }
+            
+            // Create new blob URL
+            const blobUrl = offlineStorage.createBlobUrl(offlineSong.audioBlob);
+            blobUrlRef.current = blobUrl;
+            
+            audio.src = blobUrl;
+            setIsPlayingOffline(true);
+            audio.load();
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to load offline version:", error);
+        }
+        
+        // Fallback to online source
+        audio.src = src;
+        setIsPlayingOffline(false);
+        audio.load();
+      };
+
+      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("canplay", handleCanPlay);
+      audio.addEventListener("error", handleError);
+
+      // Determine which source to use
+      if (isOffline && trackId) {
+        // If offline, try to use offline version first
+        await tryOfflinePlayback();
+      } else if (trackId) {
+        // If online, check if we have offline version and prefer it for better performance
+        const offlineSong = await offlineStorage.getSong(trackId);
+        if (offlineSong) {
+          const blobUrl = offlineStorage.createBlobUrl(offlineSong.audioBlob);
+          blobUrlRef.current = blobUrl;
+          audio.src = blobUrl;
+          setIsPlayingOffline(true);
+        } else {
+          audio.src = src;
+          setIsPlayingOffline(false);
+        }
+        audio.load();
+      } else {
+        // No trackId, use online source
+        audio.src = src;
+        setIsPlayingOffline(false);
+        audio.load();
+      }
     };
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      setProgress(audio.duration ? audio.currentTime / audio.duration : 0);
-    };
-
-    const handleCanPlay = () => {
-      setIsLoading(false);
-    };
-
-    const handleError = (event: Event) => {
-      setIsLoading(false);
-      console.error("Audio loading failed:", (event.target as HTMLAudioElement)?.error?.message || "Unknown audio error");
-    };
-
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("canplay", handleCanPlay);
-    audio.addEventListener("error", handleError);
-
-    // Set audio source
-    audio.src = src;
-    audio.load();
+    setupAudio();
 
     return () => {
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("canplay", handleCanPlay);
-      audio.removeEventListener("error", handleError);
-      audio.pause();
-      audio.src = "";
+      isMounted = false;
+      const audio = audioRef.current;
+      if (audio) {
+        audio.removeEventListener("loadedmetadata", () => {});
+        audio.removeEventListener("timeupdate", () => {});
+        audio.removeEventListener("canplay", () => {});
+        audio.removeEventListener("error", () => {});
+        audio.pause();
+        audio.src = "";
+      }
+      
+      // Cleanup blob URL
+      if (blobUrlRef.current) {
+        offlineStorage.revokeBlobUrl(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
     };
-  }, [src]);
+  }, [src, trackId, isOffline]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -88,6 +174,7 @@ export function useAudioPlayer(src: string, isPlaying: boolean) {
     duration,
     progress,
     isLoading,
+    isPlayingOffline,
     seek,
     setVolumeLevel,
   };
