@@ -63,6 +63,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onPlay()}
       data-testid={`card-song-${song.id}`}
     >
       <div className="relative">
