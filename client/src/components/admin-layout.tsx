@@ -92,20 +92,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </Button>
           </div>
 
-          {/* User info */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <UserIcon className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</p>
-                <Badge variant="outline" className="text-purple-600 border-purple-600">
-                  Admin
-                </Badge>
-              </div>
-            </div>
-          </div>
+          {/* User info moved to header */}
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
@@ -166,15 +153,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Top bar */}
         <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden"
-              data-testid="button-open-sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden"
+                data-testid="button-open-sidebar"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              
+              {/* User profile in header */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <UserIcon className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</p>
+                  <Badge variant="outline" className="text-xs text-purple-600 border-purple-600">
+                    Admin
+                  </Badge>
+                </div>
+              </div>
+            </div>
             
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">
