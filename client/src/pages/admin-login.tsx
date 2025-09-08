@@ -38,9 +38,9 @@ export default function AdminLogin() {
     }
 
     try {
-      await loginMutation.mutateAsync(loginForm);
+      const response = await loginMutation.mutateAsync(loginForm);
       // Check if user is admin after login
-      if (loginMutation.data?.user?.role === 'admin') {
+      if (response.user.role === 'admin') {
         setLocation("/admin");
       } else {
         toast.error("Admin access required");
