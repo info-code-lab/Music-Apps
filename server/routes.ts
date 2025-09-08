@@ -57,45 +57,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       progressEmitter.removeConnection(sessionId);
     });
   });
-  // Get all tracks
-  app.get("/api/tracks", async (req, res) => {
-    try {
-      const tracks = await storage.getAllTracks();
-      res.json(tracks);
-    } catch (error) {
-      console.error("Error fetching tracks:", error);
-      res.status(500).json({ message: "Failed to fetch tracks", error: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
+  // Legacy tracks endpoint removed - use /api/songs instead
 
-  // Get tracks by category
-  app.get("/api/tracks/category/:category", async (req, res) => {
-    try {
-      const { category } = req.params;
-      const tracks = await storage.getTracksByCategory(category);
-      res.json(tracks);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tracks by category" });
-    }
-  });
+  // Legacy tracks by category endpoint removed
 
-  // Search tracks
-  app.get("/api/tracks/search", async (req, res) => {
-    try {
-      const { q } = req.query;
-      if (!q || typeof q !== 'string') {
-        res.status(400).json({ message: "Search query is required" });
-        return;
-      }
-      const tracks = await storage.searchTracks(q);
-      res.json(tracks);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to search tracks" });
-    }
-  });
+  // Legacy tracks search endpoint removed
 
-  // Upload track via URL (Admin only)
-  app.post("/api/tracks/upload-url", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  // Upload song via URL (Admin only)  
+  app.post("/api/songs/upload-url", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     const sessionId = randomUUID();
     
     try {
@@ -152,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           const validatedData = insertTrackSchema.parse(trackData);
-          const track = await storage.createTrack(validatedData);
+          const track = await storage.createSong(validatedData);
           
           
           progressEmitter.emitComplete(sessionId, `Successfully added "${track.title}"`);
@@ -170,8 +139,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload track via file (Admin only)
-  app.post("/api/tracks/upload-file", authenticateToken, requireAdmin, upload.single('audio'), async (req: AuthRequest, res) => {
+  // Upload song via file (Admin only)
+  app.post("/api/songs/upload-file", authenticateToken, requireAdmin, upload.single('audio'), async (req: AuthRequest, res) => {
     try {
       const multerReq = req as Request & { file?: Express.Multer.File };
       if (!multerReq.file) {
@@ -197,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const validatedData = insertTrackSchema.parse(trackData);
-      const track = await storage.createTrack(validatedData);
+      const track = await storage.createSong(validatedData);
       
       res.status(201).json(track);
     } catch (error) {
@@ -210,13 +179,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Toggle favorite
-  app.patch("/api/tracks/:id/favorite", async (req, res) => {
+  app.patch("/api/songs/:id/favorite", async (req, res) => {
     try {
       const { id } = req.params;
       const track = await storage.toggleFavorite(id);
       
       if (!track) {
-        res.status(404).json({ message: "Track not found" });
+        res.status(404).json({ message: "Song not found" });
         return;
       }
       
@@ -226,20 +195,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete track (Admin only)
-  app.delete("/api/tracks/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  // Delete song (Admin only)
+  app.delete("/api/songs/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
-      const deleted = await storage.deleteTrack(id);
+      const deleted = await storage.deleteSong(id);
       
       if (!deleted) {
-        res.status(404).json({ message: "Track not found" });
+        res.status(404).json({ message: "Song not found" });
         return;
       }
       
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete track" });
+      res.status(500).json({ message: "Failed to delete song" });
     }
   });
 

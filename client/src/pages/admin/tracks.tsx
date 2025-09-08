@@ -62,7 +62,7 @@ export default function SongsManagement() {
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+    queryKey: ["/api/songs"],
   });
 
   // Fetch categories from database
@@ -76,10 +76,10 @@ export default function SongsManagement() {
 
   const deleteTrackMutation = useMutation({
     mutationFn: async (trackId: string) => {
-      await apiRequest("DELETE", `/api/tracks/${trackId}`);
+      await apiRequest("DELETE", `/api/songs/${trackId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       toast.success("Song deleted successfully");
     },
     onError: () => {
@@ -89,10 +89,10 @@ export default function SongsManagement() {
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: async (trackId: string) => {
-      await apiRequest("PATCH", `/api/tracks/${trackId}/favorite`);
+      await apiRequest("PATCH", `/api/songs/${trackId}/favorite`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       toast.success("Favorite status updated");
     },
     onError: () => {
@@ -118,10 +118,10 @@ export default function SongsManagement() {
 
   const updateTrackMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest("PUT", `/api/tracks/${id}`, data);
+      await apiRequest("PUT", `/api/songs/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       toast.success("Track updated successfully");
       setIsEditDialogOpen(false);
       setSelectedTrack(null);

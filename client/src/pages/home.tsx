@@ -18,17 +18,17 @@ export default function Home() {
   const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+    queryKey: ["/api/songs"],
     enabled: selectedCategory === "All Categories" && !searchQuery,
   });
 
   const { data: filteredSongs = [] } = useQuery<Track[]>({
-    queryKey: ["/api/tracks/category", selectedCategory],
+    queryKey: ["/api/songs/genre", selectedCategory],
     enabled: selectedCategory !== "All Categories" && !searchQuery,
   });
 
   const { data: searchResults = [] } = useQuery<Track[]>({
-    queryKey: ["/api/tracks/search", { q: searchQuery }],
+    queryKey: ["/api/songs/search", { q: searchQuery }],
     enabled: !!searchQuery,
   });
 

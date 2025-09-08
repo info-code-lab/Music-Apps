@@ -18,23 +18,19 @@ interface Song {
 export default function GlobalMusicPlayer() {
   const { currentSong, isPlaying, setCurrentSong, setIsPlaying } = useMusicPlayer();
 
-  // Get all tracks for navigation - try both endpoints to ensure we have data
-  const { data: tracks = [] } = useQuery<LegacyTrack[]>({
-    queryKey: ['/api/tracks'],
-  });
-  
+  // Get all songs for navigation
   const { data: songs = [] } = useQuery<any[]>({
     queryKey: ['/api/songs'],
   });
 
   if (!currentSong) return null;
 
-  // Convert songs to legacy format if needed
-  const convertedSongs = songs.map((song: any): LegacyTrack => ({
+  // Convert songs to legacy format
+  const activeTrackList = songs.map((song: any): LegacyTrack => ({
     id: song.id,
     title: song.title,
     artist: "Unknown Artist",
-    category: "Music",
+    category: "Music", 
     duration: song.duration || 0,
     url: song.filePath || "",
     artwork: song.coverArt,
@@ -43,50 +39,31 @@ export default function GlobalMusicPlayer() {
     createdAt: song.createdAt,
   }));
 
-  // Use whichever dataset has the current song
-  let activeTrackList = tracks;
-  if (tracks.length === 0 || !tracks.find(t => t.id === currentSong.id)) {
-    activeTrackList = convertedSongs;
-  }
-
-  console.log('Current song ID:', currentSong.id);
-  console.log('Available tracks:', activeTrackList.length);
-  console.log('Track IDs:', activeTrackList.map(t => t.id));
 
   const handleNext = () => {
     const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
-    console.log('Current index:', currentIndex, 'Total tracks:', activeTrackList.length);
-    
     if (currentIndex === -1) {
-      console.log('Current song not found in track list');
       return;
     }
     
     const nextTrack = activeTrackList[currentIndex + 1];
     if (nextTrack) {
-      console.log('Moving to next track:', nextTrack.title);
       setCurrentSong(nextTrack);
     } else {
-      console.log('No next track available, stopping playback');
       setIsPlaying(false);
     }
   };
 
   const handlePrevious = () => {
     const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
-    console.log('Current index:', currentIndex, 'Total tracks:', activeTrackList.length);
-    
     if (currentIndex === -1) {
-      console.log('Current song not found in track list');
       return;
     }
     
     const prevTrack = activeTrackList[currentIndex - 1];
     if (prevTrack) {
-      console.log('Moving to previous track:', prevTrack.title);
       setCurrentSong(prevTrack);
     } else {
-      console.log('No previous track available, stopping playback');
       setIsPlaying(false);
     }
   };
