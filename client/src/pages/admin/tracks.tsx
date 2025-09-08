@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -41,11 +51,32 @@ import {
   Download,
   Eye,
   Upload,
-  BarChart3
+  BarChart3,
+  ChevronDown,
+  Check,
+  X
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
-import type { Track } from "@shared/schema";
+import type { LegacyTrack } from "@shared/schema";
+
+// Define the admin track type that includes extra fields from getAllSongsWithDetails
+type AdminTrack = {
+  id: string;
+  title: string;
+  artist: string;
+  category: string;
+  duration: number;
+  albumId: string | null;
+  releaseDate: string | null;
+  isExplicit: boolean;
+  lyrics: string | null;
+  albumTitle: string | null;
+  genreName: string | null;
+  isFavorite?: boolean;
+  audioUrl?: string;
+  uploadType?: string;
+};
 
 export default function SongsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,10 +84,10 @@ export default function SongsManagement() {
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<AdminTrack | null>(null);
   const [editFormData, setEditFormData] = useState({
     title: "",
-    artist: "",
+    artists: [] as string[],
     category: "",
     duration: 0,
     albumId: "",
@@ -64,9 +95,11 @@ export default function SongsManagement() {
     isExplicit: false,
     lyrics: ""
   });
+  const [isArtistPopoverOpen, setIsArtistPopoverOpen] = useState(false);
+  const [artistSearchTerm, setArtistSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: tracks = [], isLoading } = useQuery<Track[]>({
+  const { data: tracks = [], isLoading } = useQuery<AdminTrack[]>({
     queryKey: ["/api/admin/songs"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/admin/songs");
@@ -88,6 +121,15 @@ export default function SongsManagement() {
     queryKey: ["/api/albums"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/albums");
+      return res.json();
+    }
+  });
+
+  // Fetch artists for multi-select dropdown
+  const { data: allArtists = [] } = useQuery<{id: string; name: string}[]>({
+    queryKey: ["/api/artists"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/artists");
       return res.json();
     }
   });
@@ -177,16 +219,18 @@ export default function SongsManagement() {
     toggleFavoriteMutation.mutate(trackId);
   };
 
-  const handleViewDetails = (track: Track) => {
+  const handleViewDetails = (track: AdminTrack) => {
     setSelectedTrack(track);
     setIsDetailsDialogOpen(true);
   };
 
-  const handleEditTrack = (track: Track) => {
+  const handleEditTrack = (track: AdminTrack) => {
     setSelectedTrack(track);
+    // Convert single artist to array for backwards compatibility
+    const artistsArray = track.artist ? [track.artist] : [];
     setEditFormData({
       title: track.title,
-      artist: track.artist,
+      artists: artistsArray,
       category: track.category,
       duration: track.duration || 0,
       albumId: track.albumId || "",
@@ -200,13 +244,57 @@ export default function SongsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTrack) {
-      updateTrackMutation.mutate({ id: selectedTrack.id, data: editFormData });
+      // Convert artists array back to single artist string for API compatibility
+      const formDataForAPI = {
+        ...editFormData,
+        artist: editFormData.artists.join(", ")
+      };
+      delete (formDataForAPI as any).artists;
+      updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };
 
-  const handlePlayTrack = (track: Track) => {
-    if (track.audioUrl) {
-      const audio = new Audio(track.audioUrl);
+  const handleArtistToggle = (artistName: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      artists: prev.artists.includes(artistName)
+        ? prev.artists.filter(a => a !== artistName)
+        : [...prev.artists, artistName]
+    }));
+  };
+
+  const handleSelectAllArtists = () => {
+    const allArtistNames = filteredArtists.map(artist => artist.name);
+    const allSelected = allArtistNames.every(name => editFormData.artists.includes(name));
+    
+    if (allSelected) {
+      setEditFormData(prev => ({
+        ...prev,
+        artists: prev.artists.filter(a => !allArtistNames.includes(a))
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        artists: Array.from(new Set([...prev.artists, ...allArtistNames]))
+      }));
+    }
+  };
+
+  const removeArtist = (artistName: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      artists: prev.artists.filter(a => a !== artistName)
+    }));
+  };
+
+  const filteredArtists = allArtists.filter(artist => 
+    artist.name.toLowerCase().includes(artistSearchTerm.toLowerCase())
+  );
+
+  const handlePlayTrack = (track: AdminTrack) => {
+    const audioUrl = track.audioUrl || `/api/songs/${track.id}/stream`;
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
       audio.play().catch(() => toast.error('Failed to play track'));
       toast.success(`Now playing: ${track.title}`);
     } else {
@@ -214,7 +302,7 @@ export default function SongsManagement() {
     }
   };
 
-  const getUploadTypeColor = (uploadType: string) => {
+  const getUploadTypeColor = (uploadType?: string) => {
     return uploadType === 'file' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/20';
   };
 
@@ -370,7 +458,7 @@ export default function SongsManagement() {
                       </TableCell>
                       <TableCell className="font-mono">{formatDuration(track.duration)}</TableCell>
                       <TableCell>
-                        <Badge className={getUploadTypeColor(track.uploadType)}>
+                        <Badge className={getUploadTypeColor(track.uploadType || 'file')}>
                           {track.uploadType}
                         </Badge>
                       </TableCell>
@@ -499,7 +587,7 @@ export default function SongsManagement() {
 
       {/* Edit Track Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Track</DialogTitle>
             <DialogDescription>Update track information</DialogDescription>
@@ -516,14 +604,87 @@ export default function SongsManagement() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Artist</label>
-              <Input
-                value={editFormData.artist}
-                onChange={(e) => setEditFormData({...editFormData, artist: e.target.value})}
-                placeholder="Enter artist name"
-                required
-                data-testid="input-artist-name"
-              />
+              <label className="text-sm font-medium mb-2 block">Artists</label>
+              <Popover open={isArtistPopoverOpen} onOpenChange={setIsArtistPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isArtistPopoverOpen}
+                    className="w-full justify-between h-auto min-h-[40px] p-2"
+                    data-testid="button-select-artists"
+                  >
+                    <div className="flex flex-wrap gap-1 flex-1">
+                      {editFormData.artists.length === 0 ? (
+                        <span className="text-muted-foreground">Select artists...</span>
+                      ) : (
+                        editFormData.artists.map((artist) => (
+                          <div
+                            key={artist}
+                            className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-sm"
+                          >
+                            {artist}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeArtist(artist);
+                              }}
+                              className="hover:bg-muted-foreground/20 rounded p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search artists..."
+                      value={artistSearchTerm}
+                      onValueChange={setArtistSearchTerm}
+                      data-testid="input-search-artists"
+                    />
+                    <CommandEmpty>No artists found.</CommandEmpty>
+                    <CommandList className="max-h-[200px]">
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={handleSelectAllArtists}
+                          className="font-medium"
+                          data-testid="option-select-all-artists"
+                        >
+                          <div className="flex items-center space-x-2 w-full">
+                            <Checkbox
+                              checked={filteredArtists.length > 0 && filteredArtists.every(artist => editFormData.artists.includes(artist.name))}
+                              className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                            />
+                            <span>Select All ({filteredArtists.length} artists)</span>
+                          </div>
+                        </CommandItem>
+                        {filteredArtists.map((artist) => (
+                          <CommandItem
+                            key={artist.id}
+                            onSelect={() => handleArtistToggle(artist.name)}
+                            data-testid={`option-artist-${artist.name}`}
+                          >
+                            <div className="flex items-center space-x-2 w-full">
+                              <Checkbox
+                                checked={editFormData.artists.includes(artist.name)}
+                                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              />
+                              <span>{artist.name}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
