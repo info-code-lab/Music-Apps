@@ -355,6 +355,74 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(songs).orderBy(desc(songs.createdAt));
   }
 
+  // Enhanced methods for admin dashboard with full relationship data
+  async getAllSongsWithDetails(): Promise<any[]> {
+    const result = await db
+      .select({
+        song: songs,
+        genre: genres,
+        album: albums,
+        artists: sql<string>`STRING_AGG(${artists.name}, ', ')`
+      })
+      .from(songs)
+      .leftJoin(genres, eq(songs.genreId, genres.id))
+      .leftJoin(albums, eq(songs.albumId, albums.id))
+      .leftJoin(songArtists, eq(songs.id, songArtists.songId))
+      .leftJoin(artists, eq(songArtists.artistId, artists.id))
+      .groupBy(songs.id, genres.id, albums.id)
+      .orderBy(desc(songs.createdAt));
+    
+    return result.map(row => ({
+      ...row.song,
+      artist: row.artists || 'Unknown Artist',
+      category: row.genre?.name || 'Music',
+      albumTitle: row.album?.title || null,
+      genreName: row.genre?.name || null
+    }));
+  }
+
+  async getAllAlbumsWithDetails(): Promise<any[]> {
+    const result = await db
+      .select({
+        album: albums,
+        artist: artists,
+        songCount: sql<number>`COUNT(${songs.id})`,
+        totalDuration: sql<number>`COALESCE(SUM(${songs.duration}), 0)`
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .leftJoin(songs, eq(albums.id, songs.albumId))
+      .groupBy(albums.id, artists.id)
+      .orderBy(desc(albums.createdAt));
+    
+    return result.map(row => ({
+      ...row.album,
+      artistName: row.artist?.name || 'Unknown Artist',
+      songCount: Number(row.songCount) || 0,
+      totalDuration: Number(row.totalDuration) || 0
+    }));
+  }
+
+  async getAllArtistsWithDetails(): Promise<any[]> {
+    const result = await db
+      .select({
+        artist: artists,
+        trackCount: sql<number>`COUNT(DISTINCT ${songs.id})`,
+        followers: sql<number>`0` // TODO: implement followers count
+      })
+      .from(artists)
+      .leftJoin(songArtists, eq(artists.id, songArtists.artistId))
+      .leftJoin(songs, eq(songArtists.songId, songs.id))
+      .groupBy(artists.id)
+      .orderBy(desc(artists.createdAt));
+    
+    return result.map(row => ({
+      ...row.artist,
+      trackCount: Number(row.trackCount) || 0,
+      followers: Number(row.followers) || 0
+    }));
+  }
+
   async getSong(id: string): Promise<Song | undefined> {
     const [song] = await db.select().from(songs).where(eq(songs.id, id));
     return song || undefined;
