@@ -41,7 +41,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+          />
           <Router />
         </TooltipProvider>
       </AuthProvider>
