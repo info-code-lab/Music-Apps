@@ -26,9 +26,9 @@ export function useAudioPlayer(src: string, isPlaying: boolean) {
       setIsLoading(false);
     };
 
-    const handleError = () => {
+    const handleError = (event: Event) => {
       setIsLoading(false);
-      console.error("Audio playback error");
+      console.error("Audio loading failed:", (event.target as HTMLAudioElement)?.error?.message || "Unknown audio error");
     };
 
     audio.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -58,7 +58,7 @@ export function useAudioPlayer(src: string, isPlaying: boolean) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
-          console.error("Audio play error:", error);
+          console.error("Audio playback failed:", error.message || error);
         });
       }
     } else {
