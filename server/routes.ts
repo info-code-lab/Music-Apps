@@ -399,6 +399,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced endpoints for admin dashboard
+  app.get("/api/admin/songs", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const songs = await storage.getAllSongsWithDetails();
+      res.json(songs);
+    } catch (error) {
+      console.error("Admin songs error:", error);
+      res.status(500).json({ message: "Failed to fetch songs with details" });
+    }
+  });
+
+  app.get("/api/admin/albums", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const albums = await storage.getAllAlbumsWithDetails();
+      res.json(albums);
+    } catch (error) {
+      console.error("Admin albums error:", error);
+      res.status(500).json({ message: "Failed to fetch albums with details" });
+    }
+  });
+
+  app.get("/api/admin/artists", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const artists = await storage.getAllArtistsWithDetails();
+      res.json(artists);
+    } catch (error) {
+      console.error("Admin artists error:", error);
+      res.status(500).json({ message: "Failed to fetch artists with details" });
+    }
+  });
+
   app.get("/api/songs/search", async (req, res) => {
     try {
       const { q } = req.query;
