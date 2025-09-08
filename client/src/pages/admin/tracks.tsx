@@ -142,7 +142,7 @@ export default function SongsManagement() {
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-lg gap-2">
+              <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg gap-2">
                 <Plus className="h-4 w-4" />
                 Add Song
               </Button>

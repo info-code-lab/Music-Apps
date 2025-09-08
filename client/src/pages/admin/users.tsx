@@ -151,7 +151,7 @@ export default function UsersManagement() {
             <Download className="h-4 w-4" />
             Export
           </Button>
-          <Button className="bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 shadow-lg gap-2">
+          <Button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-lg gap-2">
             <Plus className="h-4 w-4" />
             Add User
           </Button>
