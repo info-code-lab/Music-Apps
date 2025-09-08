@@ -5,7 +5,7 @@ import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Track } from "@shared/schema";
+import type { Track, LegacyTrack } from "@shared/schema";
 
 interface MusicLibraryProps {
   songs: Track[];
@@ -136,13 +136,29 @@ export default function MusicLibrary({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-          {songs.map((song) => (
-            <MusicCard 
-              key={song.id} 
-              song={song} 
-              onPlay={() => onPlaySong(song)}
-            />
-          ))}
+          {songs.map((song) => {
+            // Convert Track to LegacyTrack format for MusicCard compatibility
+            const legacySong: LegacyTrack = {
+              id: song.id,
+              title: song.title,
+              artist: "Unknown Artist", // TODO: Get from artists table
+              category: "Music", // TODO: Get from categories table  
+              duration: song.duration || 0,
+              url: song.filePath ? encodeURI(song.filePath) : "",
+              artwork: song.coverArt || null,
+              isFavorite: false, // TODO: Get from favorites table
+              uploadType: "file",
+              createdAt: song.createdAt || undefined,
+            };
+            
+            return (
+              <MusicCard 
+                key={song.id} 
+                song={legacySong} 
+                onPlay={() => onPlaySong(song)}
+              />
+            );
+          })}
         </div>
       )}
     </section>
