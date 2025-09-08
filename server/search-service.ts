@@ -1,5 +1,5 @@
 import { storage } from "./storage";
-import type { Song, Artist, Album, User } from "@shared/schema";
+import type { Song, Artist, Album, User, Genre } from "@shared/schema";
 
 export interface SearchFilters {
   genre?: string;
@@ -16,6 +16,7 @@ export interface SearchResult {
   songs: Song[];
   artists: Artist[];
   albums: Album[];
+  genres: Genre[];
   playlists: any[];
   total: number;
   query: string;
@@ -51,22 +52,24 @@ export class SearchService {
       this.trackSearch(cleanQuery);
       
       // Parallel search across different content types
-      const [songs, artists, albums, playlists] = await Promise.all([
+      const [songs, artists, albums, genres, playlists] = await Promise.all([
         this.searchSongs(searchTerms, filters, limit, offset),
         this.searchArtists(searchTerms, Math.min(limit, 20)),
         this.searchAlbums(searchTerms, Math.min(limit, 20)),
+        this.searchGenres(searchTerms, Math.min(limit, 10)),
         this.searchPlaylists(searchTerms, Math.min(limit, 20))
       ]);
 
       // Generate search suggestions
       const suggestions = this.generateSuggestions(cleanQuery);
 
-      const total = songs.length + artists.length + albums.length + playlists.length;
+      const total = songs.length + artists.length + albums.length + genres.length + playlists.length;
 
       return {
         songs,
         artists,
         albums,
+        genres,
         playlists,
         total,
         query: cleanQuery,
@@ -149,6 +152,17 @@ export class SearchService {
     
     const results = allAlbums.filter(album => {
       const searchableText = `${album.title} ${album.artistId}`.toLowerCase();
+      return terms.some(term => searchableText.includes(term.toLowerCase()));
+    });
+
+    return results.slice(0, limit);
+  }
+
+  private async searchGenres(terms: string[], limit: number): Promise<Genre[]> {
+    const allGenres = await storage.getAllGenres();
+    
+    const results = allGenres.filter(genre => {
+      const searchableText = `${genre.name} ${genre.description || ''}`.toLowerCase();
       return terms.some(term => searchableText.includes(term.toLowerCase()));
     });
 
