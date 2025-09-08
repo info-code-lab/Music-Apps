@@ -73,16 +73,16 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         />
         <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
           isHovered ? 'opacity-100' : 'opacity-0'
-        }`}>
+        } z-10`}>
           <Button 
             onClick={(e) => {
               e.stopPropagation();
               onPlay();
             }}
-            className="w-12 h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
+            className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
             data-testid={`button-play-${song.id}`}
           >
-            <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
+            <Play className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground ml-0.5" />
           </Button>
         </div>
         <div className="absolute top-2 right-2 flex items-center gap-2">
