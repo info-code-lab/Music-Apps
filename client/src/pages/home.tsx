@@ -52,7 +52,7 @@ export default function Home() {
     artist: "Unknown Artist", // TODO: Get from artists table
     category: "Music", // TODO: Get from categories table
     duration: song.duration || 0,
-    url: song.filePath || "",
+    url: song.filePath ? `/uploads/${song.filePath}` : "",
     artwork: song.coverArt || null,
     isFavorite: false, // TODO: Get from favorites table
     uploadType: "file",

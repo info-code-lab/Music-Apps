@@ -44,7 +44,7 @@ export default function Songs() {
     artist: "Unknown Artist", // TODO: Get from artists table
     category: "Music", // TODO: Get from genres table
     duration: song.duration,
-    url: song.filePath,
+    url: song.filePath ? `/uploads/${song.filePath}` : "",
     artwork: song.coverArt,
     isFavorite: false, // TODO: Get from favorites table
     uploadType: "file",

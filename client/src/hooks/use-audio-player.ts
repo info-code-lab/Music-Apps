@@ -18,9 +18,15 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
     const setupAudio = async () => {
       setIsLoading(true);
       
-      // Create audio element
-      const audio = new Audio();
-      audioRef.current = audio;
+      // Reuse existing audio element or create new one
+      let audio = audioRef.current;
+      if (!audio) {
+        audio = new Audio();
+        audioRef.current = audio;
+      } else {
+        // Pause current playback before changing source
+        audio.pause();
+      }
 
       const handleLoadedMetadata = () => {
         if (isMounted) {
@@ -84,10 +90,24 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
         audio.load();
       };
 
+      // Remove existing listeners first
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("canplay", handleCanPlay);
+      audio.removeEventListener("error", handleError);
+      
+      // Add event listeners
       audio.addEventListener("loadedmetadata", handleLoadedMetadata);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("canplay", handleCanPlay);
       audio.addEventListener("error", handleError);
+
+      // Only proceed if we have a valid source
+      if (!src || src.trim() === '') {
+        console.warn("Empty audio source provided");
+        setIsLoading(false);
+        return;
+      }
 
       // Determine which source to use
       if (isOffline && trackId) {
@@ -138,19 +158,25 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || isLoading) return;
 
     if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          console.error("Audio playback failed:", error.message || error);
-        });
-      }
+      // Wait a bit to ensure the audio is properly loaded before trying to play
+      const playTimeout = setTimeout(() => {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            console.error("Audio playback failed:", error.message || error);
+            // Don't try to play again immediately to avoid loops
+          });
+        }
+      }, 100);
+
+      return () => clearTimeout(playTimeout);
     } else {
       audio.pause();
     }
-  }, [isPlaying]);
+  }, [isPlaying, isLoading]);
 
   const seek = (percentage: number) => {
     const audio = audioRef.current;
