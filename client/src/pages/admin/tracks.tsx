@@ -88,15 +88,19 @@ export default function SongsManagement() {
   const [editFormData, setEditFormData] = useState({
     title: "",
     artists: [] as string[],
-    category: "",
+    categories: [] as string[],
     duration: 0,
-    albumId: "",
+    albums: [] as string[],
     releaseDate: "",
     isExplicit: false,
     lyrics: ""
   });
   const [isArtistPopoverOpen, setIsArtistPopoverOpen] = useState(false);
   const [artistSearchTerm, setArtistSearchTerm] = useState("");
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isAlbumPopoverOpen, setIsAlbumPopoverOpen] = useState(false);
+  const [albumSearchTerm, setAlbumSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
   const { data: tracks = [], isLoading } = useQuery<AdminTrack[]>({
@@ -226,14 +230,16 @@ export default function SongsManagement() {
 
   const handleEditTrack = (track: AdminTrack) => {
     setSelectedTrack(track);
-    // Convert single artist to array for backwards compatibility
+    // Convert single values to arrays for backwards compatibility
     const artistsArray = track.artist ? [track.artist] : [];
+    const categoriesArray = track.category ? [track.category] : [];
+    const albumsArray = track.albumId ? [track.albumId] : [];
     setEditFormData({
       title: track.title,
       artists: artistsArray,
-      category: track.category,
+      categories: categoriesArray,
       duration: track.duration || 0,
-      albumId: track.albumId || "",
+      albums: albumsArray,
       releaseDate: track.releaseDate || "",
       isExplicit: track.isExplicit || false,
       lyrics: track.lyrics || ""
@@ -244,12 +250,16 @@ export default function SongsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTrack) {
-      // Convert artists array back to single artist string for API compatibility
+      // Convert arrays back to single values for API compatibility
       const formDataForAPI = {
         ...editFormData,
-        artist: editFormData.artists.join(", ")
+        artist: editFormData.artists.join(", "),
+        category: editFormData.categories[0] || "", // Take first category for now
+        albumId: editFormData.albums[0] || "" // Take first album for now
       };
       delete (formDataForAPI as any).artists;
+      delete (formDataForAPI as any).categories;
+      delete (formDataForAPI as any).albums;
       updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };
@@ -287,8 +297,82 @@ export default function SongsManagement() {
     }));
   };
 
+  const handleCategoryToggle = (categoryName: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      categories: prev.categories.includes(categoryName)
+        ? prev.categories.filter(c => c !== categoryName)
+        : [...prev.categories, categoryName]
+    }));
+  };
+
+  const handleSelectAllCategories = () => {
+    const allCategoryNames = filteredCategories.map(category => category.name);
+    const allSelected = allCategoryNames.every(name => editFormData.categories.includes(name));
+    
+    if (allSelected) {
+      setEditFormData(prev => ({
+        ...prev,
+        categories: prev.categories.filter(c => !allCategoryNames.includes(c))
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        categories: Array.from(new Set([...prev.categories, ...allCategoryNames]))
+      }));
+    }
+  };
+
+  const removeCategory = (categoryName: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      categories: prev.categories.filter(c => c !== categoryName)
+    }));
+  };
+
+  const handleAlbumToggle = (albumId: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      albums: prev.albums.includes(albumId)
+        ? prev.albums.filter(a => a !== albumId)
+        : [...prev.albums, albumId]
+    }));
+  };
+
+  const handleSelectAllAlbums = () => {
+    const allAlbumIds = filteredAlbums.map(album => album.id);
+    const allSelected = allAlbumIds.every(id => editFormData.albums.includes(id));
+    
+    if (allSelected) {
+      setEditFormData(prev => ({
+        ...prev,
+        albums: prev.albums.filter(a => !allAlbumIds.includes(a))
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        albums: Array.from(new Set([...prev.albums, ...allAlbumIds]))
+      }));
+    }
+  };
+
+  const removeAlbum = (albumId: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      albums: prev.albums.filter(a => a !== albumId)
+    }));
+  };
+
   const filteredArtists = allArtists.filter(artist => 
     artist.name.toLowerCase().includes(artistSearchTerm.toLowerCase())
+  );
+
+  const filteredCategories = genres.filter(genre => 
+    genre.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+  );
+
+  const filteredAlbums = albums.filter(album => 
+    album.title.toLowerCase().includes(albumSearchTerm.toLowerCase())
   );
 
   const handlePlayTrack = (track: AdminTrack) => {
@@ -686,48 +770,186 @@ export default function SongsManagement() {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Category</label>
-                <select
-                  value={editFormData.category}
-                  onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
-                  required
-                  data-testid="select-category"
-                >
-                  <option value="">Select category</option>
-                  {genres.map(genre => (
-                    <option key={genre.name} value={genre.name}>{genre.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Duration (seconds)</label>
-                <Input
-                  type="number"
-                  value={editFormData.duration}
-                  onChange={(e) => setEditFormData({...editFormData, duration: parseInt(e.target.value) || 0})}
-                  placeholder="Duration in seconds"
-                  min="0"
-                  data-testid="input-duration"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Categories</label>
+              <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isCategoryPopoverOpen}
+                    className="w-full justify-between h-auto min-h-[40px] p-2"
+                    data-testid="button-select-categories"
+                  >
+                    <div className="flex flex-wrap gap-1 flex-1">
+                      {editFormData.categories.length === 0 ? (
+                        <span className="text-muted-foreground">Select categories...</span>
+                      ) : (
+                        editFormData.categories.map((category) => (
+                          <div
+                            key={category}
+                            className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-sm"
+                          >
+                            {category}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeCategory(category);
+                              }}
+                              className="hover:bg-muted-foreground/20 rounded p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onValueChange={setCategorySearchTerm}
+                      data-testid="input-search-categories"
+                    />
+                    <CommandEmpty>No categories found.</CommandEmpty>
+                    <CommandList className="max-h-[200px]">
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={handleSelectAllCategories}
+                          className="font-medium"
+                          data-testid="option-select-all-categories"
+                        >
+                          <div className="flex items-center space-x-2 w-full">
+                            <Checkbox
+                              checked={filteredCategories.length > 0 && filteredCategories.every(category => editFormData.categories.includes(category.name))}
+                              className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                            />
+                            <span>Select All ({filteredCategories.length} categories)</span>
+                          </div>
+                        </CommandItem>
+                        {filteredCategories.map((category) => (
+                          <CommandItem
+                            key={category.id}
+                            onSelect={() => handleCategoryToggle(category.name)}
+                            data-testid={`option-category-${category.name}`}
+                          >
+                            <div className="flex items-center space-x-2 w-full">
+                              <Checkbox
+                                checked={editFormData.categories.includes(category.name)}
+                                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              />
+                              <span>{category.name}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Duration (seconds)</label>
+              <Input
+                type="number"
+                value={editFormData.duration}
+                onChange={(e) => setEditFormData({...editFormData, duration: parseInt(e.target.value) || 0})}
+                placeholder="Duration in seconds"
+                min="0"
+                data-testid="input-duration"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Album</label>
-                <select
-                  value={editFormData.albumId}
-                  onChange={(e) => setEditFormData({...editFormData, albumId: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
-                  data-testid="select-album"
-                >
-                  <option value="">No Album</option>
-                  {albums.map(album => (
-                    <option key={album.id} value={album.id}>{album.title}</option>
-                  ))}
-                </select>
+                <label className="text-sm font-medium mb-2 block">Albums</label>
+                <Popover open={isAlbumPopoverOpen} onOpenChange={setIsAlbumPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isAlbumPopoverOpen}
+                      className="w-full justify-between h-auto min-h-[40px] p-2"
+                      data-testid="button-select-albums"
+                    >
+                      <div className="flex flex-wrap gap-1 flex-1">
+                        {editFormData.albums.length === 0 ? (
+                          <span className="text-muted-foreground">Select albums...</span>
+                        ) : (
+                          editFormData.albums.map((albumId) => {
+                            const album = albums.find(a => a.id === albumId);
+                            return (
+                              <div
+                                key={albumId}
+                                className="flex items-center gap-1 bg-muted px-2 py-1 rounded text-sm"
+                              >
+                                {album?.title || albumId}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeAlbum(albumId);
+                                  }}
+                                  className="hover:bg-muted-foreground/20 rounded p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search albums..."
+                        value={albumSearchTerm}
+                        onValueChange={setAlbumSearchTerm}
+                        data-testid="input-search-albums"
+                      />
+                      <CommandEmpty>No albums found.</CommandEmpty>
+                      <CommandList className="max-h-[200px]">
+                        <CommandGroup>
+                          <CommandItem
+                            onSelect={handleSelectAllAlbums}
+                            className="font-medium"
+                            data-testid="option-select-all-albums"
+                          >
+                            <div className="flex items-center space-x-2 w-full">
+                              <Checkbox
+                                checked={filteredAlbums.length > 0 && filteredAlbums.every(album => editFormData.albums.includes(album.id))}
+                                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                              />
+                              <span>Select All ({filteredAlbums.length} albums)</span>
+                            </div>
+                          </CommandItem>
+                          {filteredAlbums.map((album) => (
+                            <CommandItem
+                              key={album.id}
+                              onSelect={() => handleAlbumToggle(album.id)}
+                              data-testid={`option-album-${album.title}`}
+                            >
+                              <div className="flex items-center space-x-2 w-full">
+                                <Checkbox
+                                  checked={editFormData.albums.includes(album.id)}
+                                  className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                />
+                                <span>{album.title}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <label className="text-sm font-medium">Release Date</label>
