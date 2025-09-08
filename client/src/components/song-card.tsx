@@ -47,95 +47,103 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
       data-testid={`card-song-${song.id}`}
     >
       <CardContent className="p-0">
-        <div className="relative">
-          <img 
-            src={song.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
-            alt={song.title}
-            className="w-full h-32 md:h-48 object-cover" 
-          />
-          <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlay();
-              }}
-              className="w-12 h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
-              data-testid={`button-play-song-${song.id}`}
-            >
-              <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
-            </Button>
-          </div>
-          <div className="absolute top-2 right-2 bg-secondary/80 text-secondary-foreground px-2 py-1 rounded text-xs font-mono">
-            <span data-testid={`text-song-duration-${song.id}`}>{formatDuration(song.duration)}</span>
-          </div>
-          {(song.playCount ?? 0) > 0 && (
-            <div className="absolute top-2 left-2 bg-primary/80 text-primary-foreground px-2 py-1 rounded text-xs font-mono">
-              <span data-testid={`text-play-count-${song.id}`}>{song.playCount ?? 0} plays</span>
-            </div>
-          )}
-        </div>
-        <div className="p-2 md:p-4">
-          <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-song-title-${song.id}`}>
-            {song.title}
-          </h3>
-          <div className="text-muted-foreground text-xs md:text-sm space-y-1 mb-2 md:mb-3 font-serif">
-            {showArtist && (
-              <p className="line-clamp-1" data-testid={`text-song-artist-${song.id}`}>Artist info would go here</p>
-            )}
-            {showAlbum && song.albumId && (
-              <p className="line-clamp-1" data-testid={`text-song-album-${song.id}`}>Album info would go here</p>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            {/* Mobile: Show only favorite button */}
-            <div className="md:hidden">
+        {/* Horizontal Layout for Songs Page */}
+        <div className="flex">
+          {/* Album Art - Smaller for horizontal layout */}
+          <div className="relative flex-shrink-0">
+            <img 
+              src={song.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120'} 
+              alt={song.title}
+              className="w-16 h-16 md:w-20 md:h-20 object-cover" 
+            />
+            <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center ${
+              isHovered ? 'opacity-100' : 'opacity-0'
+            }`}>
               <Button 
-                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePlay();
+                }}
                 size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                data-testid={`button-favorite-song-${song.id}`}
+                className="w-8 h-8 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
+                data-testid={`button-play-song-${song.id}`}
               >
-                <Heart className="w-3 h-3" />
+                <Play className="w-3 h-3 text-primary-foreground ml-0.5" />
               </Button>
             </div>
-            
-            {/* Desktop: Show all buttons */}
-            <div className="hidden md:flex items-center space-x-2">
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                data-testid={`button-favorite-song-${song.id}`}
-              >
-                <Heart className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                data-testid={`button-rate-song-${song.id}`}
-              >
-                <Star className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                data-testid={`button-comment-song-${song.id}`}
-              >
-                <MessageCircle className="w-4 h-4" />
-              </Button>
+          </div>
+
+          {/* Song Details - Expanded horizontal layout */}
+          <div className="flex-1 p-3 md:p-4 min-w-0">
+            {/* Top Row: Title and Duration */}
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="text-sm md:text-base font-semibold text-foreground font-sans line-clamp-1 flex-1 mr-2" data-testid={`text-song-title-${song.id}`}>
+                {song.title}
+              </h3>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {(song.playCount ?? 0) > 0 && (
+                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs font-mono" data-testid={`text-play-count-${song.id}`}>
+                    {song.playCount} plays
+                  </span>
+                )}
+                <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-mono" data-testid={`text-song-duration-${song.id}`}>
+                  {formatDuration(song.duration)}
+                </span>
+              </div>
             </div>
-            <div className="hidden md:block">
+
+            {/* Second Row: Artist and Album Info */}
+            <div className="text-muted-foreground text-xs md:text-sm mb-2 font-serif">
+              {showArtist && (
+                <p className="line-clamp-1" data-testid={`text-song-artist-${song.id}`}>
+                  Artist info would go here
+                </p>
+              )}
+              {showAlbum && song.albumId && (
+                <p className="line-clamp-1 text-xs opacity-75" data-testid={`text-song-album-${song.id}`}>
+                  Album info would go here
+                </p>
+              )}
+            </div>
+
+            {/* Bottom Row: Action Buttons */}
+            <div className="flex items-center justify-between">
+              {/* Left side: Social actions */}
+              <div className="flex items-center space-x-1">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-red-500 transition-colors p-1.5"
+                  data-testid={`button-favorite-song-${song.id}`}
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                </Button>
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-yellow-500 transition-colors p-1.5 hidden md:inline-flex"
+                  data-testid={`button-rate-song-${song.id}`}
+                >
+                  <Star className="w-3.5 h-3.5" />
+                </Button>
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-blue-500 transition-colors p-1.5 hidden md:inline-flex"
+                  data-testid={`button-comment-song-${song.id}`}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              
+              {/* Right side: Menu */}
               <Button 
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground transition-colors p-1"
-              data-testid={`button-menu-song-${song.id}`}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
+                data-testid={`button-menu-song-${song.id}`}
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
