@@ -18,6 +18,7 @@ class AudioService {
   private currentTrackId: string = '';
   private blobUrl: string | null = null;
   private lastSaveTime: number = 0;
+  private pendingPlay: boolean = false;
   
   private state: AudioState = {
     currentTime: 0,
@@ -74,6 +75,7 @@ class AudioService {
 
     this.currentSrc = src;
     this.currentTrackId = trackId || '';
+    this.pendingPlay = false; // Reset pending play state for new track
     
     this.updateState({ isLoading: true });
 
@@ -167,6 +169,14 @@ class AudioService {
         duration: this.audio.duration,
         isLoading: false,
       });
+      
+      // If play was requested while loading, play now
+      if (this.pendingPlay) {
+        this.pendingPlay = false;
+        this.audio.play().catch(error => {
+          console.error("🎧 Pending play failed:", error);
+        });
+      }
     }
   };
 
@@ -185,6 +195,16 @@ class AudioService {
 
   private handleCanPlay = () => {
     this.updateState({ isLoading: false });
+    
+    // If play was requested while loading, play now
+    if (this.pendingPlay) {
+      this.pendingPlay = false;
+      if (this.audio) {
+        this.audio.play().catch(error => {
+          console.error("🎧 Pending play failed:", error);
+        });
+      }
+    }
   };
 
   private handleError = async () => {
@@ -213,6 +233,7 @@ class AudioService {
       isLoading: this.state.isLoading, 
       audioSrc: this.audio?.src 
     });
+    
     if (this.audio && !this.state.isLoading) {
       try {
         await this.audio.play();
@@ -222,8 +243,14 @@ class AudioService {
         console.error("🎧 Audio playback failed:", error);
         return false;
       }
+    } else if (this.state.isLoading) {
+      // Queue the play request until audio is ready
+      console.log("🎧 Audio still loading, queuing play request");
+      this.pendingPlay = true;
+      return true;
     }
-    console.log("🎧 Cannot play - no audio or still loading");
+    
+    console.log("🎧 Cannot play - no audio element");
     return false;
   }
 
