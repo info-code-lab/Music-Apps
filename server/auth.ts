@@ -73,6 +73,53 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
   next();
 }
 
+export function requireArtist(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user || (req.user.role !== 'artist' && req.user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Artist access required' });
+  }
+  next();
+}
+
+export function requireRole(roles: string[]) {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user || !roles.includes(req.user.role || '')) {
+      return res.status(403).json({ error: `Access denied. Required roles: ${roles.join(', ')}` });
+    }
+    next();
+  };
+}
+
+// Rate limiting for auth endpoints
+export function rateLimitAuth() {
+  const attempts = new Map<string, { count: number; lastAttempt: number }>();
+  const MAX_ATTEMPTS = 5;
+  const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const record = attempts.get(ip);
+
+    if (record) {
+      if (now - record.lastAttempt > WINDOW_MS) {
+        // Reset after window
+        attempts.set(ip, { count: 1, lastAttempt: now });
+      } else if (record.count >= MAX_ATTEMPTS) {
+        return res.status(429).json({ 
+          error: 'Too many login attempts. Please try again later.' 
+        });
+      } else {
+        record.count++;
+        record.lastAttempt = now;
+      }
+    } else {
+      attempts.set(ip, { count: 1, lastAttempt: now });
+    }
+
+    next();
+  };
+}
+
 export async function login(req: Request, res: Response) {
   try {
     const { username, password } = req.body;
