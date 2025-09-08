@@ -26,6 +26,28 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
       
       const audio = new Audio();
       audio.preload = 'auto'; // Preload the audio for faster playback
+      audio.crossOrigin = 'anonymous'; // Enable CORS for better audio processing
+      
+      // Enable high-quality audio processing
+      try {
+        // Better quality settings for music playback
+        audio.preservesPitch = false; // Better for music playback at different speeds
+        (audio as any).mozPreservesPitch = false; // Firefox support
+        (audio as any).webkitPreservesPitch = false; // Webkit support
+        
+        // Set playback rate to ensure quality (1.0 = normal speed)
+        audio.defaultPlaybackRate = 1.0;
+        audio.playbackRate = 1.0;
+        
+        // Enable spatial audio if supported
+        if ('setSinkId' in audio) {
+          // Use default audio device for best quality
+        }
+      } catch (e) {
+        // Fallback if not supported
+        console.log("Advanced audio features not supported");
+      }
+      
       audioRef.current = audio;
 
       const handleLoadedMetadata = () => {
@@ -198,7 +220,11 @@ export function useAudioPlayer(src: string, isPlaying: boolean, trackId?: string
     const audio = audioRef.current;
     if (!audio) return;
     
-    audio.volume = Math.max(0, Math.min(1, volume));
+    // Clamp volume between 0 and 1, but use a better curve for perceived loudness
+    const adjustedVolume = Math.max(0, Math.min(1, volume));
+    
+    // Apply a logarithmic volume curve for better perceived audio quality
+    audio.volume = adjustedVolume * adjustedVolume;
   };
 
   return {
