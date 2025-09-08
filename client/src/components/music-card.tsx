@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive } from "lucide-react";
+import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizontal } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
@@ -107,12 +107,6 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           {song.artist}
         </p>
         <div className="flex items-center justify-between">
-          <span 
-            className={`inline-block text-xs px-2 py-1 rounded-full font-mono ${getCategoryColor(song.category)}`}
-            data-testid={`text-category-${song.id}`}
-          >
-            {song.category}
-          </span>
           <div className="flex items-center gap-1">
             {/* Mobile: Show only favorite button */}
             <div className="md:hidden">
@@ -220,6 +214,16 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
               </Button>
             </div>
           </div>
+          
+          {/* 3-dot menu button */}
+          <Button 
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            data-testid={`button-menu-${song.id}`}
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>
