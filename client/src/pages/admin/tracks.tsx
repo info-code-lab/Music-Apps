@@ -499,7 +499,7 @@ export default function SongsManagement() {
 
       {/* Edit Track Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Track</DialogTitle>
             <DialogDescription>Update track information</DialogDescription>
