@@ -159,6 +159,18 @@ export const songArtists = pgTable("song_artists", {
   artistId: varchar("artist_id").notNull(),
 });
 
+export const songGenres = pgTable("song_genres", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  genreId: varchar("genre_id").notNull(),
+});
+
+export const songAlbums = pgTable("song_albums", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").notNull(),
+  albumId: varchar("album_id").notNull(),
+});
+
 // ========================
 // PLAYLISTS & FAVORITES
 // ========================

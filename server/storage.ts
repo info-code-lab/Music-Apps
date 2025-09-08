@@ -1,5 +1,5 @@
 import { 
-  users, artists, albums, songs, genres, playlists, playlistSongs, songArtists,
+  users, artists, albums, songs, genres, playlists, playlistSongs, songArtists, songGenres, songAlbums,
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
   type Album, type InsertAlbum, type Song, type InsertSong, type Playlist, type InsertPlaylist,
@@ -55,6 +55,10 @@ export interface IStorage {
   incrementPlayCount(songId: string): Promise<void>;
   updateSongArtists(songId: string, artistIds: string[]): Promise<void>;
   getSongArtists(songId: string): Promise<Artist[]>;
+  updateSongGenres(songId: string, genreIds: string[]): Promise<void>;
+  getSongGenres(songId: string): Promise<Genre[]>;
+  updateSongAlbums(songId: string, albumIds: string[]): Promise<void>;
+  getSongAlbums(songId: string): Promise<Album[]>;
 
   // Genre operations
   getAllGenres(): Promise<Genre[]>;
@@ -359,33 +363,37 @@ export class DatabaseStorage implements IStorage {
 
   // Enhanced methods for admin dashboard with full relationship data
   async getAllSongsWithDetails(): Promise<any[]> {
-    const allSongs = await db.select({
-      song: songs,
-      genre: genres,
-      album: albums
-    }).from(songs)
-      .leftJoin(genres, eq(songs.genreId, genres.id))
-      .leftJoin(albums, eq(songs.albumId, albums.id))
+    const allSongs = await db.select().from(songs)
       .orderBy(desc(songs.createdAt));
     
-    // Get artists for each song separately to maintain array structure
+    // Get all related data for each song separately to maintain array structure
     const songsWithDetails = await Promise.all(
-      allSongs.map(async (row) => {
-        const songArtistsResult = await db
-          .select({ artist: artists })
-          .from(songArtists)
-          .innerJoin(artists, eq(songArtists.artistId, artists.id))
-          .where(eq(songArtists.songId, row.song.id));
+      allSongs.map(async (song) => {
+        // Get artists
+        const songArtistsResult = await this.getSongArtists(song.id);
+        const artistNames = songArtistsResult.map(artist => artist.name);
         
-        const artistNames = songArtistsResult.map(r => r.artist.name);
+        // Get genres (categories)
+        const songGenresResult = await this.getSongGenres(song.id);
+        const genreNames = songGenresResult.map(genre => genre.name);
+        
+        // Get albums
+        const songAlbumsResult = await this.getSongAlbums(song.id);
+        const albumTitles = songAlbumsResult.map(album => album.title);
+        const albumIds = songAlbumsResult.map(album => album.id);
         
         return {
-          ...row.song,
+          ...song,
+          // Keep display strings for backward compatibility
           artist: artistNames.length > 0 ? artistNames.join(', ') : 'Unknown Artist',
-          artistNames: artistNames, // Keep the array for multi-select
-          category: row.genre?.name || 'Music',
-          albumTitle: row.album?.title || null,
-          genreName: row.genre?.name || null
+          category: genreNames.length > 0 ? genreNames.join(', ') : 'Music',
+          albumTitle: albumTitles.length > 0 ? albumTitles.join(', ') : null,
+          // Keep arrays for multi-select
+          artistNames: artistNames,
+          categoryNames: genreNames,
+          albumNames: albumTitles,
+          albumIds: albumIds,
+          genreName: genreNames.length > 0 ? genreNames[0] : null // For backward compatibility
         };
       })
     );
@@ -497,6 +505,54 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(artists, eq(songArtists.artistId, artists.id))
       .where(eq(songArtists.songId, songId));
     return result.map(r => r.artist);
+  }
+
+  // Song-Genre relationship management
+  async updateSongGenres(songId: string, genreIds: string[]): Promise<void> {
+    // Delete existing song-genre relationships
+    await db.delete(songGenres).where(eq(songGenres.songId, songId));
+    
+    // Insert new song-genre relationships
+    if (genreIds.length > 0) {
+      const songGenreData = genreIds.map(genreId => ({
+        songId,
+        genreId
+      }));
+      await db.insert(songGenres).values(songGenreData);
+    }
+  }
+
+  async getSongGenres(songId: string): Promise<Genre[]> {
+    const result = await db
+      .select({ genre: genres })
+      .from(songGenres)
+      .innerJoin(genres, eq(songGenres.genreId, genres.id))
+      .where(eq(songGenres.songId, songId));
+    return result.map(r => r.genre);
+  }
+
+  // Song-Album relationship management
+  async updateSongAlbums(songId: string, albumIds: string[]): Promise<void> {
+    // Delete existing song-album relationships
+    await db.delete(songAlbums).where(eq(songAlbums.songId, songId));
+    
+    // Insert new song-album relationships
+    if (albumIds.length > 0) {
+      const songAlbumData = albumIds.map(albumId => ({
+        songId,
+        albumId
+      }));
+      await db.insert(songAlbums).values(songAlbumData);
+    }
+  }
+
+  async getSongAlbums(songId: string): Promise<Album[]> {
+    const result = await db
+      .select({ album: albums })
+      .from(songAlbums)
+      .innerJoin(albums, eq(songAlbums.albumId, albums.id))
+      .where(eq(songAlbums.songId, songId));
+    return result.map(r => r.album);
   }
 
   async deleteSong(id: string): Promise<boolean> {

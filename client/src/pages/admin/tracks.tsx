@@ -67,12 +67,15 @@ type AdminTrack = {
   artist: string;
   artistNames?: string[]; // Array of artist names for multi-select
   category: string;
+  categoryNames?: string[]; // Array of category names for multi-select
+  albumTitle?: string;
+  albumNames?: string[]; // Array of album names for multi-select
+  albumIds?: string[]; // Array of album IDs for multi-select
   duration: number;
   albumId: string | null;
   releaseDate: string | null;
   isExplicit: boolean;
   lyrics: string | null;
-  albumTitle: string | null;
   genreName: string | null;
   isFavorite?: boolean;
   audioUrl?: string;
@@ -245,20 +248,24 @@ export default function SongsManagement() {
   const handleEditTrack = (track: AdminTrack) => {
     setSelectedTrack(track);
     
-    // Use artistNames array if available, otherwise fall back to parsing artist string
+    // Use arrays from backend if available, otherwise fall back to parsing strings
     const artistsArray = track.artistNames && track.artistNames.length > 0 
       ? track.artistNames 
       : (track.artist && track.artist !== 'Unknown Artist' ? track.artist.split(', ') : []);
     
-    // For categories, use the current category name
-    const categoriesArray = track.category && track.category !== 'Music' ? [track.category] : [];
+    const categoriesArray = track.categoryNames && track.categoryNames.length > 0
+      ? track.categoryNames
+      : (track.category && track.category !== 'Music' ? track.category.split(', ') : []);
     
-    // For albums, use the current albumId (keep as ID for the dropdown)
-    const albumsArray = track.albumId ? [track.albumId] : [];
+    const albumsArray = track.albumIds && track.albumIds.length > 0
+      ? track.albumIds
+      : (track.albumId ? [track.albumId] : []);
     
     console.log('Editing track:', track);
-    console.log('Current track category:', track.category);
-    console.log('Current track albumId:', track.albumId);
+    console.log('Backend data:');
+    console.log('- artistNames:', track.artistNames);
+    console.log('- categoryNames:', track.categoryNames);
+    console.log('- albumIds:', track.albumIds);
     console.log('Setting form data with:');
     console.log('- artists:', artistsArray);
     console.log('- categories:', categoriesArray);
@@ -280,12 +287,16 @@ export default function SongsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedTrack) {
-      // Find genreId from selected category name (take first category for now)
-      const selectedGenre = genres.find(genre => genre.name === editFormData.categories[0]);
-      const genreId = selectedGenre?.id || null;
+      // Convert category names to genre IDs
+      const genreIds = editFormData.categories
+        .map(categoryName => {
+          const genre = genres.find(g => g.name === categoryName);
+          return genre?.id;
+        })
+        .filter(Boolean); // Remove any undefined values
       
-      // Use the first selected album ID, or null if none selected
-      const albumId = editFormData.albums[0] || null;
+      // Use the selected album IDs directly
+      const albumIds = editFormData.albums.filter(Boolean);
       
       // Convert artist names to artist IDs
       const artistIds = editFormData.artists
@@ -299,12 +310,12 @@ export default function SongsManagement() {
       const formDataForAPI = {
         title: editFormData.title,
         duration: editFormData.duration,
-        genreId: genreId,
-        albumId: albumId,
         releaseDate: editFormData.releaseDate || null,
         isExplicit: editFormData.isExplicit,
         lyrics: editFormData.lyrics || null,
-        artistIds: artistIds // Add artist IDs for the backend
+        artistIds: artistIds,
+        genreIds: genreIds,
+        albumIds: albumIds
       };
       
       // Remove any undefined fields
@@ -315,10 +326,9 @@ export default function SongsManagement() {
       });
       
       console.log('Submitting update with data:', formDataForAPI);
-      console.log('Categories selected:', editFormData.categories);
-      console.log('Albums selected:', editFormData.albums);
-      console.log('Artist names selected:', editFormData.artists);
-      console.log('Final genreId:', genreId, 'albumId:', albumId, 'artistIds:', artistIds);
+      console.log('Categories selected:', editFormData.categories, '-> genreIds:', genreIds);
+      console.log('Albums selected:', editFormData.albums, '-> albumIds:', albumIds);
+      console.log('Artists selected:', editFormData.artists, '-> artistIds:', artistIds);
       updateTrackMutation.mutate({ id: selectedTrack.id, data: formDataForAPI });
     }
   };

@@ -521,22 +521,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/songs/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
-      const { artistIds, ...songData } = req.body;
+      const { artistIds, genreIds, albumIds, ...songData } = req.body;
       
-      console.log('Updating song with data:', songData, 'artistIds:', artistIds);
+      console.log('Updating song with data:', songData);
+      console.log('artistIds:', artistIds, 'genreIds:', genreIds, 'albumIds:', albumIds);
       
-      // Update the song data
-      const song = await storage.updateSong(id, songData);
+      // Update the song data (remove old genreId and albumId from songData)
+      const { genreId, albumId, ...cleanSongData } = songData;
+      const song = await storage.updateSong(id, cleanSongData);
       
       if (!song) {
         res.status(404).json({ message: "Song not found" });
         return;
       }
       
-      // If artist IDs are provided, update the song-artist relationships
+      // Update relationship tables
       if (artistIds && Array.isArray(artistIds)) {
         console.log('Updating song-artist relationships for song', id, 'with artists:', artistIds);
         await storage.updateSongArtists(id, artistIds);
+      }
+      
+      if (genreIds && Array.isArray(genreIds)) {
+        console.log('Updating song-genre relationships for song', id, 'with genres:', genreIds);
+        await storage.updateSongGenres(id, genreIds);
+      }
+      
+      if (albumIds && Array.isArray(albumIds)) {
+        console.log('Updating song-album relationships for song', id, 'with albums:', albumIds);
+        await storage.updateSongAlbums(id, albumIds);
       }
       
       res.json(song);
