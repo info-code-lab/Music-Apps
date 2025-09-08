@@ -46,7 +46,7 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
           <img 
             src={song.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
             alt={song.title}
-            className="w-full h-48 object-cover" 
+            className="w-full h-32 md:h-48 object-cover" 
           />
           <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
             isHovered ? 'opacity-100' : 'opacity-0'
@@ -71,20 +71,33 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
             </div>
           )}
         </div>
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-foreground mb-1 font-sans" data-testid={`text-song-title-${song.id}`}>
+        <div className="p-2 md:p-4">
+          <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-song-title-${song.id}`}>
             {song.title}
           </h3>
-          <div className="text-muted-foreground text-sm space-y-1 mb-3 font-serif">
+          <div className="text-muted-foreground text-xs md:text-sm space-y-1 mb-2 md:mb-3 font-serif">
             {showArtist && (
-              <p data-testid={`text-song-artist-${song.id}`}>Artist info would go here</p>
+              <p className="line-clamp-1" data-testid={`text-song-artist-${song.id}`}>Artist info would go here</p>
             )}
             {showAlbum && song.albumId && (
-              <p data-testid={`text-song-album-${song.id}`}>Album info would go here</p>
+              <p className="line-clamp-1" data-testid={`text-song-album-${song.id}`}>Album info would go here</p>
             )}
           </div>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            {/* Mobile: Show only favorite button */}
+            <div className="md:hidden">
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                data-testid={`button-favorite-song-${song.id}`}
+              >
+                <Heart className="w-3 h-3" />
+              </Button>
+            </div>
+            
+            {/* Desktop: Show all buttons */}
+            <div className="hidden md:flex items-center space-x-2">
               <Button 
                 variant="ghost"
                 size="sm"
@@ -110,14 +123,16 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
                 <MessageCircle className="w-4 h-4" />
               </Button>
             </div>
-            <Button 
+            <div className="hidden md:block">
+              <Button 
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
               data-testid={`button-menu-song-${song.id}`}
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

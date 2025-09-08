@@ -34,7 +34,8 @@ export default function Songs() {
   const displaySongs = searchQuery ? searchResults : songs;
 
   const handlePlaySong = (song: Song) => {
-    // TODO: Integrate with music player
+    console.log("Playing song:", song.title);
+    // TODO: Integrate with actual music player
   };
 
   const genreOptions = ["All Genres", ...genres.map(g => g.name)];
