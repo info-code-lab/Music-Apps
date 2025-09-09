@@ -7,7 +7,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
 import { useDownload } from "@/hooks/use-download";
 import { useOffline } from "@/hooks/use-offline";
-import MarqueeText from "@/components/ui/marquee-text";
 import toast from "react-hot-toast";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -105,21 +104,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         </div>
       </div>
       <div className="p-2 md:p-4">
-        <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans min-h-[1.2em]" data-testid={`text-title-${song.id}`}>
-          <MarqueeText 
-            text={song.title} 
-            className="" 
-            speed={30}
-            maxWidth={100}
-          />
+        <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
+          {song.title}
         </h3>
-        <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif min-h-[1em]" data-testid={`text-artist-${song.id}`}>
-          <MarqueeText 
-            text={song.artist} 
-            className="" 
-            speed={25}
-            maxWidth={80}
-          />
+        <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif line-clamp-1" data-testid={`text-artist-${song.id}`}>
+          {song.artist}
         </p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">

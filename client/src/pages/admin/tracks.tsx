@@ -601,11 +601,11 @@ export default function SongsManagement() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white truncate">{track.title}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{track.title}</p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">ID: {track.id.slice(0, 8)}...</p>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium truncate">{track.artist}</TableCell>
+                      <TableCell className="font-medium">{track.artist}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{track.category}</Badge>
                       </TableCell>
