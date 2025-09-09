@@ -194,22 +194,6 @@ export default function Songs() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button 
-                  variant={viewMode === "grid" ? "secondary" : "ghost"} 
-                  size="sm" 
-                  data-testid="button-grid-view"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === "list" ? "secondary" : "ghost"} 
-                  size="sm" 
-                  data-testid="button-list-view"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
                 <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
                   <Bell className="w-4 h-4 text-muted-foreground" />
                 </Button>
@@ -223,15 +207,37 @@ export default function Songs() {
           {/* Songs Library */}
           <section className="px-4 md:px-6 pb-6">
             <div className="mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
-                Songs
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground font-serif">
-                {searchQuery 
-                  ? `Found ${displayLegacyTracks.length} songs for "${searchQuery}"`
-                  : "Discover and play your favorite songs"
-                }
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
+                    Songs
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground font-serif">
+                    {searchQuery 
+                      ? `Found ${displayLegacyTracks.length} songs for "${searchQuery}"`
+                      : "Discover and play your favorite songs"
+                    }
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant={viewMode === "grid" ? "secondary" : "ghost"} 
+                    size="sm" 
+                    data-testid="button-grid-view"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant={viewMode === "list" ? "secondary" : "ghost"} 
+                    size="sm" 
+                    data-testid="button-list-view"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
             
             {displayLegacyTracks.length === 0 ? (
