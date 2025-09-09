@@ -35,7 +35,7 @@ export default function QueueModal({
   return (
     <>
       {/* Right Sidebar - Spotify Style */}
-      <div className="fixed right-0 top-0 bottom-0 w-80 bg-background border-l border-border z-50 flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed right-0 top-0 bottom-20 md:bottom-24 w-80 bg-background border-l border-border z-50 flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold">Queue</h2>

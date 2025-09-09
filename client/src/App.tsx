@@ -16,28 +16,38 @@ import Songs from "@/pages/songs";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/songs" component={Songs} />
+      <Route path="/artists" component={Artists} />
+      <Route path="/albums" component={Albums} />
+      <Route path="/playlists" component={Playlists} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/admin/dashboard" component={Admin} />
+      <Route path="/admin/tracks" component={Admin} />
+      <Route path="/admin/artists" component={Admin} />
+      <Route path="/admin/albums" component={Admin} />
+      <Route path="/admin/categories" component={Admin} />
+      <Route path="/admin/users" component={Admin} />
+      <Route path="/admin/upload" component={Admin} />
+      <Route path="/admin/settings" component={Admin} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function AppContent() {
   const { isQueueOpen } = useMusicPlayer();
   
   return (
     <div className={`transition-all duration-300 ${isQueueOpen ? 'mr-80' : ''}`}>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/songs" component={Songs} />
-        <Route path="/artists" component={Artists} />
-        <Route path="/albums" component={Albums} />
-        <Route path="/playlists" component={Playlists} />
-        <Route path="/admin/login" component={AdminLogin} />
-        <Route path="/admin" component={Admin} />
-        <Route path="/admin/dashboard" component={Admin} />
-        <Route path="/admin/tracks" component={Admin} />
-        <Route path="/admin/artists" component={Admin} />
-        <Route path="/admin/albums" component={Admin} />
-        <Route path="/admin/categories" component={Admin} />
-        <Route path="/admin/users" component={Admin} />
-        <Route path="/admin/upload" component={Admin} />
-        <Route path="/admin/settings" component={Admin} />
-        <Route component={NotFound} />
-      </Switch>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+      />
+      <Router />
     </div>
   );
 }
@@ -48,11 +58,7 @@ function App() {
       <AuthProvider>
         <MusicPlayerProvider>
           <TooltipProvider>
-            <Toaster
-              position="top-right"
-              reverseOrder={false}
-            />
-            <Router />
+            <AppContent />
             <GlobalMusicPlayer />
           </TooltipProvider>
         </MusicPlayerProvider>
