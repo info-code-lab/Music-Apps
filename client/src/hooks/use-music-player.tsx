@@ -4,10 +4,16 @@ import { LegacyTrack } from '@shared/schema';
 interface MusicPlayerContextType {
   currentSong: LegacyTrack | null;
   isPlaying: boolean;
+  isShuffle: boolean;
+  isRepeat: boolean;
   setCurrentSong: (song: LegacyTrack | null) => void;
   setIsPlaying: (playing: boolean) => void;
+  setIsShuffle: (shuffle: boolean) => void;
+  setIsRepeat: (repeat: boolean) => void;
   playTrack: (track: LegacyTrack, isUserInitiated?: boolean) => void;
   togglePlayPause: () => void;
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -34,6 +40,25 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       return false;
     }
   });
+  
+  // Initialize shuffle and repeat from localStorage
+  const [isShuffle, setIsShuffle] = useState(() => {
+    try {
+      const saved = localStorage.getItem('music_player_shuffle');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  
+  const [isRepeat, setIsRepeat] = useState(() => {
+    try {
+      const saved = localStorage.getItem('music_player_repeat');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -48,6 +73,17 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     console.log("isPlaying state changed to:", isPlaying);
     localStorage.setItem('music_player_is_playing', isPlaying.toString());
   }, [isPlaying]);
+
+  // Save shuffle and repeat settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('music_player_shuffle', JSON.stringify(isShuffle));
+    console.log("Shuffle mode:", isShuffle);
+  }, [isShuffle]);
+
+  useEffect(() => {
+    localStorage.setItem('music_player_repeat', JSON.stringify(isRepeat));
+    console.log("Repeat mode:", isRepeat);
+  }, [isRepeat]);
 
   const playTrack = async (track: LegacyTrack, isUserInitiated = false) => {
     console.log("playTrack called with:", track.title, "userInitiated:", isUserInitiated);
@@ -79,15 +115,31 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     setIsPlaying(!isPlaying);
   };
 
+  const toggleShuffle = () => {
+    setIsShuffle(!isShuffle);
+    console.log("Toggling shuffle to:", !isShuffle);
+  };
+
+  const toggleRepeat = () => {
+    setIsRepeat(!isRepeat);
+    console.log("Toggling repeat to:", !isRepeat);
+  };
+
   return (
     <MusicPlayerContext.Provider
       value={{
         currentSong,
         isPlaying,
+        isShuffle,
+        isRepeat,
         setCurrentSong,
         setIsPlaying,
+        setIsShuffle,
+        setIsRepeat,
         playTrack,
         togglePlayPause,
+        toggleShuffle,
+        toggleRepeat,
       }}
     >
       {children}
