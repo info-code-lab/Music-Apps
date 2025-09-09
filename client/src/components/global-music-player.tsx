@@ -50,6 +50,7 @@ export default function GlobalMusicPlayer() {
     const nextTrack = activeTrackList[currentIndex + 1];
     if (nextTrack) {
       setCurrentSong(nextTrack);
+      setIsPlaying(true);
     } else {
       setIsPlaying(false);
     }
@@ -64,6 +65,7 @@ export default function GlobalMusicPlayer() {
     const prevTrack = activeTrackList[currentIndex - 1];
     if (prevTrack) {
       setCurrentSong(prevTrack);
+      setIsPlaying(true);
     } else {
       setIsPlaying(false);
     }
