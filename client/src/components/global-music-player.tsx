@@ -3,6 +3,8 @@ import MusicPlayer from '@/components/music-player';
 import MobileMusicPlayer from '@/components/mobile-music-player';
 import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
+import { useEffect } from 'react';
+import { audioService } from '@/lib/audio-service';
 
 interface Song {
   id: string;
@@ -37,11 +39,9 @@ export default function GlobalMusicPlayer() {
     createdAt: song.createdAt,
   }));
 
-  // CONDITIONAL RETURN AFTER ALL HOOKS
-  if (!currentSong) return null;
-
-
   const handleNext = () => {
+    if (!currentSong) return;
+    
     const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
     if (currentIndex === -1) {
       return;
@@ -57,6 +57,8 @@ export default function GlobalMusicPlayer() {
   };
 
   const handlePrevious = () => {
+    if (!currentSong) return;
+    
     const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
     if (currentIndex === -1) {
       return;
@@ -74,6 +76,23 @@ export default function GlobalMusicPlayer() {
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
+
+  // Set up auto-advance when song ends
+  useEffect(() => {
+    const handleSongEnded = () => {
+      console.log("Song ended, auto-advancing to next track");
+      handleNext();
+    };
+    
+    audioService.setOnSongEndedCallback(handleSongEnded);
+    
+    return () => {
+      audioService.setOnSongEndedCallback(() => {});
+    };
+  }, [activeTrackList, currentSong]);
+
+  // CONDITIONAL RETURN AFTER ALL HOOKS
+  if (!currentSong) return null;
 
   return (
     <>

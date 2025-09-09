@@ -14,6 +14,7 @@ type AudioStateListener = (state: AudioState) => void;
 class AudioService {
   private audio: HTMLAudioElement | null = null;
   private listeners: Set<AudioStateListener> = new Set();
+  private onSongEndedCallback: (() => void) | null = null;
   private currentSrc: string = '';
   private currentTrackId: string = '';
   private blobUrl: string | null = null;
@@ -130,6 +131,7 @@ class AudioService {
     this.audio.addEventListener('timeupdate', this.handleTimeUpdate);
     this.audio.addEventListener('canplay', this.handleCanPlay);
     this.audio.addEventListener('error', this.handleError);
+    this.audio.addEventListener('ended', this.handleEnded);
 
     // Try to load offline version first if available
     if (trackId) {
@@ -218,6 +220,13 @@ class AudioService {
     }
   };
 
+  private handleEnded = () => {
+    console.log("Song ended, calling callback if exists");
+    if (this.onSongEndedCallback) {
+      this.onSongEndedCallback();
+    }
+  };
+
   async play() {
     console.log("audioService.play() called - audio exists:", !!this.audio, "isLoading:", this.state.isLoading);
     if (this.audio && !this.state.isLoading) {
@@ -273,6 +282,10 @@ class AudioService {
     } catch {
       // Ignore localStorage errors
     }
+  }
+
+  setOnSongEndedCallback(callback: () => void) {
+    this.onSongEndedCallback = callback;
   }
 
   getCurrentState(): AudioState {
