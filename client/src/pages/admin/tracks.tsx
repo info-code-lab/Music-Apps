@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
+import MarqueeText from "@/components/ui/marquee-text";
 import type { LegacyTrack } from "@shared/schema";
 
 // Define the admin track type that includes extra fields from getAllSongsWithDetails
@@ -601,11 +602,25 @@ export default function SongsManagement() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{track.title}</p>
+                          <p className="font-medium text-gray-900 dark:text-white min-h-[1.2em]">
+                            <MarqueeText 
+                              text={track.title} 
+                              className="" 
+                              speed={30}
+                              threshold={120}
+                            />
+                          </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">ID: {track.id.slice(0, 8)}...</p>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{track.artist}</TableCell>
+                      <TableCell className="font-medium min-w-[100px]">
+                        <MarqueeText 
+                          text={track.artist} 
+                          className="" 
+                          speed={25}
+                          threshold={100}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">{track.category}</Badge>
                       </TableCell>

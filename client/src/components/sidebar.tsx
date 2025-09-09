@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2, Headphones, Waves, Zap, Volume2, Coffee, Mic, Tags } from "lucide-react";
+import MarqueeText from "@/components/ui/marquee-text";
 import type { Track } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -182,8 +183,22 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
                   className="w-8 h-8 rounded object-cover" 
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground font-mono truncate">{song.title}</p>
-                  <p className="text-xs text-muted-foreground font-serif truncate">Unknown Artist</p>
+                  <p className="text-sm font-medium text-foreground font-mono min-h-[1em]">
+                    <MarqueeText 
+                      text={song.title} 
+                      className="" 
+                      speed={25}
+                      threshold={100}
+                    />
+                  </p>
+                  <p className="text-xs text-muted-foreground font-serif min-h-[0.8em]">
+                    <MarqueeText 
+                      text="Unknown Artist" 
+                      className="" 
+                      speed={20}
+                      threshold={80}
+                    />
+                  </p>
                 </div>
               </div>
             ))}
