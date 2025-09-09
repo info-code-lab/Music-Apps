@@ -392,8 +392,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/songs", async (req, res) => {
     try {
-      const songs = await storage.getAllSongs();
-      res.json(songs);
+      const tracks = await storage.getAllTracks();
+      res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch songs" });
     }
