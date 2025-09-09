@@ -1,12 +1,6 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, X } from "lucide-react";
+import { Play, X } from "lucide-react";
 import { formatDuration } from "@/lib/audio-utils";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import type { LegacyTrack as Track } from "@shared/schema";
@@ -32,144 +26,117 @@ export default function QueueModal({
     playTrack(track, true);
   };
 
-  const formatDateAdded = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) return "Today";
-      if (diffDays === 2) return "Yesterday";
-      if (diffDays <= 7) return `${diffDays - 1} days ago`;
-      if (diffDays <= 30) return `${Math.floor((diffDays - 1) / 7)} weeks ago`;
-      
-      return date.toLocaleDateString();
-    } catch {
-      return "Unknown";
-    }
-  };
+  // Get the remaining tracks after current song
+  const currentIndex = tracks.findIndex(t => t.id === currentSong?.id);
+  const nextTracks = currentIndex >= 0 ? tracks.slice(currentIndex + 1) : tracks;
+
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[80vh] flex flex-col p-0">
-        <DialogHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold">Your Library</DialogTitle>
+    <>
+      {/* Overlay */}
+      <div 
+        className="fixed inset-0 bg-black/50 z-40"
+        onClick={onClose}
+      />
+      
+      {/* Sidebar */}
+      <div className="fixed right-0 top-0 bottom-0 w-96 bg-background border-l border-border z-50 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-semibold">Queue</h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-6 w-6 p-0"
+            className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
-        </DialogHeader>
+        </div>
 
-        <div className="flex-1 overflow-hidden">
-          <div className="px-6 py-2 text-sm text-muted-foreground">
-            Browse and organize your music collection
-          </div>
-
-          {/* Header Row */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-2 text-sm font-medium text-muted-foreground border-b">
-            <div className="col-span-1 text-center">#</div>
-            <div className="col-span-5">Title</div>
-            <div className="col-span-3">Album</div>
-            <div className="col-span-2">Date added</div>
-            <div className="col-span-1 text-center">⏰</div>
-          </div>
-
-          {/* Track List */}
-          <div className="flex-1 overflow-y-auto">
-            {tracks.map((track, index) => {
-              const isCurrentTrack = currentSong?.id === track.id;
-              return (
-                <div
-                  key={track.id}
-                  className={`grid grid-cols-12 gap-4 px-6 py-3 hover:bg-accent/50 cursor-pointer transition-colors group ${
-                    isCurrentTrack ? "bg-accent/30" : ""
-                  }`}
-                  onClick={() => handleTrackClick(track)}
-                  data-testid={`queue-track-${index}`}
-                >
-                  {/* Track Number / Play Button */}
-                  <div className="col-span-1 flex items-center justify-center text-sm text-muted-foreground">
-                    <span className="group-hover:hidden">
-                      {isCurrentTrack && isPlaying ? (
-                        <div className="flex items-center space-x-0.5">
-                          <div className="w-1 h-3 bg-primary rounded animate-pulse"></div>
-                          <div className="w-1 h-2 bg-primary rounded animate-pulse" style={{ animationDelay: "0.2s" }}></div>
-                          <div className="w-1 h-4 bg-primary rounded animate-pulse" style={{ animationDelay: "0.1s" }}></div>
-                        </div>
-                      ) : (
-                        <span className={isCurrentTrack ? "text-primary font-semibold" : ""}>
-                          {index + 1}
-                        </span>
-                      )}
-                    </span>
-                    <Play className="w-4 h-4 hidden group-hover:block text-foreground" />
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Now Playing Section */}
+          {currentSong && (
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Now playing</h3>
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-accent/30">
+                <img
+                  src={currentSong.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=48&h=48'}
+                  alt={currentSong.title}
+                  className="w-12 h-12 rounded-lg object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-primary truncate">
+                    {currentSong.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {currentSong.artist}
+                  </p>
+                </div>
+                {isPlaying && (
+                  <div className="flex items-center space-x-0.5 ml-2">
+                    <div className="w-1 h-3 bg-primary rounded animate-pulse"></div>
+                    <div className="w-1 h-2 bg-primary rounded animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="w-1 h-4 bg-primary rounded animate-pulse" style={{ animationDelay: "0.1s" }}></div>
                   </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                  {/* Title and Artist */}
-                  <div className="col-span-5 min-w-0">
-                    <div className="flex items-center space-x-3">
+          {/* Next Tracks Section */}
+          {nextTracks.length > 0 && (
+            <div className="px-4 pb-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                Next from: Your Library
+              </h3>
+              <div className="space-y-2">
+                {nextTracks.map((track) => (
+                  <div
+                    key={track.id}
+                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent/50 cursor-pointer transition-colors group"
+                    onClick={() => handleTrackClick(track)}
+                  >
+                    <div className="relative">
                       <img
                         src={track.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=48&h=48'}
                         alt={track.title}
-                        className="w-10 h-10 rounded object-cover"
+                        className="w-12 h-12 rounded-lg object-cover"
                       />
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-medium truncate ${
-                          isCurrentTrack ? "text-primary" : "text-foreground"
-                        }`}>
-                          {track.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {track.artist}
-                        </p>
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Play className="w-4 h-4 text-white" />
                       </div>
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {track.artist}
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Album */}
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-sm text-muted-foreground truncate">
-                      {track.title} {/* Using title as album for now */}
-                    </span>
-                  </div>
-
-                  {/* Date Added */}
-                  <div className="col-span-2 flex items-center">
-                    <span className="text-sm text-muted-foreground">
-                      {track.createdAt ? formatDateAdded(track.createdAt) : "Unknown"}
-                    </span>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="col-span-1 flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground">
-                      {formatDuration(track.duration)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {tracks.length === 0 && (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center">
-                <p className="text-lg font-medium text-muted-foreground mb-2">
-                  No tracks in your library
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  No tracks in queue
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Add some music to get started
                 </p>
               </div>
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }
