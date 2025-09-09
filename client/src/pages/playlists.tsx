@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { insertPlaylistSchema } from "@shared/schema";
 import { z } from "zod";
 import type { Playlist } from "@shared/schema";
+import { useMusicPlayer } from "@/hooks/use-music-player";
 
 const createPlaylistSchema = insertPlaylistSchema.omit({ userId: true });
 type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
@@ -29,6 +30,7 @@ export default function Playlists() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { currentSong } = useMusicPlayer();
 
   const { data: playlists = [], isLoading } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists/public"],
