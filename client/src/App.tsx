@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
-import { MusicPlayerProvider } from "@/hooks/use-music-player";
+import { MusicPlayerProvider, useMusicPlayer } from "@/hooks/use-music-player";
 import GlobalMusicPlayer from "./components/global-music-player";
 import Home from "@/pages/home";
 import Admin from "@/pages/admin";
@@ -16,25 +16,29 @@ import Songs from "@/pages/songs";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { isQueueOpen } = useMusicPlayer();
+  
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/songs" component={Songs} />
-      <Route path="/artists" component={Artists} />
-      <Route path="/albums" component={Albums} />
-      <Route path="/playlists" component={Playlists} />
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={Admin} />
-      <Route path="/admin/dashboard" component={Admin} />
-      <Route path="/admin/tracks" component={Admin} />
-      <Route path="/admin/artists" component={Admin} />
-      <Route path="/admin/albums" component={Admin} />
-      <Route path="/admin/categories" component={Admin} />
-      <Route path="/admin/users" component={Admin} />
-      <Route path="/admin/upload" component={Admin} />
-      <Route path="/admin/settings" component={Admin} />
-      <Route component={NotFound} />
-    </Switch>
+    <div className={`transition-all duration-300 ${isQueueOpen ? 'mr-80' : ''}`}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/songs" component={Songs} />
+        <Route path="/artists" component={Artists} />
+        <Route path="/albums" component={Albums} />
+        <Route path="/playlists" component={Playlists} />
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={Admin} />
+        <Route path="/admin/dashboard" component={Admin} />
+        <Route path="/admin/tracks" component={Admin} />
+        <Route path="/admin/artists" component={Admin} />
+        <Route path="/admin/albums" component={Admin} />
+        <Route path="/admin/categories" component={Admin} />
+        <Route path="/admin/users" component={Admin} />
+        <Route path="/admin/upload" component={Admin} />
+        <Route path="/admin/settings" component={Admin} />
+        <Route component={NotFound} />
+      </Switch>
+    </div>
   );
 }
 
