@@ -12,6 +12,7 @@ import {
   Repeat,
   Wifi
 } from "lucide-react";
+import Marquee from "react-fast-marquee";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
@@ -99,9 +100,18 @@ export default function MobileMusicPlayer({
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-foreground truncate" data-testid="text-current-title-mobile">
-                  {song.title}
-                </p>
+                <div className="flex-1 min-w-0" data-testid="text-current-title-mobile">
+                  <Marquee
+                    speed={30}
+                    gradient={false}
+                    pauseOnHover={true}
+                    play={song.title.length > 20}
+                  >
+                    <p className="text-sm font-semibold text-foreground pr-4">
+                      {song.title}
+                    </p>
+                  </Marquee>
+                </div>
                 {isPlayingOffline && (
                   <div className="bg-green-600 text-white px-1.5 py-0.5 rounded-full text-xs flex items-center gap-1">
                     <Wifi className="w-2.5 h-2.5" />
