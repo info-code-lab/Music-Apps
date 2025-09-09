@@ -31,7 +31,7 @@ export default function GlobalMusicPlayer() {
     category: "Music", 
     duration: song.duration || 0,
     url: song.filePath || "",
-    artwork: song.coverArt,
+    artwork: song.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300',
     isFavorite: false,
     uploadType: "file",
     createdAt: song.createdAt,
