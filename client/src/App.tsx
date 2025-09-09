@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
-import { MusicPlayerProvider, useMusicPlayer } from "@/hooks/use-music-player";
+import { MusicPlayerProvider } from "@/hooks/use-music-player";
 import GlobalMusicPlayer from "./components/global-music-player";
 import Home from "@/pages/home";
 import Admin from "@/pages/admin";
@@ -38,25 +38,17 @@ function Router() {
   );
 }
 
-function AppContent() {
-  return (
-    <>
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-      />
-      <Router />
-    </>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MusicPlayerProvider>
           <TooltipProvider>
-            <AppContent />
+            <Toaster
+              position="top-right"
+              reverseOrder={false}
+            />
+            <Router />
             <GlobalMusicPlayer />
           </TooltipProvider>
         </MusicPlayerProvider>

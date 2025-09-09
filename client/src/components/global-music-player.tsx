@@ -1,7 +1,6 @@
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import MusicPlayer from '@/components/music-player';
 import MobileMusicPlayer from '@/components/mobile-music-player';
-import QueueModal from '@/components/queue-modal';
 import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
 import { useEffect } from 'react';
@@ -19,7 +18,7 @@ interface Song {
 }
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, isShuffle, isRepeat, isQueueOpen, setCurrentSong, setIsPlaying, setIsQueueOpen } = useMusicPlayer();
+  const { currentSong, isPlaying, isShuffle, isRepeat, setCurrentSong, setIsPlaying } = useMusicPlayer();
 
   // Get all songs for navigation - ALWAYS call hooks first
   const { data: songs = [] } = useQuery<any[]>({
@@ -197,15 +196,6 @@ export default function GlobalMusicPlayer() {
           onPrevious={handlePrevious}
         />
       </div>
-
-      {/* Queue Modal */}
-      <QueueModal
-        isOpen={isQueueOpen}
-        onClose={() => setIsQueueOpen(false)}
-        tracks={activeTrackList}
-        currentSong={currentSong}
-        isPlaying={isPlaying}
-      />
     </>
   );
 }

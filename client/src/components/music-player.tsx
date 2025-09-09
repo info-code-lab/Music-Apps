@@ -34,7 +34,7 @@ export default function MusicPlayer({
   onNext, 
   onPrevious 
 }: MusicPlayerProps) {
-  const { isShuffle, isRepeat, toggleShuffle, toggleRepeat, toggleQueue } = useMusicPlayer();
+  const { isShuffle, isRepeat, toggleShuffle, toggleRepeat } = useMusicPlayer();
   const [volume, setVolume] = useState([70]);
   const [isMuted, setIsMuted] = useState(false);
   
@@ -196,7 +196,6 @@ export default function MusicPlayer({
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={toggleQueue}
               className="text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-queue"
             >

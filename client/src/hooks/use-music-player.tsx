@@ -6,17 +6,14 @@ interface MusicPlayerContextType {
   isPlaying: boolean;
   isShuffle: boolean;
   isRepeat: boolean;
-  isQueueOpen: boolean;
   setCurrentSong: (song: LegacyTrack | null) => void;
   setIsPlaying: (playing: boolean) => void;
   setIsShuffle: (shuffle: boolean) => void;
   setIsRepeat: (repeat: boolean) => void;
-  setIsQueueOpen: (open: boolean) => void;
   playTrack: (track: LegacyTrack, isUserInitiated?: boolean) => void;
   togglePlayPause: () => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
-  toggleQueue: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -62,8 +59,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       return false;
     }
   });
-  
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -130,11 +125,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     console.log("Toggling repeat to:", !isRepeat);
   };
 
-  const toggleQueue = () => {
-    setIsQueueOpen(!isQueueOpen);
-    console.log("Toggling queue to:", !isQueueOpen);
-  };
-
   return (
     <MusicPlayerContext.Provider
       value={{
@@ -142,17 +132,14 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
         isPlaying,
         isShuffle,
         isRepeat,
-        isQueueOpen,
         setCurrentSong,
         setIsPlaying,
         setIsShuffle,
         setIsRepeat,
-        setIsQueueOpen,
         playTrack,
         togglePlayPause,
         toggleShuffle,
         toggleRepeat,
-        toggleQueue,
       }}
     >
       {children}
