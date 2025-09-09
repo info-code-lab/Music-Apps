@@ -232,6 +232,12 @@ class AudioService {
     if (this.audio && !this.state.isLoading) {
       try {
         console.log("Attempting to play audio...");
+        // Ensure the audio is loaded before playing
+        if (this.audio.readyState < 3) {
+          console.log("Audio not ready, waiting for canplay event");
+          this.pendingPlay = true;
+          return false;
+        }
         await this.audio.play();
         console.log("Audio play successful");
         this.pendingPlay = false;
