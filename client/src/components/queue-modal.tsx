@@ -40,8 +40,8 @@ export default function QueueModal({
         onClick={onClose}
       />
       
-      {/* Sidebar */}
-      <div className="fixed right-0 top-0 bottom-0 w-96 bg-background border-l border-border z-50 flex flex-col">
+      {/* Bottom Popup */}
+      <div className="fixed left-0 right-0 bottom-0 h-[70vh] bg-background border-t border-border rounded-t-xl z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold">Queue</h2>
