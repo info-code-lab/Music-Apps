@@ -34,6 +34,12 @@ export default function QueueModal({
 
   return (
     <>
+      {/* Overlay */}
+      <div 
+        className="fixed inset-0 bg-black/20 z-40"
+        onClick={onClose}
+      />
+      
       {/* Right Sidebar - Spotify Style */}
       <div className="fixed right-0 top-0 bottom-20 md:bottom-24 w-80 bg-background border-l border-border z-50 flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}

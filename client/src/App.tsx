@@ -39,16 +39,14 @@ function Router() {
 }
 
 function AppContent() {
-  const { isQueueOpen } = useMusicPlayer();
-  
   return (
-    <div className={`transition-all duration-300 ${isQueueOpen ? 'mr-80' : ''}`}>
+    <>
       <Toaster
         position="top-right"
         reverseOrder={false}
       />
       <Router />
-    </div>
+    </>
   );
 }
 
