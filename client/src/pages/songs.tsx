@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Grid3X3, List, Search, Bell, User } from "lucide-react";
 import MusicCard from "@/components/music-card";
+import SongsListView from "@/components/songs-list-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Song, LegacyTrack } from "@shared/schema";
 
@@ -248,12 +249,14 @@ export default function Songs() {
                   }
                 </p>
               </div>
-            ) : (
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                 {displayLegacyTracks.map((track) => (
                   <MusicCard key={track.id} song={track} onPlay={() => handlePlaySong(track)} />
                 ))}
               </div>
+            ) : (
+              <SongsListView tracks={displayLegacyTracks} onPlay={handlePlaySong} />
             )}
           </section>
         </main>
