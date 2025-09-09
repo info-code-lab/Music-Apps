@@ -157,7 +157,7 @@ export default function Home() {
           />
         </div>
 
-        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-32' : 'pb-20'} md:pb-32`}>
+        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
           {/* Desktop Header with Search */}
           <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
