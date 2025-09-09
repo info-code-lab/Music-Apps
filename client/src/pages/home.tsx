@@ -27,7 +27,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
-  const { currentSong, playTrack } = useMusicPlayer();
+  const { currentSong, playTrack, isQueueOpen } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
@@ -147,6 +147,33 @@ export default function Home() {
         selectedCategory={selectedCategory}
       />
 
+      {/* Desktop Header - Fixed at top */}
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search songs, artists, or albums..."
+                className="pl-10 bg-input border-border font-serif"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                data-testid="input-search"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 ml-6">
+            <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <User className="w-4 h-4 text-primary-foreground" />
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
         <div className="hidden md:block">
@@ -157,34 +184,7 @@ export default function Home() {
           />
         </div>
 
-        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-32' : 'pb-20'} md:pb-32`}>
-          {/* Desktop Header with Search */}
-          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search songs, artists, or albums..."
-                    className="pl-10 bg-input border-border font-serif"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    data-testid="input-search"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-4 ml-6">
-                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
-                  <Bell className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary-foreground" />
-                </div>
-              </div>
-            </div>
-          </header>
-
+        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-32' : 'pb-20'} md:pb-32 transition-all duration-300 ${isQueueOpen ? 'mr-80' : ''}`}>
           {searchQuery && searchResults ? (
             <SearchResults 
               searchResults={searchResults}
@@ -249,7 +249,6 @@ export default function Home() {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-
     </div>
   );
 }

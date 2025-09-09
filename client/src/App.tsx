@@ -39,19 +39,14 @@ function Router() {
 }
 
 function AppContent() {
-  const { isQueueOpen } = useMusicPlayer();
-  
   return (
-    <div className="flex">
+    <>
       <Toaster
         position="top-right"
         reverseOrder={false}
       />
-      {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ${isQueueOpen ? 'mr-80' : ''}`}>
-        <Router />
-      </div>
-    </div>
+      <Router />
+    </>
   );
 }
 
