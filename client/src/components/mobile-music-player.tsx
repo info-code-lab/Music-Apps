@@ -61,7 +61,7 @@ export default function MobileMusicPlayer({
   return (
     <>
       {/* Compact Bottom Bar */}
-      <div className="fixed bottom-14 left-0 right-0 bg-card border-t border-border z-30">
+      <div className="fixed bottom-15.8px left-0 right-0 bg-card border-t border-border z-30">
         {/* Progress Bar with Time Display */}
         <div className="px-4 py-3">
           <div className="flex items-center space-x-3">
