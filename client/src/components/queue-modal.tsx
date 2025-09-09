@@ -41,7 +41,7 @@ export default function QueueModal({
       />
       
       {/* Bottom Popup */}
-      <div className="fixed left-0 right-0 bottom-0 h-[70vh] bg-background border-t border-border rounded-t-xl z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
+      <div className="fixed left-0 right-0 bottom-20 md:bottom-24 h-[60vh] bg-background border-t border-border rounded-t-xl z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold">Queue</h2>
