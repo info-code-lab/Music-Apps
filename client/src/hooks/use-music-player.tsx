@@ -25,10 +25,10 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   
   const [isPlaying, setIsPlaying] = useState(() => {
     try {
-      const saved = localStorage.getItem('music_player_is_playing');
-      const initialValue = saved === 'true';
-      console.log("Initial isPlaying state:", initialValue);
-      return initialValue;
+      // On page refresh, always start with paused state to avoid autoplay issues
+      // The UI will show the restore button so user can resume playback
+      console.log("Initial isPlaying state: false (avoiding autoplay on refresh)");
+      return false;
     } catch {
       console.log("Initial isPlaying state: false (fallback)");
       return false;

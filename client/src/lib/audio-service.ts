@@ -243,8 +243,13 @@ class AudioService {
         this.pendingPlay = false;
         return true;
       } catch (error) {
-        console.error("Audio playback failed:", error);
-        this.pendingPlay = false;
+        const audioError = error as Error;
+        console.log("Audio playback failed (likely autoplay restriction):", audioError.message);
+        // If autoplay fails, just set pending play - user needs to interact first
+        if (audioError.name === 'NotAllowedError') {
+          console.log("Setting pending play due to autoplay restriction");
+          this.pendingPlay = true;
+        }
         return false;
       }
     } else {
