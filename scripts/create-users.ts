@@ -1,3 +1,4 @@
+//npm run db:push
 //npx tsx scripts/create-users.ts
 //npx tsx scripts/import-songs.ts
 //npx tsx scripts/populate-database.ts
