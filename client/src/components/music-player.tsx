@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
+import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -33,8 +34,7 @@ export default function MusicPlayer({
   onNext, 
   onPrevious 
 }: MusicPlayerProps) {
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
+  const { isShuffle, isRepeat, toggleShuffle, toggleRepeat } = useMusicPlayer();
   const [volume, setVolume] = useState([70]);
   const [isMuted, setIsMuted] = useState(false);
   
@@ -115,7 +115,7 @@ export default function MusicPlayer({
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setIsShuffle(!isShuffle)}
+                onClick={toggleShuffle}
                 className={`transition-colors ${isShuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 data-testid="button-shuffle"
               >
@@ -151,7 +151,7 @@ export default function MusicPlayer({
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setIsRepeat(!isRepeat)}
+                onClick={toggleRepeat}
                 className={`transition-colors ${isRepeat ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 data-testid="button-repeat"
               >

@@ -8,11 +8,14 @@ import {
   Volume2,
   ChevronUp,
   Plus,
+  Shuffle,
+  Repeat,
   Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
+import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -33,6 +36,7 @@ export default function MobileMusicPlayer({
   onPrevious,
   onExpand
 }: MobileMusicPlayerProps) {
+  const { isShuffle, isRepeat, toggleShuffle, toggleRepeat } = useMusicPlayer();
   const [volume, setVolume] = useState([70]);
   
   const {
@@ -115,10 +119,11 @@ export default function MobileMusicPlayer({
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-muted-foreground hover:text-foreground transition-colors p-2"
-              data-testid="button-favorite-mobile"
+              onClick={toggleShuffle}
+              className={`transition-colors p-2 ${isShuffle ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              data-testid="button-shuffle-mobile"
             >
-              <Heart className={`w-5 h-5 ${song.isFavorite ? 'fill-current text-red-500' : ''}`} />
+              <Shuffle className="w-4 h-4" />
             </Button>
             
             <Button 
@@ -154,10 +159,11 @@ export default function MobileMusicPlayer({
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-muted-foreground hover:text-foreground transition-colors p-2"
-              data-testid="button-add-playlist-mobile"
+              onClick={toggleRepeat}
+              className={`transition-colors p-2 ${isRepeat ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              data-testid="button-repeat-mobile"
             >
-              <Plus className="w-5 h-5" />
+              <Repeat className="w-4 h-4" />
             </Button>
           </div>
         </div>

@@ -18,7 +18,7 @@ interface Song {
 }
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, setCurrentSong, setIsPlaying } = useMusicPlayer();
+  const { currentSong, isPlaying, isShuffle, isRepeat, setCurrentSong, setIsPlaying } = useMusicPlayer();
 
   // Get all songs for navigation - ALWAYS call hooks first
   const { data: songs = [] } = useQuery<any[]>({
@@ -42,12 +42,25 @@ export default function GlobalMusicPlayer() {
   const handleNext = async () => {
     if (!currentSong) return;
     
-    const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
-    if (currentIndex === -1) {
-      return;
+    let nextTrack;
+    
+    if (isShuffle) {
+      // Shuffle mode: pick a random track that's not the current one
+      const otherTracks = activeTrackList.filter(t => t.id !== currentSong.id);
+      if (otherTracks.length > 0) {
+        const randomIndex = Math.floor(Math.random() * otherTracks.length);
+        nextTrack = otherTracks[randomIndex];
+        console.log("Shuffle mode: selected random track:", nextTrack.title);
+      }
+    } else {
+      // Normal mode: find next track in sequence
+      const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
+      if (currentIndex === -1) {
+        return;
+      }
+      nextTrack = activeTrackList[currentIndex + 1];
     }
     
-    const nextTrack = activeTrackList[currentIndex + 1];
     if (nextTrack) {
       console.log("Switching to next track:", nextTrack.title);
       
@@ -125,9 +138,29 @@ export default function GlobalMusicPlayer() {
 
   // Set up auto-advance when song ends
   useEffect(() => {
-    const handleSongEnded = () => {
-      console.log("Song ended, auto-advancing to next track");
-      handleNext();
+    const handleSongEnded = async () => {
+      console.log("Song ended. Repeat mode:", isRepeat, "Shuffle mode:", isShuffle);
+      
+      if (isRepeat) {
+        // Repeat current track
+        console.log("Repeat mode: replaying current track");
+        try {
+          if (currentSong) {
+            const songUrl = currentSong.url.startsWith('/uploads/') ? currentSong.url : `/uploads/${currentSong.url}`;
+            await audioService.setSrc(songUrl, currentSong.id);
+            const playSuccess = await audioService.play();
+            if (playSuccess) {
+              console.log("Repeat playback started successfully");
+            }
+          }
+        } catch (error) {
+          console.error("Error repeating track:", error);
+        }
+      } else {
+        // Move to next track
+        console.log("Auto-advancing to next track");
+        handleNext();
+      }
     };
     
     audioService.setOnSongEndedCallback(handleSongEnded);
@@ -135,7 +168,7 @@ export default function GlobalMusicPlayer() {
     return () => {
       audioService.setOnSongEndedCallback(() => {});
     };
-  }, [activeTrackList, currentSong]);
+  }, [activeTrackList, currentSong, isRepeat, isShuffle]);
 
   // CONDITIONAL RETURN AFTER ALL HOOKS
   if (!currentSong) return null;
