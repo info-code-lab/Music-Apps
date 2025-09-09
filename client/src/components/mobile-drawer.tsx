@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Home, 
@@ -53,6 +53,8 @@ export default function MobileDrawer({
   onCategorySelect, 
   selectedCategory 
 }: MobileDrawerProps) {
+  const [location] = useLocation();
+  
   // Fetch genres from API
   const { data: genres = [], isLoading } = useQuery({
     queryKey: ['/api/genres'],
@@ -121,14 +123,21 @@ export default function MobileDrawer({
             <div className="p-4 space-y-2">
               {mainNavItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = item.href === "/" ? location === "/" : location.startsWith(item.href);
+                
                 return (
                   <Link key={item.href} href={item.href}>
                     <button
-                      className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-accent transition-colors text-left"
+                      className={cn(
+                        "w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left",
+                        isActive 
+                          ? "bg-accent text-accent-foreground" 
+                          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                      )}
                       onClick={onClose}
                       data-testid={`drawer-nav-${item.name.toLowerCase()}`}
                     >
-                      <Icon className="w-5 h-5 text-muted-foreground" />
+                      <Icon className={cn("w-5 h-5", isActive ? "text-accent-foreground" : "text-muted-foreground")} />
                       <span className="font-medium">{item.name}</span>
                     </button>
                   </Link>

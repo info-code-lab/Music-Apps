@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Home, Search, Music, Plus, Flame, Heart, Star, Guitar, Users, Disc, ListMusic, Music2, Headphones, Waves, Zap, Volume2, Coffee, Mic, Tags } from "lucide-react";
 import type { Track } from "@shared/schema";
@@ -27,6 +27,7 @@ const iconMap: { [key: string]: any } = {
 };
 
 export default function Sidebar({ onCategorySelect, selectedCategory, recentSongs }: SidebarProps) {
+  const [location] = useLocation();
   // Fetch genres from API
   const { data: genres = [], isLoading } = useQuery({
     queryKey: ['/api/genres'],
@@ -69,7 +70,11 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
         <div className="space-y-1">
           <Link 
             href="/" 
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-accent text-accent-foreground" 
+            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              location === "/" 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
             data-testid="link-home"
           >
             <Home className="w-5 h-5" />
@@ -77,7 +82,11 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           </Link>
           <Link 
             href="/songs" 
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              location.startsWith("/songs") 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
             data-testid="link-songs"
           >
             <Music2 className="w-5 h-5" />
@@ -85,7 +94,11 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           </Link>
           <Link 
             href="/artists" 
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              location.startsWith("/artists") 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
             data-testid="link-artists"
           >
             <Users className="w-5 h-5" />
@@ -93,7 +106,11 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           </Link>
           <Link 
             href="/albums" 
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              location.startsWith("/albums") 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
             data-testid="link-albums"
           >
             <Disc className="w-5 h-5" />
@@ -101,7 +118,11 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           </Link>
           <Link 
             href="/playlists" 
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" 
+            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              location.startsWith("/playlists") 
+                ? "bg-accent text-accent-foreground" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
             data-testid="link-playlists"
           >
             <ListMusic className="w-5 h-5" />
