@@ -7,6 +7,15 @@ export function formatDuration(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
+export function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+  
+  // Create a temporary element to decode HTML entities
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
 export function parseAudioMetadata(file: File): Promise<{
   duration: number;
   title?: string;

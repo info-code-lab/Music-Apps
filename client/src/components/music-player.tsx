@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import { formatDuration } from "@/lib/audio-utils";
+import { formatDuration, decodeHtmlEntities } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
 
 interface MusicPlayerProps {
@@ -86,7 +86,7 @@ export default function MusicPlayer({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-foreground font-sans truncate" data-testid="text-current-title">
-                  {song.title}
+                  {decodeHtmlEntities(song.title)}
                 </p>
                 {isPlayingOffline && (
                   <div className="bg-green-600 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
