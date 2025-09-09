@@ -188,7 +188,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
                       text={song.title} 
                       className="" 
                       speed={25}
-                      threshold={100}
+                      maxWidth={120}
                     />
                   </p>
                   <p className="text-xs text-muted-foreground font-serif min-h-[0.8em]">
@@ -196,7 +196,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
                       text="Unknown Artist" 
                       className="" 
                       speed={20}
-                      threshold={80}
+                      maxWidth={100}
                     />
                   </p>
                 </div>

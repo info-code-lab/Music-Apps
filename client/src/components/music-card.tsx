@@ -110,7 +110,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             text={song.title} 
             className="" 
             speed={30}
-            threshold={100}
+            maxWidth={100}
           />
         </h3>
         <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif min-h-[1em]" data-testid={`text-artist-${song.id}`}>
@@ -118,7 +118,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             text={song.artist} 
             className="" 
             speed={25}
-            threshold={80}
+            maxWidth={80}
           />
         </p>
         <div className="flex items-center justify-between">

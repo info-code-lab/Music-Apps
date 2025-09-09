@@ -5,7 +5,7 @@ interface MarqueeTextProps {
   text: string;
   className?: string;
   speed?: number;
-  threshold?: number;
+  maxWidth?: number;
   children?: React.ReactNode;
 }
 
@@ -13,41 +13,36 @@ export default function MarqueeText({
   text, 
   className = "", 
   speed = 50, 
-  threshold = 120,
+  maxWidth = 150, // Default max width for mobile/small containers
   children 
 }: MarqueeTextProps) {
-  const textRef = useRef<HTMLSpanElement>(null);
   const [shouldMarquee, setShouldMarquee] = useState(false);
 
   useEffect(() => {
-    if (textRef.current) {
-      const textWidth = textRef.current.scrollWidth;
-      const containerWidth = textRef.current.parentElement?.clientWidth || 0;
-      
-      // Use threshold for mobile responsiveness - smaller text needs marquee sooner
-      setShouldMarquee(textWidth > Math.min(containerWidth, threshold));
-    }
-  }, [text, threshold]);
+    // Simple check based on text length and mobile/desktop detection
+    const isMobile = window.innerWidth < 768;
+    const threshold = isMobile ? 12 : 20; // Characters threshold
+    
+    // Enable marquee for longer text or when maxWidth is small
+    setShouldMarquee(text.length > threshold || maxWidth < 200);
+  }, [text, maxWidth]);
 
   if (shouldMarquee) {
     return (
-      <div className={className}>
-        <Marquee 
-          speed={speed}
-          pauseOnHover
-          gradient
-          gradientWidth={20}
-          gradientColor="transparent"
-        >
-          {text}&nbsp;&nbsp;&nbsp;&nbsp;
-        </Marquee>
-      </div>
+      <Marquee 
+        className={className}
+        speed={speed}
+        pauseOnHover
+        gradient
+        gradientWidth={10}
+        gradientColor="rgba(255,255,255,0)"
+      >
+        {text}&nbsp;&nbsp;&nbsp;&nbsp;
+      </Marquee>
     );
   }
 
   return (
-    <span ref={textRef} className={className}>
-      {children || text}
-    </span>
+    <span className={`truncate ${className}`}>{children || text}</span>
   );
 }

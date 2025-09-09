@@ -607,7 +607,7 @@ export default function SongsManagement() {
                               text={track.title} 
                               className="" 
                               speed={30}
-                              threshold={120}
+                              maxWidth={200}
                             />
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">ID: {track.id.slice(0, 8)}...</p>
@@ -618,7 +618,7 @@ export default function SongsManagement() {
                           text={track.artist} 
                           className="" 
                           speed={25}
-                          threshold={100}
+                          maxWidth={150}
                         />
                       </TableCell>
                       <TableCell>
