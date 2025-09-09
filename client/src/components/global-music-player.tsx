@@ -79,7 +79,7 @@ export default function GlobalMusicPlayer() {
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if (!currentSong) return;
     
     const currentIndex = activeTrackList.findIndex(t => t.id === currentSong.id);
@@ -89,9 +89,32 @@ export default function GlobalMusicPlayer() {
     
     const prevTrack = activeTrackList[currentIndex - 1];
     if (prevTrack) {
+      console.log("Switching to previous track:", prevTrack.title);
+      
+      // First set the new song
       setCurrentSong(prevTrack);
-      setIsPlaying(true);
+      
+      // Then update audio service with new URL and play
+      try {
+        const songUrl = prevTrack.url.startsWith('/uploads/') ? prevTrack.url : `/uploads/${prevTrack.url}`;
+        console.log("Setting audio source for previous track:", songUrl);
+        await audioService.setSrc(songUrl, prevTrack.id);
+        
+        // Play the new track
+        const playSuccess = await audioService.play();
+        if (playSuccess) {
+          console.log("Previous track playback started successfully");
+          setIsPlaying(true);
+        } else {
+          console.log("Previous track playback failed, setting state to play anyway");
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        console.error("Error switching to previous track:", error);
+        setIsPlaying(true); // Still set playing state so UI updates
+      }
     } else {
+      console.log("No previous track available, stopping playback");
       setIsPlaying(false);
     }
   };
