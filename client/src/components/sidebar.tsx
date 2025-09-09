@@ -182,7 +182,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
                   className="w-8 h-8 rounded object-cover" 
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground font-mono truncate">{decodeHtmlEntities(song.title)}</p>
+                  <p className="text-sm font-medium text-foreground font-mono truncate">{song.title}</p>
                   <p className="text-xs text-muted-foreground font-serif truncate">Unknown Artist</p>
                 </div>
               </div>

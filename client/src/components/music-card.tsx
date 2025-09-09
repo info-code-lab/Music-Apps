@@ -4,7 +4,7 @@ import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizont
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
-import { formatDuration, decodeHtmlEntities } from "@/lib/audio-utils";
+import { formatDuration } from "@/lib/audio-utils";
 import { useDownload } from "@/hooks/use-download";
 import { useOffline } from "@/hooks/use-offline";
 import toast from "react-hot-toast";
@@ -105,7 +105,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       </div>
       <div className="p-2 md:p-4">
         <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
-          {decodeHtmlEntities(song.title)}
+          {song.title}
         </h3>
         <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif line-clamp-1" data-testid={`text-artist-${song.id}`}>
           {song.artist}
