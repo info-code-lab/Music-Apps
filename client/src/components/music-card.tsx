@@ -104,9 +104,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         </div>
       </div>
       <div className="p-2 md:p-4">
-        <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
-          {song.title}
-        </h3>
+        <div className="marquee-container h-5 md:h-7 mb-1" data-testid={`text-title-${song.id}`}>
+          <h3 className="marquee-text text-sm md:text-lg font-semibold text-foreground font-sans">
+            {song.title}
+          </h3>
+        </div>
         <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif line-clamp-1" data-testid={`text-artist-${song.id}`}>
           {song.artist}
         </p>
