@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Grid3X3, List, Search, Bell, User } from "lucide-react";
 import MusicCard from "@/components/music-card";
-import SongsListView from "@/components/songs-list-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Song, LegacyTrack } from "@shared/schema";
 
@@ -18,7 +17,6 @@ export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
@@ -194,20 +192,10 @@ export default function Songs() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button 
-                  variant={viewMode === "grid" ? "secondary" : "ghost"} 
-                  size="sm" 
-                  data-testid="button-grid-view"
-                  onClick={() => setViewMode("grid")}
-                >
+                <Button variant="secondary" size="sm" data-testid="button-grid-view">
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant={viewMode === "list" ? "secondary" : "ghost"} 
-                  size="sm" 
-                  data-testid="button-list-view"
-                  onClick={() => setViewMode("list")}
-                >
+                <Button variant="ghost" size="sm" data-testid="button-list-view">
                   <List className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
@@ -249,14 +237,12 @@ export default function Songs() {
                   }
                 </p>
               </div>
-            ) : viewMode === "grid" ? (
+            ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                 {displayLegacyTracks.map((track) => (
                   <MusicCard key={track.id} song={track} onPlay={() => handlePlaySong(track)} />
                 ))}
               </div>
-            ) : (
-              <SongsListView tracks={displayLegacyTracks} onPlay={handlePlaySong} />
             )}
           </section>
         </main>
