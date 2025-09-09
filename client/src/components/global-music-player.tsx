@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
 import { useEffect } from 'react';
 import { audioService } from '@/lib/audio-service';
+import { useLocation } from 'wouter';
 
 interface Song {
   id: string;
@@ -19,6 +20,7 @@ interface Song {
 
 export default function GlobalMusicPlayer() {
   const { currentSong, isPlaying, isShuffle, isRepeat, setCurrentSong, setIsPlaying } = useMusicPlayer();
+  const [location] = useLocation();
 
   // Get all songs for navigation - ALWAYS call hooks first
   const { data: songs = [] } = useQuery<any[]>({
@@ -171,6 +173,9 @@ export default function GlobalMusicPlayer() {
   }, [activeTrackList, currentSong, isRepeat, isShuffle]);
 
   // CONDITIONAL RETURN AFTER ALL HOOKS
+  // Hide music player on admin routes
+  if (location.startsWith('/admin')) return null;
+  
   if (!currentSong) return null;
 
   return (
