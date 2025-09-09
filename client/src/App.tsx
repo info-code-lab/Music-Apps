@@ -13,6 +13,9 @@ import Artists from "@/pages/artists";
 import Albums from "@/pages/albums";
 import Playlists from "@/pages/playlists";
 import Songs from "@/pages/songs";
+import Favorites from "@/pages/favorites";
+import Profile from "@/pages/profile";
+import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +26,9 @@ function Router() {
       <Route path="/artists" component={Artists} />
       <Route path="/albums" component={Albums} />
       <Route path="/playlists" component={Playlists} />
+      <Route path="/favorites" component={Favorites} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/search" component={Search} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={Admin} />
       <Route path="/admin/dashboard" component={Admin} />
