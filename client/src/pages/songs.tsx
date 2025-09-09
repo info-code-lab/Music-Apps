@@ -17,6 +17,7 @@ export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
@@ -192,10 +193,20 @@ export default function Songs() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="secondary" size="sm" data-testid="button-grid-view">
+                <Button 
+                  variant={viewMode === "grid" ? "secondary" : "ghost"} 
+                  size="sm" 
+                  data-testid="button-grid-view"
+                  onClick={() => setViewMode("grid")}
+                >
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" data-testid="button-list-view">
+                <Button 
+                  variant={viewMode === "list" ? "secondary" : "ghost"} 
+                  size="sm" 
+                  data-testid="button-list-view"
+                  onClick={() => setViewMode("list")}
+                >
                   <List className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
