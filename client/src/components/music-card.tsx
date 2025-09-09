@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizontal } from "lucide-react";
+import { Play, Pause, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizontal, Volume2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
 import { useDownload } from "@/hooks/use-download";
 import { useOffline } from "@/hooks/use-offline";
+import { useMusicPlayer } from "@/hooks/use-music-player";
 import toast from "react-hot-toast";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -30,6 +31,7 @@ const getCategoryColor = (category: string) => {
 export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const queryClient = useQueryClient();
+  const { currentSong, isPlaying } = useMusicPlayer();
   const { 
     downloadSong, 
     deleteSong, 
@@ -41,6 +43,10 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
     isFileDownloadSupported
   } = useDownload();
   const { isOffline } = useOffline();
+
+  // Check if this song is currently playing
+  const isCurrentSong = currentSong?.id === song.id;
+  const isCurrentlyPlaying = isCurrentSong && isPlaying;
 
   const favoriteMutation = useMutation({
     mutationFn: async () => {
@@ -60,7 +66,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
 
   return (
     <div 
-      className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
+      className={`bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer ${
+        isCurrentlyPlaying 
+          ? 'border-primary shadow-lg ring-2 ring-primary/20' 
+          : 'border-border'
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => {
@@ -76,7 +86,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           className="w-full h-32 md:h-48 object-cover" 
         />
         <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
-          isHovered ? 'opacity-100' : 'opacity-0'
+          isHovered || isCurrentlyPlaying ? 'opacity-100' : 'opacity-0'
         } z-10`}>
           <Button 
             onClick={(e) => {
@@ -86,9 +96,23 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
             data-testid={`button-play-${song.id}`}
           >
-            <Play className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground ml-0.5" />
+            {isCurrentlyPlaying ? (
+              <Pause className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
+            ) : (
+              <Play className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground ml-0.5" />
+            )}
           </Button>
         </div>
+        
+        {/* Playing indicator */}
+        {isCurrentlyPlaying && (
+          <div className="absolute top-2 left-2 z-20">
+            <div className="bg-primary/90 text-primary-foreground px-2 py-1 rounded-full text-xs flex items-center gap-1 font-medium">
+              <Volume2 className="w-3 h-3" />
+              Playing
+            </div>
+          </div>
+        )}
         <div className="absolute top-2 right-2 flex items-center gap-2">
           {/* Offline Status Indicator */}
           {isDownloaded(song.id) && (
@@ -104,7 +128,9 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         </div>
       </div>
       <div className="p-2 md:p-4">
-        <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
+        <h3 className={`text-sm md:text-lg font-semibold mb-1 font-sans line-clamp-1 ${
+          isCurrentlyPlaying ? 'text-primary' : 'text-foreground'
+        }`} data-testid={`text-title-${song.id}`}>
           {song.title}
         </h3>
         <p className="text-muted-foreground text-xs md:text-sm mb-2 font-serif line-clamp-1" data-testid={`text-artist-${song.id}`}>
