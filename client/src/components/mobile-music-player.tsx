@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { 
   Play, 
   Pause, 
@@ -7,7 +7,6 @@ import {
   Heart,
   Volume2,
   ChevronUp,
-  ChevronDown,
   Plus,
   Shuffle,
   Repeat,
@@ -39,11 +38,6 @@ export default function MobileMusicPlayer({
 }: MobileMusicPlayerProps) {
   const { isShuffle, isRepeat, toggleShuffle, toggleRepeat } = useMusicPlayer();
   const [volume, setVolume] = useState([70]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [startY, setStartY] = useState(0);
-  const [currentY, setCurrentY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const playerRef = useRef<HTMLDivElement>(null);
   
   const {
     currentTime,
@@ -64,88 +58,10 @@ export default function MobileMusicPlayer({
     seek(newProgress[0] / 100);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setStartY(e.touches[0].clientY);
-    setCurrentY(e.touches[0].clientY);
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    setCurrentY(e.touches[0].clientY);
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    
-    const deltaY = currentY - startY;
-    const threshold = 50; // Minimum swipe distance
-    
-    if (deltaY > threshold) {
-      // Swiped down - collapse player
-      setIsCollapsed(true);
-    } else if (deltaY < -threshold) {
-      // Swiped up - expand player
-      setIsCollapsed(false);
-    }
-    
-    setIsDragging(false);
-    setStartY(0);
-    setCurrentY(0);
-  };
-
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   return (
     <>
-      {/* Collapsed Player Indicator */}
-      {isCollapsed && (
-        <div 
-          className="fixed left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-t-lg shadow-lg cursor-pointer z-40"
-          style={{ bottom: '3.9rem' }}
-          onClick={toggleCollapse}
-          data-testid="collapsed-player-indicator"
-        >
-          <div className="flex items-center space-x-2">
-            <img 
-              src={song.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=24&h=24'} 
-              alt={song.title}
-              className="w-6 h-6 rounded object-cover" 
-            />
-            <span className="text-xs font-medium truncate max-w-32">
-              {song.title}
-            </span>
-            <ChevronUp className="w-4 h-4" />
-          </div>
-        </div>
-      )}
-
       {/* Compact Bottom Bar */}
-      <div 
-        ref={playerRef}
-        className={`fixed left-0 right-0 bg-card border-t border-border z-30 transition-transform duration-300 ease-out ${
-          isCollapsed ? 'translate-y-full' : 'translate-y-0'
-        }`}
-        style={{ bottom: '3.9rem' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Collapse/Expand Handle */}
-        <div className="flex justify-center py-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleCollapse}
-            className="p-1 h-6 w-8 text-muted-foreground hover:text-foreground"
-            data-testid="button-toggle-player"
-          >
-            {isCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
-        </div>
-
+      <div className="fixed left-0 right-0 bg-card border-t border-border z-30" style={{ bottom: '3.9rem' }}>
         {/* Progress Bar with Time Display */}
         <div className="px-4 py-3">
           <div className="flex items-center space-x-3">
