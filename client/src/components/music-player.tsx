@@ -28,6 +28,55 @@ interface MusicPlayerProps {
   onPrevious: () => void;
 }
 
+interface SongTitleMarqueeProps {
+  title: string;
+  testId: string;
+}
+
+function SongTitleMarquee({ title, testId }: SongTitleMarqueeProps) {
+  const [shouldMarquee, setShouldMarquee] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current && containerRef.current) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.clientWidth;
+        setShouldMarquee(textWidth > containerWidth);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [title]);
+
+  return (
+    <div ref={containerRef} className="flex-1 min-w-0" data-testid={testId}>
+      {shouldMarquee ? (
+        <Marquee
+          speed={30}
+          gradient={false}
+          pauseOnHover={true}
+          play={true}
+        >
+          <p className="text-sm font-semibold text-foreground font-sans pr-4">
+            {title}
+          </p>
+        </Marquee>
+      ) : (
+        <p 
+          ref={textRef}
+          className="text-sm font-semibold text-foreground font-sans truncate"
+        >
+          {title}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function MusicPlayer({ 
   song, 
   isPlaying, 
@@ -86,18 +135,7 @@ export default function MusicPlayer({
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <div className="flex-1 min-w-0" data-testid="text-current-title">
-                  <Marquee
-                    speed={30}
-                    gradient={false}
-                    pauseOnHover={true}
-                    play={song.title.length > 25}
-                  >
-                    <p className="text-sm font-semibold text-foreground font-sans pr-4">
-                      {song.title}
-                    </p>
-                  </Marquee>
-                </div>
+                <SongTitleMarquee title={song.title} testId="text-current-title" />
                 {isPlayingOffline && (
                   <div className="bg-green-600 text-white px-1.5 py-0.5 rounded text-xs flex items-center gap-1">
                     <Wifi className="w-3 h-3" />
