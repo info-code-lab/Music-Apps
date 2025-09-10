@@ -20,30 +20,37 @@ export default function MainLayout({
   const { currentSong } = useMusicPlayer();
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-      {/* Floating Sidebar - Only on desktop */}
-      <div className="hidden lg:block">
-        <FloatingSidebar />
-      </div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 lg:p-6">
+      {/* Main Container - Full floating design */}
+      <div className="max-w-[1400px] mx-auto bg-white dark:bg-gray-950 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-800/50 overflow-hidden min-h-[calc(100vh-2rem)] lg:min-h-[calc(100vh-3rem)] flex">
+        
+        {/* Floating Sidebar - Integrated */}
+        <div className="hidden lg:block w-64 border-r border-gray-200/50 dark:border-gray-800/50">
+          <div className="p-6">
+            <FloatingSidebar />
+          </div>
+        </div>
 
-      {/* Floating Header - Only on desktop */}
-      <div className="hidden lg:block">
-        <FloatingHeader 
-          onSearch={onSearch}
-          searchQuery={searchQuery}
-          showSearch={showSearch}
-        />
-      </div>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Floating Header - Integrated */}
+          <div className="hidden lg:block border-b border-gray-200/50 dark:border-gray-800/50">
+            <div className="p-4">
+              <FloatingHeader 
+                onSearch={onSearch}
+                searchQuery={searchQuery}
+                showSearch={showSearch}
+              />
+            </div>
+          </div>
 
-      {/* Main Content */}
-      <div className="lg:ml-72">
-        <main className={`min-h-screen ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32 lg:pt-20`}>
-          <div className="lg:fixed lg:right-4 lg:top-20 lg:bottom-4 lg:left-80 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
-            <div className="lg:flex-1 lg:overflow-auto lg:p-6 p-4">
+          {/* Content */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-4 lg:p-6">
               {children}
             </div>
           </div>
-        </main>
+        </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
