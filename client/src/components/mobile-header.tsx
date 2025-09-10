@@ -27,7 +27,7 @@ export default function MobileHeader({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-background border-b border-border lg:hidden">
+    <header className="sticky top-0 z-30 bg-background border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
         {!isSearchExpanded ? (
           <>

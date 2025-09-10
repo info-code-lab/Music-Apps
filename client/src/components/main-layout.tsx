@@ -23,7 +23,7 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
       {/* Floating Sidebar - Only on desktop */}
-      <div className="hidden lg:flex">
+      <div className="hidden lg:block">
         <FloatingSidebar />
       </div>
 
@@ -36,7 +36,7 @@ export default function MainLayout({
         />
       </div>
 
-      {/* Mobile Header - Only on mobile/tablet */}
+      {/* Mobile Header - Only on mobile/tablet (below lg) */}
       <div className="lg:hidden">
         <MobileHeader
           onSearch={onSearch}
