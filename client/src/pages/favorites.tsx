@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, Music } from "lucide-react";
@@ -10,7 +8,6 @@ import type { Song, LegacyTrack } from "@shared/schema";
 
 export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
 
   // TODO: Implement favorites API endpoint
@@ -47,19 +44,6 @@ export default function Favorites() {
 
   return (
     <div className="min-h-screen">
-      <MobileHeader 
-        onSearch={setSearchQuery}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       {/* Main Content */}
       <main className="bg-background">
           <div className="p-4 md:p-8">

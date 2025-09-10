@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import MusicLibrary from "@/components/music-library";
 import SearchResults from "@/components/search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
@@ -24,7 +22,6 @@ interface SearchResult {
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
   const [, setLocation] = useLocation();
@@ -132,14 +129,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobile Drawer */}
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={handleCategorySelect}
-        selectedCategory={selectedCategory}
-      />
-
       <div className="lg:min-h-screen">
         <main className="overflow-auto custom-scrollbar">
           {searchQuery && searchResults ? (

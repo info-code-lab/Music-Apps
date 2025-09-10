@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import PlaylistLibrary from "@/components/playlist-library";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,7 +24,6 @@ type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
   const { currentSong } = useMusicPlayer();
 
@@ -78,21 +75,6 @@ export default function Playlists() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobile Header */}
-      <MobileHeader 
-        onSearch={setSearchQuery}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
-      {/* Mobile Drawer */}
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       <main className="overflow-auto custom-scrollbar">
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">

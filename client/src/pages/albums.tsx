@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import AlbumLibrary from "@/components/album-library";
 import MusicLibrary from "@/components/music-library";
 import { Input } from "@/components/ui/input";
@@ -12,7 +10,6 @@ import { useMusicPlayer } from "@/hooks/use-music-player";
 
 export default function Albums() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const { currentSong, playTrack } = useMusicPlayer();
 
@@ -63,21 +60,6 @@ export default function Albums() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobile Header */}
-      <MobileHeader 
-        onSearch={setSearchQuery}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
-      {/* Mobile Drawer */}
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       <main className="overflow-auto custom-scrollbar">
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">

@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,7 +21,6 @@ import {
 } from "lucide-react";
 
 export default function Profile() {
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [, setLocation] = useLocation();
 
   // Mock user data - TODO: Get from actual user context/API
@@ -54,18 +51,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen">
-      <MobileHeader 
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-        showSearch={false}
-      />
-
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       {/* Main Content */}
       <main className="bg-background">
           <div className="p-4 md:p-8 max-w-4xl mx-auto pb-44 md:pb-8">

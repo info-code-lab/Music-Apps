@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +12,6 @@ import type { Song, LegacyTrack } from "@shared/schema";
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
@@ -58,12 +55,6 @@ export default function Songs() {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <MobileHeader 
-          onSearch={setSearchQuery}
-          searchQuery={searchQuery}
-          onMenuToggle={() => setIsMobileDrawerOpen(true)}
-        />
-        
         <main className="overflow-auto custom-scrollbar">
             <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
               <div className="flex items-center justify-between">
@@ -123,21 +114,6 @@ export default function Songs() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobile Header */}
-      <MobileHeader 
-        onSearch={setSearchQuery}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
-      {/* Mobile Drawer */}
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       <main className="overflow-auto custom-scrollbar">
           {/* Songs Library */}
           <section className="px-4 md:px-6 pb-6">

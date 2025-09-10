@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import MobileHeader from "@/components/mobile-header";
-import MobileDrawer from "@/components/mobile-drawer";
 import MusicCard from "@/components/music-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +29,6 @@ interface SearchResult {
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'songs' | 'artists' | 'albums'>('all');
   const { currentSong, playTrack } = useMusicPlayer();
 
@@ -86,19 +83,6 @@ export default function Search() {
 
   return (
     <div className="min-h-screen">
-      <MobileHeader 
-        onSearch={handleSearch}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
-      <MobileDrawer 
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onCategorySelect={() => {}}
-        selectedCategory=""
-      />
-
       {/* Main Content */}
       <main className="bg-background">
           <div className="p-4 md:p-8">
