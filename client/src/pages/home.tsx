@@ -5,7 +5,7 @@ import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import MusicLibrary from "@/components/music-library";
 import SearchResults from "@/components/search-results";
-import DesktopHeader from "@/components/desktop-header";
+import UnifiedHeader from "@/components/unified-header";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -132,6 +132,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Unified Header for Desktop */}
+      <div className="hidden md:block">
+        <UnifiedHeader 
+          showSearch={true}
+          searchQuery={searchQuery}
+          onSearch={handleSearch}
+          searchPlaceholder="Search songs, artists, or albums..."
+        />
+      </div>
+
       {/* Mobile Header */}
       <MobileHeader 
         onSearch={handleSearch}
@@ -158,13 +168,6 @@ export default function Home() {
         </div>
 
         <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
-          {/* Desktop Header with Search */}
-          <DesktopHeader 
-            showSearch={true}
-            searchQuery={searchQuery}
-            onSearch={handleSearch}
-            searchPlaceholder="Search songs, artists, or albums..."
-          />
 
           {searchQuery && searchResults ? (
             <SearchResults 

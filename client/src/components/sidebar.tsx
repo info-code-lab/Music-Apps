@@ -52,19 +52,6 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
 
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col h-screen sticky top-0">
-      {/* Logo and Brand */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <Music className="text-primary-foreground text-lg w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground font-sans">Harmony</h1>
-            <p className="text-xs text-muted-foreground font-mono">Live Player</p>
-          </div>
-        </div>
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-2 custom-scrollbar overflow-y-auto">
         <div className="space-y-1">
