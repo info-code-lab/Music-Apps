@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import FloatingSidebar from "./floating-sidebar";
 import FloatingHeader from "./floating-header";
 import MobileHeader from "./mobile-header";
 import MobileBottomNav from "./mobile-bottom-nav";
+import MobileDrawer from "./mobile-drawer";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 
 interface MainLayoutProps {
@@ -10,6 +11,8 @@ interface MainLayoutProps {
   onSearch?: (query: string) => void;
   searchQuery?: string;
   showSearch?: boolean;
+  onCategorySelect?: (category: string) => void;
+  selectedCategory?: string;
 }
 
 export default function MainLayout({
@@ -17,8 +20,11 @@ export default function MainLayout({
   onSearch,
   searchQuery = "",
   showSearch = true,
+  onCategorySelect,
+  selectedCategory = "All Categories",
 }: MainLayoutProps) {
   const { currentSong } = useMusicPlayer();
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
@@ -42,8 +48,17 @@ export default function MainLayout({
           onSearch={onSearch}
           searchQuery={searchQuery}
           showSearch={showSearch}
+          onMenuToggle={() => setIsMobileDrawerOpen(true)}
         />
       </div>
+
+      {/* Mobile Drawer - Only on mobile/tablet (below lg) */}
+      <MobileDrawer 
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        onCategorySelect={onCategorySelect || (() => {})}
+        selectedCategory={selectedCategory}
+      />
 
       {/* Main Content */}
       <div className="lg:ml-60">

@@ -64,7 +64,7 @@ export default function MobileHeader({
                 variant="ghost" 
                 size="sm" 
                 className="p-2" 
-                data-testid="button-notifications"
+                data-testid="button-mobile-notifications"
               >
                 <Bell className="w-5 h-5" />
               </Button>
