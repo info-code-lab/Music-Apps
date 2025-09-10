@@ -41,7 +41,7 @@ export default function FloatingHeader({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Search task"
+                  placeholder="Search songs, artists, albums..."
                   className="pl-10 pr-12 bg-gray-50/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 rounded-lg text-sm font-medium placeholder:text-gray-400"
                   value={searchQuery}
                   onChange={handleSearchChange}

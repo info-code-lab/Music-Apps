@@ -609,6 +609,30 @@ export type LegacyTrack = {
   createdAt?: Date;
 };
 
+// Search interfaces for unified search functionality
+export interface SearchFilters {
+  genre?: string;
+  artist?: string;
+  album?: string;
+  duration?: { min?: number; max?: number };
+  year?: { min?: number; max?: number };
+  quality?: string[];
+  mood?: string[];
+  bpm?: { min?: number; max?: number };
+}
+
+export interface SearchResult {
+  songs: Song[];
+  artists: Artist[];
+  albums: Album[];
+  genres: Genre[];
+  playlists: Playlist[];
+  total: number;
+  query: string;
+  filters: SearchFilters;
+  suggestions: string[];
+}
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 

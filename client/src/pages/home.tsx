@@ -1,30 +1,34 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import MusicLibrary from "@/components/music-library";
-import SearchResults from "@/components/search-results";
+import UnifiedSearchResults from "@/components/unified-search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useSearch } from "@/hooks/use-search";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
-import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
+import type { Track, LegacyTrack, Artist, Album, Genre, SearchResult } from "@shared/schema";
 
-// Define unified search result type
-interface SearchResult {
-  songs: Track[];
-  artists: Artist[];
-  albums: Album[];
-  genres: Genre[];
-  total: number;
-  query: string;
+interface HomeProps {
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
 }
 
-export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
+export default function Home({ searchQuery: externalSearchQuery = "", onSearch }: HomeProps) {
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
   const [, setLocation] = useLocation();
+
+  // Use external search if provided, otherwise use internal
+  const searchQuery = externalSearchQuery || internalSearchQuery;
+  const setQuery = onSearch ?? setInternalSearchQuery;
+  const handleSearch = (q: string) => { 
+    setQuery(q); 
+    if (!q) setFilterBy({ type: 'none' }); 
+  };
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
@@ -90,27 +94,21 @@ export default function Home() {
   // Convert songs to legacy format
   const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query === "") {
-      setFilterBy({type: 'none'}); // Clear any filters when search is cleared
-    }
-  };
 
   const handleViewArtist = (artist: Artist) => {
-    setSearchQuery(""); // Clear search
+    handleSearch(""); // Clear search
     setSelectedCategory("All Categories"); // Reset category
     setFilterBy({type: 'artist', id: artist.id});
   };
 
   const handleViewAlbum = (album: Album) => {
-    setSearchQuery(""); // Clear search
+    handleSearch(""); // Clear search
     setSelectedCategory("All Categories"); // Reset category
     setFilterBy({type: 'album', id: album.id});
   };
 
   const handleCategorySelect = (categoryName: string) => {
-    setSearchQuery(""); // Clear search
+    handleSearch(""); // Clear search
     setFilterBy({type: 'none'}); // Clear any other filters
     setSelectedCategory(categoryName);
   };
@@ -118,11 +116,11 @@ export default function Home() {
   const handleBackToHome = () => {
     setSelectedCategory("All Categories");
     setFilterBy({type: 'none'});
-    setSearchQuery("");
+    handleSearch("");
   };
 
   const handleGenreSelect = (genre: Genre) => {
-    setSearchQuery(""); // Clear search
+    handleSearch(""); // Clear search
     setSelectedCategory("All Categories"); // Reset category
     setFilterBy({type: 'genre', id: genre.id});
   };
@@ -132,12 +130,12 @@ export default function Home() {
       <div className="lg:min-h-screen">
         <main className="overflow-auto custom-scrollbar">
           {searchQuery && searchResults ? (
-            <SearchResults 
+            <UnifiedSearchResults 
               searchResults={searchResults}
-              onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
+              searchQuery={searchQuery}
+              onPlaySong={(song: LegacyTrack) => handlePlaySong(song)}
               onViewArtist={handleViewArtist}
               onViewAlbum={handleViewAlbum}
-              onCategorySelect={handleCategorySelect}
               onGenreSelect={handleGenreSelect}
             />
           ) : selectedCategory !== "All Categories" || filterBy.type !== 'none' ? (

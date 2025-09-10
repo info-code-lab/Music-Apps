@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MusicPlayerProvider } from "@/hooks/use-music-player";
+import { useSearch } from "@/hooks/use-search";
 import GlobalMusicPlayer from "./components/global-music-player";
 import MainLayout from "@/components/main-layout";
 import Home from "@/pages/home";
@@ -20,36 +21,38 @@ import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { searchQuery, handleSearch } = useSearch();
+
   return (
     <Switch>
       {/* Main app routes with floating sidebar */}
       <Route path="/">
-        <MainLayout>
-          <Home />
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
+          <Home searchQuery={searchQuery} onSearch={handleSearch} />
         </MainLayout>
       </Route>
       <Route path="/songs">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Songs />
         </MainLayout>
       </Route>
       <Route path="/artists">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Artists />
         </MainLayout>
       </Route>
       <Route path="/albums">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Albums />
         </MainLayout>
       </Route>
       <Route path="/playlists">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Playlists />
         </MainLayout>
       </Route>
       <Route path="/favorites">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Favorites />
         </MainLayout>
       </Route>
@@ -59,7 +62,7 @@ function Router() {
         </MainLayout>
       </Route>
       <Route path="/search">
-        <MainLayout>
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Search />
         </MainLayout>
       </Route>
