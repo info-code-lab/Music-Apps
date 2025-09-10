@@ -79,33 +79,6 @@ export default function Albums() {
       />
 
       <main className="overflow-auto custom-scrollbar">
-          {/* Desktop Header with Search */}
-          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search albums..."
-                    className="pl-10 bg-input border-border font-serif"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    data-testid="input-search-albums"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-4 ml-6">
-                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
-                  <Bell className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary-foreground" />
-                </div>
-              </div>
-            </div>
-          </header>
-
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">
             {selectedAlbum ? (

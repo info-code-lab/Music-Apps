@@ -54,7 +54,7 @@ function Router() {
         </MainLayout>
       </Route>
       <Route path="/profile">
-        <MainLayout>
+        <MainLayout showSearch={false}>
           <Profile />
         </MainLayout>
       </Route>
