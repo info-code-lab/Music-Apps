@@ -5,6 +5,7 @@ import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,8 @@ import {
   Bell,
   Shield,
   HelpCircle,
-  LogOut
+  LogOut,
+  Search
 } from "lucide-react";
 
 export default function Profile() {
@@ -85,12 +87,13 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div className="flex-1 max-w-md">
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <div className="pl-10 py-2 text-foreground font-serif">
-                    Profile Settings
-                  </div>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search songs, artists, or albums..."
+                    className="pl-10 bg-input border-border font-serif"
+                    data-testid="input-search"
+                  />
                 </div>
               </div>
               <div className="flex items-center space-x-4 ml-6">
