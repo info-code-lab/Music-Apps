@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
-import UnifiedHeader from "@/components/unified-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +26,7 @@ import {
 
 export default function Profile() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Mock user data - TODO: Get from actual user context/API
   const user = {
@@ -55,14 +56,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Unified Header for Desktop */}
-      <div className="hidden md:block">
-        <UnifiedHeader 
-          title="Profile Settings"
-          showSearch={false}
-        />
-      </div>
-
       <MobileHeader 
         onMenuToggle={() => setIsMobileDrawerOpen(true)}
         showSearch={false}
@@ -87,6 +80,35 @@ export default function Profile() {
 
         {/* Main Content */}
         <main className="flex-1 bg-background">
+          {/* Desktop Header with Search */}
+          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div className="pl-10 py-2 text-foreground font-serif">
+                    Profile Settings
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4 ml-6">
+                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
+                  <Bell className="w-4 h-4 text-muted-foreground" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
+                  data-testid="button-profile"
+                  onClick={() => setLocation('/profile')}
+                >
+                  <User className="w-4 h-4 text-primary-foreground" />
+                </Button>
+              </div>
+            </div>
+          </header>
           
           <div className="p-4 md:p-8 max-w-4xl mx-auto pb-44 md:pb-8">
             {/* Profile Header */}
