@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
@@ -28,6 +29,7 @@ export default function Home() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
+  const [, setLocation] = useLocation();
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
@@ -183,7 +185,7 @@ export default function Home() {
                   size="sm" 
                   className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
                   data-testid="button-profile"
-                  onClick={() => window.location.href = '/profile'}
+                  onClick={() => setLocation('/profile')}
                 >
                   <User className="w-4 h-4 text-primary-foreground" />
                 </Button>
