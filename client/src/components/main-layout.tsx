@@ -36,10 +36,10 @@ export default function MainLayout({
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-72">
-        <main className={`min-h-screen ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32 lg:pt-20`}>
-          <div className="lg:fixed lg:right-4 lg:top-20 lg:bottom-4 lg:left-80 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
-            <div className="lg:flex-1 lg:overflow-auto lg:p-6 p-4">
+      <div className="lg:ml-60">
+        <main className={`min-h-screen ${currentSong ? 'pb-24' : 'pb-6'} md:pb-8 lg:pt-16`}>
+          <div className="lg:fixed lg:right-3 lg:top-16 lg:bottom-3 lg:left-64 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
+            <div className="lg:flex-1 lg:overflow-auto lg:p-4 p-3">
               {children}
             </div>
           </div>
