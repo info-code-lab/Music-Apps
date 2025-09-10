@@ -31,7 +31,7 @@ export default function FloatingHeader({
   };
 
   return (
-    <div className="fixed top-3 left-3 right-3 z-40 lg:left-60">
+    <div className="fixed top-3 left-3 right-3 z-40 lg:left-60 hidden lg:block">
       <div className="bg-white/95 dark:bg-gray-950/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 px-4 py-2.5">
         <div className="flex items-center justify-between">
           {/* Search Section */}
