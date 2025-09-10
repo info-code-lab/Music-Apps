@@ -41,12 +41,13 @@ export default function MainLayout({
           className={`min-h-screen ${currentSong ? "pb-20" : "pb-4"} md:pb-6 lg:pt-12`}
         >
           <div
-            className="lg:fixed lg:right-8 lg:bottom-4 lg:left-60 
-            bg-white/95 dark:bg-gray-950/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 px-4 py-2.5  lg:overflow-hidden 
+            className="lg:fixed lg:right-4 lg:bottom-4 lg:left-60 
+            bg-white dark:bg-gray-950 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 
+            lg:overflow-hidden 
                        lg:flex lg:flex-col"
             style={{ top: "6rem" }} // 26 * 0.25rem = 104px
           >
-            <div className="lg:flex-1 lg:overflow-auto lg:p-3 p-2">
+            <div className="lg:flex-1 lg:overflow-auto ">
               {children}
             </div>
           </div>
