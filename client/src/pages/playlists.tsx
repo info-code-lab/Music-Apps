@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import PlaylistLibrary from "@/components/playlist-library";
 import { Input } from "@/components/ui/input";
@@ -79,7 +77,7 @@ export default function Playlists() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       {/* Mobile Header */}
       <MobileHeader 
         onSearch={setSearchQuery}
@@ -95,17 +93,7 @@ export default function Playlists() {
         selectedCategory=""
       />
 
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <Sidebar 
-            onCategorySelect={() => {}}
-            selectedCategory=""
-            recentSongs={[]}
-          />
-        </div>
-
-        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
+      <main className="overflow-auto custom-scrollbar">
           {/* Desktop Header with Search */}
           <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
@@ -245,11 +233,7 @@ export default function Playlists() {
               searchQuery={searchQuery}
             />
           </section>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      </main>
     </div>
   );
 }
