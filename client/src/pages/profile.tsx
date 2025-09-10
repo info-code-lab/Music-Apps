@@ -4,8 +4,8 @@ import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
+import DesktopHeader from "@/components/desktop-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +22,7 @@ import {
   Bell,
   Shield,
   HelpCircle,
-  LogOut,
-  Search
+  LogOut
 } from "lucide-react";
 
 export default function Profile() {
@@ -82,36 +81,7 @@ export default function Profile() {
 
         {/* Main Content */}
         <main className="flex-1 bg-background">
-          {/* Desktop Header with Search */}
-          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search songs, artists, or albums..."
-                    className="pl-10 bg-input border-border font-serif"
-                    data-testid="input-search"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-4 ml-6">
-                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
-                  <Bell className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
-                  data-testid="button-profile"
-                  onClick={() => setLocation('/profile')}
-                >
-                  <User className="w-4 h-4 text-primary-foreground" />
-                </Button>
-              </div>
-            </div>
-          </header>
+          <DesktopHeader />
           
           <div className="p-4 md:p-8 max-w-4xl mx-auto pb-44 md:pb-8">
             {/* Profile Header */}
