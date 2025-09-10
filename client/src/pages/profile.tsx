@@ -78,7 +78,7 @@ export default function Profile() {
 
         {/* Main Content */}
         <main className="flex-1 bg-background">
-          <div className="p-4 md:p-8 max-w-4xl mx-auto">
+          <div className="p-4 md:p-8 max-w-4xl mx-auto pb-44 md:pb-8">
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
               <Avatar className="w-24 h-24 md:w-32 md:h-32">
