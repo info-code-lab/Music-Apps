@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Bell, Mail, Settings, User, LogOut } from "lucide-react";
-import EnhancedSearch from "@/components/enhanced-search";
+import SimpleSearch from "@/components/simple-search";
 
 interface FloatingHeaderProps {
   onSearch?: (query: string) => void;
@@ -37,10 +37,11 @@ export default function FloatingHeader({
           {/* Enhanced Search Section */}
           <div className="flex-1">
             {showSearch && (
-              <EnhancedSearch
+              <SimpleSearch
                 onSearch={handleSearchChange}
                 searchQuery={searchQuery}
-                className="max-w-2xl"
+                className="max-w-lg"
+                placeholder="Search for songs, artists, albums..."
               />
             )}
           </div>
