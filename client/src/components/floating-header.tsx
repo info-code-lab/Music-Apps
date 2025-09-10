@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Mail, Settings, User, LogOut } from "lucide-react";
-import SimpleSearch from "@/components/simple-search";
+import { Search, Bell, Mail, Settings, User, LogOut } from "lucide-react";
 
 interface FloatingHeaderProps {
   onSearch?: (query: string) => void;
@@ -26,23 +26,33 @@ export default function FloatingHeader({
     avatar: null,
   };
 
-  const handleSearchChange = (query: string) => {
-    onSearch?.(query);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearch?.(e.target.value);
   };
 
   return (
     <div className="fixed top-3 left-3 right-3 z-40 lg:left-60 hidden lg:block">
-      <div className="bg-white/95 dark:bg-gray-950/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 px-6 py-4">
-        <div className="flex items-center justify-between gap-6">
-          {/* Enhanced Search Section */}
-          <div className="flex-1">
+      <div className="bg-white/95 dark:bg-gray-950/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 px-4 py-2.5">
+        <div className="flex items-center justify-between">
+          {/* Search Section */}
+          <div className="flex-1 max-w-md">
             {showSearch && (
-              <SimpleSearch
-                onSearch={handleSearchChange}
-                searchQuery={searchQuery}
-                className="max-w-lg"
-                placeholder="Search for songs, artists, albums..."
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search songs, artists, albums..."
+                  className="pl-10 pr-12 bg-gray-50/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 rounded-lg text-sm font-medium placeholder:text-gray-400"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  data-testid="floating-header-search"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    ⌘F
+                  </kbd>
+                </div>
+              </div>
             )}
           </div>
 

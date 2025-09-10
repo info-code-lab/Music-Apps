@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import MusicLibrary from "@/components/music-library";
 import UnifiedSearchResults from "@/components/unified-search-results";
-import SectionedSearchResults from "@/components/sectioned-search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
@@ -129,30 +128,14 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
       <div className="lg:min-h-screen">
         <main className="overflow-auto custom-scrollbar">
           {searchQuery && searchResults ? (
-            <div className="px-4 md:px-6 pb-6">
-              {/* Desktop: Sectioned Search Results */}
-              <div className="hidden md:block">
-                <SectionedSearchResults 
-                  searchResults={searchResults}
-                  searchQuery={searchQuery}
-                  onPlaySong={(song: LegacyTrack) => handlePlaySong(song)}
-                  onViewArtist={handleViewArtist}
-                  onViewAlbum={handleViewAlbum}
-                />
-              </div>
-              
-              {/* Mobile: Unified Search Results */}
-              <div className="block md:hidden">
-                <UnifiedSearchResults 
-                  searchResults={searchResults}
-                  searchQuery={searchQuery}
-                  onPlaySong={(song: LegacyTrack) => handlePlaySong(song)}
-                  onViewArtist={handleViewArtist}
-                  onViewAlbum={handleViewAlbum}
-                  onGenreSelect={handleGenreSelect}
-                />
-              </div>
-            </div>
+            <UnifiedSearchResults 
+              searchResults={searchResults}
+              searchQuery={searchQuery}
+              onPlaySong={(song: LegacyTrack) => handlePlaySong(song)}
+              onViewArtist={handleViewArtist}
+              onViewAlbum={handleViewAlbum}
+              onGenreSelect={handleGenreSelect}
+            />
           ) : selectedCategory !== "All Categories" || filterBy.type !== 'none' ? (
             // Show category/filter view
             <section className="px-4 md:px-6 pb-6">
