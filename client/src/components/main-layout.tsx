@@ -40,8 +40,15 @@ export default function MainLayout({
         <main
           className={`min-h-screen ${currentSong ? "pb-20" : "pb-4"} md:pb-6 lg:pt-12`}
         >
-          <div className="lg:fixed lg:right-8 lg:top-26 lg:bottom-12 lg:left-72 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
-            <div className="lg:flex-1 lg:overflow-auto lg:p-3 p-2">
+          <div
+            className="lg:fixed lg:right-8 lg:bottom-12 lg:left-56 
+                       lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl 
+                       lg:shadow-xl lg:border lg:border-gray-200 
+                       lg:dark:border-gray-800 lg:overflow-hidden 
+                       lg:flex lg:flex-col"
+            style={{ top: "6.5rem" }} // 26 * 0.25rem = 104px
+          >
+            <div className=" bg-white/95 dark:bg-gray-950/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-800/50 px-4 py-2.5 lg:flex-1 lg:overflow-auto lg:p-3 p-2">
               {children}
             </div>
           </div>
