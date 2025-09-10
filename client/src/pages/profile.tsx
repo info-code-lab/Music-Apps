@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
-import DesktopHeader from "@/components/desktop-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,7 +25,6 @@ import {
 
 export default function Profile() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [, setLocation] = useLocation();
 
   // Mock user data - TODO: Get from actual user context/API
   const user = {
@@ -81,8 +78,6 @@ export default function Profile() {
 
         {/* Main Content */}
         <main className="flex-1 bg-background">
-          <DesktopHeader />
-          
           <div className="p-4 md:p-8 max-w-4xl mx-auto pb-44 md:pb-8">
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
