@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import FloatingSidebar from "./floating-sidebar";
 import FloatingHeader from "./floating-header";
+import MobileHeader from "./mobile-header";
 import MobileBottomNav from "./mobile-bottom-nav";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 
@@ -22,13 +23,22 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
       {/* Floating Sidebar - Only on desktop */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:flex">
         <FloatingSidebar />
       </div>
 
       {/* Floating Header - Only on desktop */}
       <div className="hidden lg:block">
         <FloatingHeader
+          onSearch={onSearch}
+          searchQuery={searchQuery}
+          showSearch={showSearch}
+        />
+      </div>
+
+      {/* Mobile Header - Only on mobile/tablet */}
+      <div className="lg:hidden">
+        <MobileHeader
           onSearch={onSearch}
           searchQuery={searchQuery}
           showSearch={showSearch}
