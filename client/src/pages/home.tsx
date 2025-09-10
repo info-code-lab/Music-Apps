@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import MusicLibrary from "@/components/music-library";
 import SearchResults from "@/components/search-results";
@@ -133,7 +131,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       {/* Mobile Header */}
       <MobileHeader 
         onSearch={handleSearch}
@@ -149,17 +147,8 @@ export default function Home() {
         selectedCategory={selectedCategory}
       />
 
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <Sidebar 
-            onCategorySelect={handleCategorySelect}
-            selectedCategory={selectedCategory}
-            recentSongs={songs.slice(0, 2)}
-          />
-        </div>
-
-        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
+      <div className="lg:min-h-screen">
+        <main className="overflow-auto custom-scrollbar">
           {/* Desktop Header with Search */}
           <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
@@ -254,10 +243,6 @@ export default function Home() {
           )}
         </main>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-
     </div>
   );
 }

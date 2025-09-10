@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MusicPlayerProvider } from "@/hooks/use-music-player";
 import GlobalMusicPlayer from "./components/global-music-player";
+import MainLayout from "@/components/main-layout";
 import Home from "@/pages/home";
 import Admin from "@/pages/admin";
 import AdminLogin from "@/pages/admin-login";
@@ -21,14 +22,49 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/songs" component={Songs} />
-      <Route path="/artists" component={Artists} />
-      <Route path="/albums" component={Albums} />
-      <Route path="/playlists" component={Playlists} />
-      <Route path="/favorites" component={Favorites} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/search" component={Search} />
+      {/* Main app routes with floating sidebar */}
+      <Route path="/">
+        <MainLayout>
+          <Home />
+        </MainLayout>
+      </Route>
+      <Route path="/songs">
+        <MainLayout>
+          <Songs />
+        </MainLayout>
+      </Route>
+      <Route path="/artists">
+        <MainLayout>
+          <Artists />
+        </MainLayout>
+      </Route>
+      <Route path="/albums">
+        <MainLayout>
+          <Albums />
+        </MainLayout>
+      </Route>
+      <Route path="/playlists">
+        <MainLayout>
+          <Playlists />
+        </MainLayout>
+      </Route>
+      <Route path="/favorites">
+        <MainLayout>
+          <Favorites />
+        </MainLayout>
+      </Route>
+      <Route path="/profile">
+        <MainLayout>
+          <Profile />
+        </MainLayout>
+      </Route>
+      <Route path="/search">
+        <MainLayout>
+          <Search />
+        </MainLayout>
+      </Route>
+      
+      {/* Admin routes without floating sidebar */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={Admin} />
       <Route path="/admin/dashboard" component={Admin} />
