@@ -101,7 +101,7 @@ export default function FloatingSidebar() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="fixed left-4 top-4 bottom-4 w-64 bg-white dark:bg-gray-950 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
       {/* Header with Logo */}
       <div className="p-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3">
