@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import MusicLibrary from "@/components/music-library";
 import UnifiedSearchResults from "@/components/unified-search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import { useSearch } from "@/hooks/use-search";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,10 @@ import type { Track, LegacyTrack, Artist, Album, Genre, SearchResult } from "@sh
 interface HomeProps {
   searchQuery?: string;
   onSearch?: (query: string) => void;
+  searchResults?: SearchResult;
 }
 
-export default function Home({ searchQuery: externalSearchQuery = "", onSearch }: HomeProps) {
+export default function Home({ searchQuery: externalSearchQuery = "", onSearch, searchResults: externalSearchResults }: HomeProps) {
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
@@ -55,10 +55,8 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch }
     enabled: filterBy.type === 'genre' && !!filterBy.id,
   });
 
-  const { data: searchResults } = useQuery<SearchResult>({
-    queryKey: [`/api/search?q=${encodeURIComponent(searchQuery)}`],
-    enabled: !!searchQuery,
-  });
+  // Use search results from props (comes from useSearch hook in App.tsx)
+  const searchResults = externalSearchResults;
 
   const displaySongs = searchQuery 
     ? (searchResults?.songs || []) 

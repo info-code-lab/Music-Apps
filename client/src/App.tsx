@@ -21,14 +21,14 @@ import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { searchQuery, handleSearch } = useSearch();
+  const { searchQuery, handleSearch, searchResults } = useSearch();
 
   return (
     <Switch>
       {/* Main app routes with floating sidebar */}
       <Route path="/">
         <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
-          <Home searchQuery={searchQuery} onSearch={handleSearch} />
+          <Home searchQuery={searchQuery} onSearch={handleSearch} searchResults={searchResults} />
         </MainLayout>
       </Route>
       <Route path="/songs">
