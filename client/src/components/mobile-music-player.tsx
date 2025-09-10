@@ -15,7 +15,7 @@ import {
 import Marquee from "react-fast-marquee";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useEqualizerAudioPlayer } from "@/hooks/use-equalizer-audio-player";
+import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import type { LegacyTrack as Track } from "@shared/schema";
@@ -97,7 +97,7 @@ export default function MobileMusicPlayer({
     isPlayingOffline,
     seek,
     setVolumeLevel
-  } = useEqualizerAudioPlayer(song.url, isPlaying, song.id);
+  } = useSharedAudioPlayer(song.url, isPlaying, song.id);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);

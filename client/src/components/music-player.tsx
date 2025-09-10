@@ -15,11 +15,9 @@ import {
 import Marquee from "react-fast-marquee";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useEqualizerAudioPlayer } from "@/hooks/use-equalizer-audio-player";
+import { useSharedAudioPlayer } from "@/hooks/use-shared-audio-player";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
-import Equalizer from "@/components/equalizer";
-import { equalizerAudioService } from "@/lib/equalizer-audio-service";
 import type { LegacyTrack as Track } from "@shared/schema";
 
 interface MusicPlayerProps {
@@ -89,21 +87,6 @@ export default function MusicPlayer({
   const { isShuffle, isRepeat, toggleShuffle, toggleRepeat } = useMusicPlayer();
   const [volume, setVolume] = useState([70]);
   const [isMuted, setIsMuted] = useState(false);
-  const [equalizerEnabled, setEqualizerEnabled] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-  
-  // Get audio element from equalizer audio service
-  useEffect(() => {
-    const audio = equalizerAudioService.getAudioElement();
-    setAudioElement(audio);
-    
-    // Subscribe to equalizer state
-    const unsubscribe = equalizerAudioService.subscribe((state) => {
-      setEqualizerEnabled(state.equalizerEnabled);
-    });
-    
-    return unsubscribe;
-  }, [song.id]);
   
   console.log("MusicPlayer component - isPlaying prop:", isPlaying, "song.url:", song.url);
   
@@ -113,15 +96,9 @@ export default function MusicPlayer({
     progress,
     isLoading,
     isPlayingOffline,
-    equalizerEnabled: currentEqualizerEnabled,
     seek,
     setVolumeLevel
-  } = useEqualizerAudioPlayer(song.url, isPlaying, song.id);
-  
-  // Update local equalizer state when it changes from the service
-  useEffect(() => {
-    setEqualizerEnabled(currentEqualizerEnabled);
-  }, [currentEqualizerEnabled]);
+  } = useSharedAudioPlayer(song.url, isPlaying, song.id);
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
@@ -143,11 +120,6 @@ export default function MusicPlayer({
 
   const handleSeek = (newProgress: number[]) => {
     seek(newProgress[0] / 100);
-  };
-
-  const handleEqualizerToggle = (enabled: boolean) => {
-    equalizerAudioService.setEqualizerEnabled(enabled);
-    setEqualizerEnabled(enabled);
   };
 
   return (
@@ -305,16 +277,6 @@ export default function MusicPlayer({
               <Expand className="w-4 h-4" />
             </Button>
           </div>
-        </div>
-        
-        {/* Equalizer */}
-        <div className="mt-4">
-          <Equalizer
-            audioElement={audioElement}
-            isEnabled={equalizerEnabled}
-            onToggle={handleEqualizerToggle}
-            className="w-full"
-          />
         </div>
       </div>
     </div>
