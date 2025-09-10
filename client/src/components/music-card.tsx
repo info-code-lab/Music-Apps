@@ -60,7 +60,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
 
   return (
     <div 
-      className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
+      className="bg-card rounded-lg border border-border overflow-hidden floating-card gentle-float group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => {
@@ -73,7 +73,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
         <img 
           src={song.artwork || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
           alt={song.title}
-          className="w-full h-32 md:h-48 object-cover" 
+          className="w-full h-32 md:h-48 object-cover floating-image" 
         />
         <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
           isHovered ? 'opacity-100' : 'opacity-0'
@@ -103,7 +103,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           </div>
         </div>
       </div>
-      <div className="p-2 md:p-4">
+      <div className="p-2 md:p-4 floating-content">
         <h3 className="text-sm md:text-lg font-semibold text-foreground mb-1 font-sans line-clamp-1" data-testid={`text-title-${song.id}`}>
           {song.title}
         </h3>

@@ -24,7 +24,7 @@ export default function AlbumCard({ album, onViewAlbum }: AlbumCardProps) {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
+      className="overflow-hidden floating-card gentle-float group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onViewAlbum(album)}
@@ -35,7 +35,7 @@ export default function AlbumCard({ album, onViewAlbum }: AlbumCardProps) {
           <img 
             src={album.coverArt || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
             alt={album.title}
-            className="w-full h-48 object-cover" 
+            className="w-full h-48 object-cover floating-image" 
           />
           <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
             isHovered ? 'opacity-100' : 'opacity-0'
@@ -55,7 +55,7 @@ export default function AlbumCard({ album, onViewAlbum }: AlbumCardProps) {
             <span data-testid={`text-album-date-${album.id}`}>{formatReleaseDate(album.releaseDate)}</span>
           </div>
         </div>
-        <div className="p-4">
+        <div className="p-4 floating-content">
           <h3 className="text-lg font-semibold text-foreground mb-1 font-sans" data-testid={`text-album-title-${album.id}`}>
             {album.title}
           </h3>

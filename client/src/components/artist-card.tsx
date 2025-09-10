@@ -14,7 +14,7 @@ export default function ArtistCard({ artist, onViewArtist }: ArtistCardProps) {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
+      className="overflow-hidden floating-card gentle-float group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onViewArtist(artist)}
@@ -25,7 +25,7 @@ export default function ArtistCard({ artist, onViewArtist }: ArtistCardProps) {
           <img 
             src={artist.profilePic || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
             alt={artist.name}
-            className="w-full h-48 object-cover" 
+            className="w-full h-48 object-cover floating-image" 
           />
           <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
             isHovered ? 'opacity-100' : 'opacity-0'
@@ -42,7 +42,7 @@ export default function ArtistCard({ artist, onViewArtist }: ArtistCardProps) {
             </Button>
           </div>
         </div>
-        <div className="p-4">
+        <div className="p-4 floating-content">
           <h3 className="text-lg font-semibold text-foreground mb-1 font-sans" data-testid={`text-artist-name-${artist.id}`}>
             {artist.name}
           </h3>

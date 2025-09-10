@@ -230,3 +230,68 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* Enhanced floating effects */
+.floating-card {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.floating-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15), 0 10px 10px rgba(0, 0, 0, 0.1);
+}
+
+.floating-image {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center;
+}
+
+.floating-image:hover {
+  transform: scale(1.05) translateZ(0);
+}
+
+.floating-content {
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+}
+
+.floating-content:hover {
+  transform: translateY(-2px) translateZ(0);
+}
+
+/* Gentle floating animation */
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.gentle-float {
+  animation: gentleFloat 3s ease-in-out infinite;
+}
+
+.gentle-float:nth-child(2n) {
+  animation-delay: 0.5s;
+}
+
+.gentle-float:nth-child(3n) {
+  animation-delay: 1s;
+}
+
+.gentle-float:nth-child(4n) {
+  animation-delay: 1.5s;
+}
+
+/* Enhanced shadow variations */
+.shadow-float {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+.shadow-float:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
