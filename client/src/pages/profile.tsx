@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +53,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       <MobileHeader 
         onMenuToggle={() => setIsMobileDrawerOpen(true)}
         showSearch={false}
@@ -68,18 +66,8 @@ export default function Profile() {
         selectedCategory=""
       />
 
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <Sidebar 
-            onCategorySelect={() => {}}
-            selectedCategory=""
-            recentSongs={[]}
-          />
-        </div>
-
-        {/* Main Content */}
-        <main className="flex-1 bg-background">
+      {/* Main Content */}
+      <main className="bg-background">
           {/* Desktop Header with Search */}
           <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
@@ -213,11 +201,7 @@ export default function Profile() {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      </main>
     </div>
   );
 }

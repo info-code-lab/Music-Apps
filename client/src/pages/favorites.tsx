@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,7 +46,7 @@ export default function Favorites() {
   const displayLegacyTracks = filteredSongs.map(convertToLegacyTrack);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       <MobileHeader 
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
@@ -62,18 +60,8 @@ export default function Favorites() {
         selectedCategory=""
       />
 
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <Sidebar 
-            onCategorySelect={() => {}}
-            selectedCategory=""
-            recentSongs={[]}
-          />
-        </div>
-
-        {/* Main Content */}
-        <main className="flex-1 bg-background">
+      {/* Main Content */}
+      <main className="bg-background">
           <div className="p-4 md:p-8">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center">
@@ -129,11 +117,7 @@ export default function Favorites() {
               </div>
             )}
           </div>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      </main>
     </div>
   );
 }

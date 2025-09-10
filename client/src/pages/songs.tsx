@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
-import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,23 +57,14 @@ export default function Songs() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen">
         <MobileHeader 
           onSearch={setSearchQuery}
           searchQuery={searchQuery}
           onMenuToggle={() => setIsMobileDrawerOpen(true)}
         />
         
-        <div className="flex flex-1">
-          <div className="hidden md:block">
-            <Sidebar 
-              onCategorySelect={() => {}}
-              selectedCategory=""
-              recentSongs={[]}
-            />
-          </div>
-          
-          <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
+        <main className="overflow-auto custom-scrollbar">
             <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
               <div className="flex items-center justify-between">
                 <div className="flex-1 max-w-md">
@@ -127,16 +116,13 @@ export default function Songs() {
                 ))}
               </div>
             </section>
-          </main>
-        </div>
-        
-        <MobileBottomNav />
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen">
       {/* Mobile Header */}
       <MobileHeader 
         onSearch={setSearchQuery}
@@ -152,17 +138,7 @@ export default function Songs() {
         selectedCategory=""
       />
 
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
-          <Sidebar 
-            onCategorySelect={() => {}}
-            selectedCategory=""
-            recentSongs={displaySongs.slice(0, 2)}
-          />
-        </div>
-
-        <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
+      <main className="overflow-auto custom-scrollbar">
           {/* Desktop Header with Search */}
           <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
             <div className="flex items-center justify-between">
@@ -245,12 +221,7 @@ export default function Songs() {
               </div>
             )}
           </section>
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-      
+      </main>
     </div>
   );
 }
