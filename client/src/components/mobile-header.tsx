@@ -40,7 +40,7 @@ export default function MobileHeader({
   }, [searchQuery]);
 
   return (
-    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
       <div className="flex items-center justify-between px-4 py-3">
         {!isSearchExpanded ? (
           <>

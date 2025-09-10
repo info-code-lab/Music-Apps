@@ -42,15 +42,13 @@ export default function MainLayout({
         />
       </div>
 
-      {/* Mobile Header - Only on mobile/tablet (below lg) */}
-      <div className="lg:hidden">
-        <MobileHeader
-          onSearch={onSearch}
-          searchQuery={searchQuery}
-          showSearch={showSearch}
-          onMenuToggle={() => setIsMobileDrawerOpen(true)}
-        />
-      </div>
+      {/* Mobile Header - Only on mobile/tablet (below lg) - Direct child for sticky positioning */}
+      <MobileHeader
+        onSearch={onSearch}
+        searchQuery={searchQuery}
+        showSearch={showSearch}
+        onMenuToggle={() => setIsMobileDrawerOpen(true)}
+      />
 
       {/* Mobile Drawer - Only on mobile/tablet (below lg) */}
       <MobileDrawer 
@@ -63,7 +61,7 @@ export default function MainLayout({
       {/* Main Content */}
       <div className="lg:ml-60">
         <main
-          className={`min-h-screen ${currentSong ? "pb-20" : "pb-4"} md:pb-6 lg:pt-12`}
+          className={`min-h-screen ${currentSong ? "pb-20" : "pb-4"} md:pb-6 pt-16 lg:pt-12`}
         >
           <div
             className="lg:fixed lg:right-4 lg:bottom-4 lg:left-60 
