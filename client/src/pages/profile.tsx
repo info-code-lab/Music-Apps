@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
@@ -25,6 +26,7 @@ import {
 
 export default function Profile() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Mock user data - TODO: Get from actual user context/API
   const user = {
@@ -100,7 +102,7 @@ export default function Profile() {
                   size="sm" 
                   className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
                   data-testid="button-profile"
-                  onClick={() => window.location.href = '/profile'}
+                  onClick={() => setLocation('/profile')}
                 >
                   <User className="w-4 h-4 text-primary-foreground" />
                 </Button>
