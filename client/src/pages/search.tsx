@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import MusicCard from "@/components/music-card";
+import JioSaavnSearchResults from "@/components/jiosaavn-search-results";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,17 +16,7 @@ import {
   Clock,
   X
 } from "lucide-react";
-import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
-
-// Define unified search result type
-interface SearchResult {
-  songs: Track[];
-  artists: Artist[];
-  albums: Album[];
-  genres: Genre[];
-  total: number;
-  query: string;
-}
+import type { Track, LegacyTrack, Artist, Album, Genre, SearchResult } from "@shared/schema";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -154,36 +145,6 @@ export default function Search() {
             ) : (
               /* Search Results */
               <div>
-                {/* Search Header */}
-                <div className="mb-6">
-                  <h1 className="text-2xl font-bold text-foreground mb-2 font-sans">
-                    Search Results
-                  </h1>
-                  <p className="text-muted-foreground font-serif">
-                    {isLoading 
-                      ? "Searching..." 
-                      : `Found ${searchResults?.total || 0} results for "${searchQuery}"`
-                    }
-                  </p>
-                </div>
-
-                {/* Search Tabs */}
-                <div className="flex space-x-1 mb-6 border-b border-border">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      className={`px-4 py-2 font-medium text-sm rounded-t-lg transition-colors ${
-                        activeTab === tab.id
-                          ? "text-primary border-b-2 border-primary bg-primary/5"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      onClick={() => setActiveTab(tab.id as any)}
-                    >
-                      {tab.label} {tab.count > 0 && `(${tab.count})`}
-                    </button>
-                  ))}
-                </div>
-
                 {/* Search Results Content */}
                 {isLoading ? (
                   <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
@@ -198,6 +159,19 @@ export default function Search() {
                     ))}
                   </div>
                 ) : searchResults && searchResults.total > 0 ? (
+                  <JioSaavnSearchResults
+                    searchResults={searchResults}
+                    searchQuery={searchQuery}
+                    onPlaySong={handlePlaySong}
+                    onViewAll={(section) => {
+                      if (section === 'clear') {
+                        clearSearch();
+                      } else {
+                        setActiveTab(section as any);
+                      }
+                    }}
+                  />
+                ) : searchResults && searchResults.total === 0 ? (
                   <div>
                     {/* Songs Results */}
                     {(activeTab === 'all' || activeTab === 'songs') && searchResults.songs?.length > 0 && (

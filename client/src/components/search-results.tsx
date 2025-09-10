@@ -85,7 +85,7 @@ export default function SearchResults({
                 key={genre.id}
                 variant="outline" 
                 className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
-                style={{ borderColor: genre.color, color: genre.color }}
+                style={{ borderColor: genre.color || undefined, color: genre.color || undefined }}
                 onClick={() => onGenreSelect?.(genre)}
                 data-testid={`badge-genre-${genre.id}`}
               >
