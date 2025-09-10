@@ -4,62 +4,82 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  LayoutDashboard, 
-  CheckSquare, 
-  Calendar, 
-  BarChart3, 
+  Home, 
+  Music2, 
   Users, 
+  Disc, 
+  ListMusic, 
+  Heart, 
+  Search, 
+  User,
   Settings, 
   HelpCircle, 
   LogOut,
   Download,
-  Smartphone
+  Music
 } from "lucide-react";
 
 const menuItems = [
   {
-    name: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
+    name: "Home",
+    href: "/",
+    icon: Home,
     section: "menu"
   },
   {
-    name: "Tasks",
-    href: "/admin/tasks",
-    icon: CheckSquare,
-    badge: "02",
+    name: "Search",
+    href: "/search",
+    icon: Search,
     section: "menu"
   },
   {
-    name: "Calendar",
-    href: "/admin/calendar", 
-    icon: Calendar,
+    name: "Songs",
+    href: "/songs",
+    icon: Music2,
     section: "menu"
   },
   {
-    name: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-    section: "menu"
-  },
-  {
-    name: "Team",
-    href: "/admin/team",
+    name: "Artists",
+    href: "/artists",
     icon: Users,
+    section: "menu"
+  },
+  {
+    name: "Albums",
+    href: "/albums",
+    icon: Disc,
+    section: "menu"
+  },
+  {
+    name: "Playlists",
+    href: "/playlists",
+    icon: ListMusic,
     section: "menu"
   }
 ];
 
 const generalItems = [
   {
+    name: "Favorites",
+    href: "/favorites",
+    icon: Heart,
+    section: "general"
+  },
+  {
+    name: "Profile",
+    href: "/profile",
+    icon: User,
+    section: "general"
+  },
+  {
     name: "Settings",
-    href: "/admin/settings",
+    href: "/settings",
     icon: Settings,
     section: "general"
   },
   {
     name: "Help", 
-    href: "/admin/help",
+    href: "/help",
     icon: HelpCircle,
     section: "general"
   },
@@ -85,13 +105,11 @@ export default function FloatingSidebar() {
       {/* Header with Logo */}
       <div className="p-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            </div>
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <Music className="w-5 h-5 text-white" />
           </div>
           <span className="font-semibold text-gray-900 dark:text-white text-lg">
-            Donezo
+            Harmony
           </span>
         </div>
       </div>
@@ -121,14 +139,6 @@ export default function FloatingSidebar() {
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="flex-1">{item.name}</span>
-                    {item.badge && (
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2 py-0.5 h-5"
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
                   </div>
                 </Link>
               );
@@ -167,28 +177,29 @@ export default function FloatingSidebar() {
         </div>
       </div>
 
-      {/* Mobile App Promotion Card */}
+      {/* Music Player Promotion Card */}
       <div className="p-4">
-        <div className="bg-gray-900 dark:bg-gray-800 rounded-xl p-4 text-white">
+        <div className="bg-purple-600 dark:bg-purple-700 rounded-xl p-4 text-white">
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Smartphone className="w-5 h-5" />
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Music className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <h4 className="font-medium text-sm mb-1">Download our</h4>
-              <h4 className="font-medium text-sm">Mobile App</h4>
-              <p className="text-xs text-gray-300 mt-1">
-                Get the mobile experience
+              <h4 className="font-medium text-sm mb-1">Discover new</h4>
+              <h4 className="font-medium text-sm">Music</h4>
+              <p className="text-xs text-purple-100 mt-1">
+                Explore our music library
               </p>
             </div>
           </div>
           <Button 
             size="sm" 
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white border-0"
-            data-testid="button-download-app"
+            className="w-full bg-white/20 hover:bg-white/30 text-white border-0"
+            data-testid="button-explore-music"
+            onClick={() => window.location.href = '/search'}
           >
-            <Download className="w-4 h-4 mr-2" />
-            Download
+            <Search className="w-4 h-4 mr-2" />
+            Explore
           </Button>
         </div>
       </div>
