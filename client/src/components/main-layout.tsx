@@ -37,13 +37,7 @@ export default function MainLayout({
       </div>
 
       {/* Mobile Header - Only on mobile/tablet (below lg) */}
-      <div className="lg:hidden">
-        <MobileHeader
-          onSearch={onSearch}
-          searchQuery={searchQuery}
-          showSearch={showSearch}
-        />
-      </div>
+      
 
       {/* Main Content */}
       <div className="lg:ml-60">
