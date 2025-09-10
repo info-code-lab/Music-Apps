@@ -178,9 +178,15 @@ export default function Home() {
                 <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
                   <Bell className="w-4 h-4 text-muted-foreground" />
                 </Button>
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
+                  data-testid="button-profile"
+                  onClick={() => window.location.href = '/profile'}
+                >
                   <User className="w-4 h-4 text-primary-foreground" />
-                </div>
+                </Button>
               </div>
             </div>
           </header>

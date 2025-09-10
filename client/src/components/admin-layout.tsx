@@ -171,7 +171,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             
             <div className="flex items-center gap-4">
               {/* Professional user profile */}
-              <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors"
+                onClick={() => setLocation('/profile')}
+                data-testid="button-admin-profile"
+              >
                 <div className="relative">
                   <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-lg">
                     <UserIcon className="h-5 w-5 text-white" />
@@ -186,7 +191,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </Badge>
                   </div>
                 </div>
-              </div>
+              </Button>
             </div>
           </div>
         </div>
