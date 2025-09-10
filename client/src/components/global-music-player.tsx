@@ -4,7 +4,7 @@ import MobileMusicPlayer from '@/components/mobile-music-player';
 import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
 import { useEffect } from 'react';
-import { audioService } from '@/lib/audio-service';
+import { equalizerAudioService } from '@/lib/equalizer-audio-service';
 import { useLocation } from 'wouter';
 
 interface Song {
@@ -73,10 +73,10 @@ export default function GlobalMusicPlayer() {
       try {
         const songUrl = nextTrack.url.startsWith('/uploads/') ? nextTrack.url : `/uploads/${nextTrack.url}`;
         console.log("Setting audio source for next track:", songUrl);
-        await audioService.setSrc(songUrl, nextTrack.id);
+        await equalizerAudioService.setSrc(songUrl, nextTrack.id);
         
         // Play the new track
-        const playSuccess = await audioService.play();
+        const playSuccess = await equalizerAudioService.play();
         if (playSuccess) {
           console.log("Next track playback started successfully");
           setIsPlaying(true);
@@ -113,10 +113,10 @@ export default function GlobalMusicPlayer() {
       try {
         const songUrl = prevTrack.url.startsWith('/uploads/') ? prevTrack.url : `/uploads/${prevTrack.url}`;
         console.log("Setting audio source for previous track:", songUrl);
-        await audioService.setSrc(songUrl, prevTrack.id);
+        await equalizerAudioService.setSrc(songUrl, prevTrack.id);
         
         // Play the new track
-        const playSuccess = await audioService.play();
+        const playSuccess = await equalizerAudioService.play();
         if (playSuccess) {
           console.log("Previous track playback started successfully");
           setIsPlaying(true);
@@ -149,8 +149,8 @@ export default function GlobalMusicPlayer() {
         try {
           if (currentSong) {
             const songUrl = currentSong.url.startsWith('/uploads/') ? currentSong.url : `/uploads/${currentSong.url}`;
-            await audioService.setSrc(songUrl, currentSong.id);
-            const playSuccess = await audioService.play();
+            await equalizerAudioService.setSrc(songUrl, currentSong.id);
+            const playSuccess = await equalizerAudioService.play();
             if (playSuccess) {
               console.log("Repeat playback started successfully");
             }
@@ -165,10 +165,10 @@ export default function GlobalMusicPlayer() {
       }
     };
     
-    audioService.setOnSongEndedCallback(handleSongEnded);
+    equalizerAudioService.setOnSongEndedCallback(handleSongEnded);
     
     return () => {
-      audioService.setOnSongEndedCallback(() => {});
+      equalizerAudioService.setOnSongEndedCallback(() => {});
     };
   }, [activeTrackList, currentSong, isRepeat, isShuffle]);
 
