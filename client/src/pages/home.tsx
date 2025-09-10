@@ -132,13 +132,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Mobile Header */}
-      <MobileHeader 
-        onSearch={handleSearch}
-        searchQuery={searchQuery}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
-
       {/* Mobile Drawer */}
       <MobileDrawer 
         isOpen={isMobileDrawerOpen}
