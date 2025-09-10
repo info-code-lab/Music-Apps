@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu, Bell, User, X } from "lucide-react";
@@ -18,16 +18,29 @@ export default function MobileHeader({
   showSearch = true 
 }: MobileHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   const handleSearchToggle = () => {
     setIsSearchExpanded(!isSearchExpanded);
     if (isSearchExpanded && onSearch) {
       onSearch("");
+      setLocalSearchQuery("");
     }
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearchQuery(value);
+    onSearch?.(value);
+  };
+
+  // Sync local state with external searchQuery prop
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
   return (
-    <header className="sticky top-0 z-30 bg-background border-b border-border lg:hidden">
+    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
       <div className="flex items-center justify-between px-4 py-3">
         {!isSearchExpanded ? (
           <>
@@ -87,8 +100,8 @@ export default function MobileHeader({
                 type="text"
                 placeholder="Search songs, artists, albums..."
                 className="pl-10 bg-input border-border font-serif"
-                value={searchQuery}
-                onChange={(e) => onSearch?.(e.target.value)}
+                value={localSearchQuery}
+                onChange={handleSearchChange}
                 autoFocus
                 data-testid="input-mobile-search"
               />
