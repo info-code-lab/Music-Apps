@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import Sidebar from "@/components/sidebar";
 import MobileHeader from "@/components/mobile-header";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import MobileDrawer from "@/components/mobile-drawer";
 import MusicLibrary from "@/components/music-library";
 import SearchResults from "@/components/search-results";
+import DesktopHeader from "@/components/desktop-header";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
+import { ArrowLeft, Music } from "lucide-react";
 import type { Track, LegacyTrack, Artist, Album, Genre } from "@shared/schema";
 
 // Define unified search result type
@@ -29,7 +28,6 @@ export default function Home() {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
-  const [, setLocation] = useLocation();
 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
@@ -161,37 +159,12 @@ export default function Home() {
 
         <main className={`flex-1 overflow-auto custom-scrollbar ${currentSong ? 'pb-44' : 'pb-20'} md:pb-32`}>
           {/* Desktop Header with Search */}
-          <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search songs, artists, or albums..."
-                    className="pl-10 bg-input border-border font-serif"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    data-testid="input-search"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-4 ml-6">
-                <Button variant="ghost" size="sm" className="p-2" data-testid="button-notifications">
-                  <Bell className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 p-0" 
-                  data-testid="button-profile"
-                  onClick={() => setLocation('/profile')}
-                >
-                  <User className="w-4 h-4 text-primary-foreground" />
-                </Button>
-              </div>
-            </div>
-          </header>
+          <DesktopHeader 
+            showSearch={true}
+            searchQuery={searchQuery}
+            onSearch={handleSearch}
+            searchPlaceholder="Search songs, artists, or albums..."
+          />
 
           {searchQuery && searchResults ? (
             <SearchResults 
