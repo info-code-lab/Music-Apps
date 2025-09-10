@@ -37,9 +37,9 @@ export default function MainLayout({
 
       {/* Main Content */}
       <div className="lg:ml-60">
-        <main className={`min-h-screen ${currentSong ? 'pb-' : 'pb-'} md:pb- lg:pt-`}>
-          <div className="lg:fixed lg:right-3 lg:top-16 lg:bottom-3 lg:left-64 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
-            <div className="lg:flex-1 lg:overflow-auto lg:p-4 p-3">
+        <main className={`min-h-screen ${currentSong ? 'pb-20' : 'pb-4'} md:pb-6 lg:pt-12`}>
+          <div className="lg:fixed lg:right-6 lg:top-20 lg:bottom-6 lg:left-68 lg:bg-white lg:dark:bg-gray-950 lg:rounded-2xl lg:shadow-xl lg:border lg:border-gray-200 lg:dark:border-gray-800 lg:overflow-hidden lg:flex lg:flex-col">
+            <div className="lg:flex-1 lg:overflow-auto lg:p-3 p-2">
               {children}
             </div>
           </div>
