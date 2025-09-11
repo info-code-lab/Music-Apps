@@ -225,39 +225,61 @@ export async function getUserFromSession(sessionToken: string) {
   return getUserFromJWT(sessionToken);
 }
 
-// Enhanced JWT Authentication middleware with 100% security
+// Pure Database Session Authentication middleware - 100% secure
 export const authenticateToken: RequestHandler = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const sessionToken = authHeader && authHeader.split(' ')[1]; // Bearer SESSION_TOKEN
 
-  if (!token) {
+  if (!sessionToken) {
     return res.status(401).json({ 
-      error: 'EdDSA JWT access token required',
+      error: 'Database session token required',
       code: 'TOKEN_MISSING'
     });
   }
 
   try {
-    // Verify JWT token with maximum security
-    const user = await getUserFromJWT(token);
-    if (!user) {
+    // Get session directly from database - 100% database verification
+    const session = await storage.getSession(sessionToken);
+    if (!session) {
       return res.status(401).json({ 
-        error: 'Invalid or expired EdDSA JWT token',
-        code: 'TOKEN_INVALID'
+        error: 'Invalid session token',
+        code: 'SESSION_INVALID'
       });
     }
 
-    // Attach user to request for downstream usage
+    // Check if session is expired
+    if (new Date() > new Date(session.expiresAt)) {
+      // Clean up expired session
+      await storage.deleteSession(sessionToken);
+      return res.status(401).json({ 
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED'
+      });
+    }
+
+    // Get user from database
+    const user = await storage.getUser(session.userId);
+    if (!user) {
+      // Clean up session for non-existent user
+      await storage.deleteSession(sessionToken);
+      return res.status(401).json({ 
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Attach user and session to request
     (req as any).user = user;
-    (req as any).jwtToken = token;
+    (req as any).sessionToken = sessionToken;
+    (req as any).session = session;
     
-    console.log(`🔐 EdDSA JWT Auth Success - User: ${user.id}`);
+    console.log(`🔐 Database Session Auth Success - User: ${user.id}`);
     next();
   } catch (error) {
-    console.error('EdDSA JWT Auth middleware error:', error);
+    console.error('Database Session Auth error:', error);
     return res.status(403).json({ 
-      error: 'EdDSA JWT token verification failed',
-      code: 'TOKEN_VERIFICATION_FAILED'
+      error: 'Session verification failed',
+      code: 'SESSION_VERIFICATION_FAILED'
     });
   }
 };
@@ -336,29 +358,28 @@ export function setupPhoneAuth(app: Express) {
         console.log(`👤 New user created for phone: ${phoneNumber}`);
       }
       
-      // Generate secure JWT token
-      const jwtToken = await generateJWTToken(user);
-      const sessionToken = generateSessionToken(); // For database tracking
+      // Generate secure database session token (100% database-based security)
+      const sessionToken = generateSessionToken(); // Simple secure session token
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
-      // Create session record in database (dual layer security)
+      // Store session ONLY in database - no JWT, no localStorage
       await storage.createSession({
         userId: user.id,
-        sessionToken: jwtToken, // Store JWT token in database for revocation capability
+        sessionToken: sessionToken, // Store simple session token in database
         expiresAt,
         device: (req.headers['user-agent'] || 'unknown').substring(0, 100),
         ipAddress: req.ip,
       });
       
-      console.log(`✅ Phone Auth - User ${user.id} logged in with secure EdDSA JWT token`);
+      console.log(`✅ Phone Auth - User ${user.id} logged in with secure database session token`);
       
       res.json({ 
         success: true, 
-        message: "Login successful with EdDSA JWT security",
-        token: jwtToken, // Return EdDSA JWT token to client
+        message: "Login successful with database session security",
+        token: sessionToken, // Return database session token to client
         tokenType: 'Bearer',
-        algorithm: 'EdDSA',
-        expiresIn: JWT_EXPIRES_IN,
+        algorithm: 'Database-Session',
+        expiresIn: '7d',
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
@@ -401,24 +422,25 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Enhanced JWT Logout endpoint with token revocation
+  // Database Session Logout endpoint with instant revocation
   app.post("/api/auth/logout", authenticateToken, async (req, res) => {
     try {
-      const jwtToken = (req as any).jwtToken;
+      const sessionToken = (req as any).sessionToken;
+      const user = (req as any).user;
       
-      if (jwtToken) {
-        // Revoke JWT by removing from database (blacklist approach)
-        await storage.deleteSession(jwtToken);
-        console.log(`👋 User logged out - JWT token revoked and blacklisted`);
+      if (sessionToken) {
+        // Instantly revoke session by removing from database
+        await storage.deleteSession(sessionToken);
+        console.log(`👋 User ${user.id} logged out - Database session revoked instantly`);
       }
       
       res.json({ 
         success: true, 
-        message: "Logged out successfully - JWT token revoked",
-        tokenRevoked: true
+        message: "Logged out successfully - Session revoked",
+        sessionRevoked: true
       });
     } catch (error) {
-      console.error("JWT Logout error:", error);
+      console.error("Session Logout error:", error);
       res.status(500).json({ error: "Failed to logout" });
     }
   });
