@@ -21,8 +21,8 @@ export default function MobileBottomNav() {
     { 
       label: "Library", 
       icon: Library, 
-      href: "/songs", 
-      active: location.startsWith("/songs") || location.startsWith("/albums") || location.startsWith("/artists") || location.startsWith("/playlists") 
+      href: "/my-library", 
+      active: location.startsWith("/my-library") || location.startsWith("/songs") || location.startsWith("/albums") || location.startsWith("/artists") || location.startsWith("/playlists") || location.startsWith("/favorites") 
     },
     { 
       label: "Favorites", 
