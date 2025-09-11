@@ -1,11 +1,13 @@
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import MusicPlayer from '@/components/music-player';
 import MobileMusicPlayer from '@/components/mobile-music-player';
+import TabletMusicPlayer from '@/components/tablet-music-player';
 import { useQuery } from '@tanstack/react-query';
 import { LegacyTrack } from '@shared/schema';
 import { useEffect } from 'react';
 import { audioService } from '@/lib/audio-service';
 import { useLocation } from 'wouter';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 
 interface Song {
   id: string;
@@ -21,6 +23,7 @@ interface Song {
 export default function GlobalMusicPlayer() {
   const { currentSong, isPlaying, isShuffle, isRepeat, setCurrentSong, setIsPlaying } = useMusicPlayer();
   const [location] = useLocation();
+  const breakpoint = useBreakpoint();
 
   // Get all songs for navigation - ALWAYS call hooks first
   const { data: songs = [] } = useQuery<any[]>({
@@ -178,29 +181,39 @@ export default function GlobalMusicPlayer() {
   
   if (!currentSong) return null;
 
-  return (
-    <>
-      {/* Desktop Music Player */}
-      <div className="hidden md:block">
-        <MusicPlayer
-          song={currentSong}
-          isPlaying={isPlaying}
-          onPlayPause={handlePlayPause}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-        />
-      </div>
+  // Conditionally render only one music player based on breakpoint
+  if (breakpoint === 'desktop') {
+    return (
+      <MusicPlayer
+        song={currentSong}
+        isPlaying={isPlaying}
+        onPlayPause={handlePlayPause}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+      />
+    );
+  }
 
-      {/* Mobile Music Player */}
-      <div className="md:hidden">
-        <MobileMusicPlayer
-          song={currentSong}
-          isPlaying={isPlaying}
-          onPlayPause={handlePlayPause}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-        />
-      </div>
-    </>
+  if (breakpoint === 'tablet') {
+    return (
+      <TabletMusicPlayer
+        song={currentSong}
+        isPlaying={isPlaying}
+        onPlayPause={handlePlayPause}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+      />
+    );
+  }
+
+  // Mobile breakpoint
+  return (
+    <MobileMusicPlayer
+      song={currentSong}
+      isPlaying={isPlaying}
+      onPlayPause={handlePlayPause}
+      onNext={handleNext}
+      onPrevious={handlePrevious}
+    />
   );
 }
