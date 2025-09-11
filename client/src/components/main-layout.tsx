@@ -27,7 +27,7 @@ export default function MainLayout({
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+    <div className="min-h-screen bg-background">
       {/* Floating Sidebar - Only on desktop */}
       <div className="hidden lg:block">
         <FloatingSidebar />
@@ -65,12 +65,12 @@ export default function MainLayout({
         >
           <div
             className="lg:fixed lg:right-4 lg:bottom-4 lg:left-60 
-            bg-white dark:bg-gray-950 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 
+            bg-background dark:bg-background rounded-2xl shadow-xl border border-border 
             lg:overflow-hidden 
                        lg:flex lg:flex-col"
             style={{ top: "6rem" }} // 26 * 0.25rem = 104px
           >
-            <div className="lg:flex-1 lg:overflow-auto ">
+            <div className="lg:flex-1 lg:overflow-y-auto custom-scrollbar">
               {children}
             </div>
           </div>

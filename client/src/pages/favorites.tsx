@@ -10,11 +10,13 @@ export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentSong, playTrack } = useMusicPlayer();
 
-  // TODO: Implement favorites API endpoint
-  const { data: favoriteSongs = [], isLoading } = useQuery<Song[]>({
-    queryKey: ["/api/favorites"],
-    enabled: false, // Disable until API is implemented
+  // Get all songs and filter favorites locally (temporary until favorites API is implemented)
+  const { data: allSongs = [], isLoading } = useQuery<Song[]>({
+    queryKey: ["/api/songs"],
   });
+
+  // For now, show some songs as favorites (can be toggled by user later)
+  const favoriteSongs = allSongs.slice(0, 4); // Show first 4 songs as favorites
 
   // Convert Song to LegacyTrack format for MusicCard compatibility
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
@@ -43,9 +45,9 @@ export default function Favorites() {
   const displayLegacyTracks = filteredSongs.map(convertToLegacyTrack);
 
   return (
-    <div className="min-h-screen">
+    <div className="h-full">
       {/* Main Content */}
-      <main className="bg-background">
+      <main className="h-full">
           <div className="p-4 md:p-8">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center">

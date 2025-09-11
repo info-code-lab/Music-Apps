@@ -124,9 +124,8 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="lg:min-h-screen">
-        <main className="overflow-auto custom-scrollbar">
+    <div className="h-full">
+      <main className="h-full">
           {searchQuery && searchResults ? (
             <UnifiedSearchResults 
               searchResults={searchResults}
@@ -187,7 +186,6 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
             />
           )}
         </main>
-      </div>
     </div>
   );
 }

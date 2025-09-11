@@ -54,8 +54,8 @@ export default function Songs() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen">
-        <main className="overflow-auto custom-scrollbar">
+      <div className="h-full">
+        <main className="h-full">
             <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-6 hidden md:block">
               <div className="flex items-center justify-between">
                 <div className="flex-1 max-w-md">
@@ -113,8 +113,8 @@ export default function Songs() {
   }
 
   return (
-    <div className="min-h-screen">
-      <main className="overflow-auto custom-scrollbar">
+    <div className="h-full">
+      <main className="h-full">
           {/* Songs Library */}
           <section className="px-4 md:px-6 pb-6">
             <div className="mb-4 md:mb-6">
