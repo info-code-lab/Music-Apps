@@ -120,7 +120,7 @@ export default function TabletMusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 z-20 mb-16 lg:mb-0">
+    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-card border-t border-border p-3 z-20">
       <div className="max-w-full mx-auto">
         {/* Progress Bar - Full width at top for better visibility */}
         <div className="mb-3">
