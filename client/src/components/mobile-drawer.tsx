@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Home, 
-  Music, 
-  Users, 
-  Disc, 
-  ListMusic, 
-  Heart, 
+import {
+  Home,
+  Music,
+  Users,
+  Disc,
+  ListMusic,
+  Heart,
   Settings,
   X,
   Library,
@@ -19,7 +19,7 @@ import {
   Waves,
   Volume2,
   Zap,
-  Tags
+  Tags,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
@@ -44,25 +44,38 @@ interface Genre {
 
 // Icon mapping for genre icons
 const iconMap: { [key: string]: any } = {
-  Music, Flame, Heart, Star, Guitar, Coffee, Mic, Headphones, 
-  Waves, Volume2, Zap, Tags, Users, Disc, ListMusic
+  Music,
+  Flame,
+  Heart,
+  Star,
+  Guitar,
+  Coffee,
+  Mic,
+  Headphones,
+  Waves,
+  Volume2,
+  Zap,
+  Tags,
+  Users,
+  Disc,
+  ListMusic,
 };
 
-export default function MobileDrawer({ 
-  isOpen, 
-  onClose, 
-  onCategorySelect, 
-  selectedCategory 
+export default function MobileDrawer({
+  isOpen,
+  onClose,
+  onCategorySelect,
+  selectedCategory,
 }: MobileDrawerProps) {
   const [location] = useLocation();
-  
+
   // Fetch genres from API
   const { data: genres = [], isLoading } = useQuery({
-    queryKey: ['/api/genres'],
+    queryKey: ["/api/genres"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/genres");
       return res.json();
-    }
+    },
   });
 
   // Create categories from genres, adding "All Categories" at the beginning
@@ -71,8 +84,8 @@ export default function MobileDrawer({
     ...genres.map((genre: Genre) => ({
       name: genre.name,
       icon: iconMap[genre.icon || "Music"] || Music,
-      color: genre.color || "#8B5CF6"
-    }))
+      color: genre.color || "#8B5CF6",
+    })),
   ];
 
   const mainNavItems = [
@@ -97,11 +110,11 @@ export default function MobileDrawer({
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-40 lg:hidden"
         onClick={onClose}
       />
-      
+
       {/* Drawer */}
       <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-background border-r border-border z-50 lg:hidden transform transition-transform duration-300 ease-in-out">
         <div className="flex flex-col h-full">
@@ -110,10 +123,10 @@ export default function MobileDrawer({
             <h2 className="text-lg font-bold text-foreground font-sans">
               Menu
             </h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2" 
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-2"
               onClick={onClose}
               data-testid="button-close-drawer"
             >
@@ -127,21 +140,31 @@ export default function MobileDrawer({
             <div className="p-4 space-y-2">
               {mainNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = item.href === "/" ? location === "/" : location.startsWith(item.href);
-                
+                const isActive =
+                  item.href === "/"
+                    ? location === "/"
+                    : location.startsWith(item.href);
+
                 return (
                   <Link key={item.href} href={item.href}>
                     <button
                       className={cn(
                         "w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left",
-                        isActive 
-                          ? "bg-accent text-accent-foreground" 
-                          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                        isActive
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-accent text-muted-foreground hover:text-foreground",
                       )}
                       onClick={onClose}
                       data-testid={`drawer-nav-${item.name.toLowerCase()}`}
                     >
-                      <Icon className={cn("w-5 h-5", isActive ? "text-accent-foreground" : "text-muted-foreground")} />
+                      <Icon
+                        className={cn(
+                          "w-5 h-5",
+                          isActive
+                            ? "text-accent-foreground"
+                            : "text-muted-foreground",
+                        )}
+                      />
                       <span className="font-medium">{item.name}</span>
                     </button>
                   </Link>
@@ -157,21 +180,31 @@ export default function MobileDrawer({
               <div className="space-y-2">
                 {libraryNavItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = item.href === "/" ? location === "/" : location.startsWith(item.href);
-                  
+                  const isActive =
+                    item.href === "/"
+                      ? location === "/"
+                      : location.startsWith(item.href);
+
                   return (
                     <Link key={item.href} href={item.href}>
                       <button
                         className={cn(
                           "w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left",
-                          isActive 
-                            ? "bg-accent text-accent-foreground" 
-                            : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                          isActive
+                            ? "bg-accent text-accent-foreground"
+                            : "hover:bg-accent text-muted-foreground hover:text-foreground",
                         )}
                         onClick={onClose}
-                        data-testid={`drawer-library-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        data-testid={`drawer-library-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
                       >
-                        <Icon className={cn("w-5 h-5", isActive ? "text-accent-foreground" : "text-muted-foreground")} />
+                        <Icon
+                          className={cn(
+                            "w-5 h-5",
+                            isActive
+                              ? "text-accent-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        />
                         <span className="font-medium">{item.name}</span>
                       </button>
                     </Link>
@@ -189,31 +222,34 @@ export default function MobileDrawer({
                 {categories.map((category) => {
                   const Icon = category.icon;
                   const isSelected = selectedCategory === category.name;
-                  
+
                   return (
                     <button
                       key={category.name}
                       className={cn(
                         "w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left",
-                        isSelected 
-                          ? "bg-primary/10 text-primary border border-primary/20" 
-                          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                        isSelected
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "hover:bg-accent text-muted-foreground hover:text-foreground",
                       )}
                       onClick={() => handleCategoryClick(category.name)}
-                      data-testid={`drawer-category-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-testid={`drawer-category-${category.name.toLowerCase().replace(/\s+/g, "-")}`}
                     >
-                      <Icon 
-                        className="w-4 h-4" 
-                        style={{ color: isSelected ? category.color : undefined }}
+                      <Icon
+                        className="w-4 h-4"
+                        style={{
+                          color: isSelected ? category.color : undefined,
+                        }}
                       />
-                      <span className="font-medium text-sm">{category.name}</span>
+                      <span className="font-medium text-sm">
+                        {category.name}
+                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </>
