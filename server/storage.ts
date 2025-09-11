@@ -1,9 +1,11 @@
 import { 
   users, artists, albums, songs, genres, playlists, playlistSongs, songArtists, songGenres, songAlbums,
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
+  otpVerification, userSessions, userPreferredArtists,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
   type Album, type InsertAlbum, type Song, type InsertSong, type Playlist, type InsertPlaylist,
-  type Comment, type InsertComment, type Rating, type InsertRating, type Genre, type InsertGenre
+  type Comment, type InsertComment, type Rating, type InsertRating, type Genre, type InsertGenre,
+  type OtpVerification, type InsertOtp, type UserSession, type InsertSession
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, ilike, or, desc, and, inArray } from "drizzle-orm";
@@ -13,8 +15,25 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByPhone(phoneNumber: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  
+  // Phone Authentication
+  createOtp(otp: InsertOtp): Promise<OtpVerification>;
+  verifyOtp(phoneNumber: string, otp: string): Promise<boolean>;
+  cleanExpiredOtps(): Promise<void>;
+  
+  // User Sessions
+  createSession(session: InsertSession): Promise<UserSession>;
+  getSession(sessionToken: string): Promise<UserSession | undefined>;
+  deleteSession(sessionToken: string): Promise<boolean>;
+  cleanExpiredSessions(): Promise<void>;
+  
+  // User Preferences
+  getUserPreferredArtists(userId: string): Promise<Artist[]>;
+  addUserPreferredArtist(userId: string, artistId: string): Promise<void>;
+  removeUserPreferredArtist(userId: string, artistId: string): Promise<boolean>;
   
   // Legacy Track operations (backward compatibility)
   getAllTracks(): Promise<Track[]>;
@@ -144,6 +163,124 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+    return user || undefined;
+  }
+
+  // ========================
+  // PHONE AUTHENTICATION OPERATIONS
+  // ========================
+
+  async createOtp(insertOtp: InsertOtp): Promise<OtpVerification> {
+    const [otp] = await db
+      .insert(otpVerification)
+      .values(insertOtp)
+      .returning();
+    return otp;
+  }
+
+  async verifyOtp(phoneNumber: string, otp: string): Promise<boolean> {
+    const [verification] = await db
+      .select()
+      .from(otpVerification)
+      .where(and(
+        eq(otpVerification.phoneNumber, phoneNumber),
+        eq(otpVerification.otp, otp),
+        eq(otpVerification.verified, false),
+        sql`${otpVerification.expiresAt} > NOW()`
+      ));
+
+    if (verification) {
+      // Mark as verified
+      await db
+        .update(otpVerification)
+        .set({ verified: true })
+        .where(eq(otpVerification.id, verification.id));
+      return true;
+    }
+    return false;
+  }
+
+  async cleanExpiredOtps(): Promise<void> {
+    await db
+      .delete(otpVerification)
+      .where(sql`${otpVerification.expiresAt} < NOW()`);
+  }
+
+  // ========================
+  // USER SESSION OPERATIONS  
+  // ========================
+
+  async createSession(insertSession: InsertSession): Promise<UserSession> {
+    const [session] = await db
+      .insert(userSessions)
+      .values(insertSession)
+      .returning();
+    return session;
+  }
+
+  async getSession(sessionToken: string): Promise<UserSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(userSessions)
+      .where(and(
+        eq(userSessions.sessionToken, sessionToken),
+        sql`${userSessions.expiresAt} > NOW()`
+      ));
+    return session || undefined;
+  }
+
+  async deleteSession(sessionToken: string): Promise<boolean> {
+    const result = await db
+      .delete(userSessions)
+      .where(eq(userSessions.sessionToken, sessionToken));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async cleanExpiredSessions(): Promise<void> {
+    await db
+      .delete(userSessions)
+      .where(sql`${userSessions.expiresAt} < NOW()`);
+  }
+
+  // ========================
+  // USER PREFERENCES OPERATIONS
+  // ========================
+
+  async getUserPreferredArtists(userId: string): Promise<Artist[]> {
+    const preferredArtists = await db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        bio: artists.bio,
+        profilePic: artists.profilePic,
+        createdAt: artists.createdAt,
+      })
+      .from(userPreferredArtists)
+      .innerJoin(artists, eq(userPreferredArtists.artistId, artists.id))
+      .where(eq(userPreferredArtists.userId, userId));
+    
+    return preferredArtists;
+  }
+
+  async addUserPreferredArtist(userId: string, artistId: string): Promise<void> {
+    await db
+      .insert(userPreferredArtists)
+      .values({ userId, artistId })
+      .onConflictDoNothing();
+  }
+
+  async removeUserPreferredArtist(userId: string, artistId: string): Promise<boolean> {
+    const result = await db
+      .delete(userPreferredArtists)
+      .where(and(
+        eq(userPreferredArtists.userId, userId),
+        eq(userPreferredArtists.artistId, artistId)
+      ));
+    return (result.rowCount || 0) > 0;
   }
 
   // ========================

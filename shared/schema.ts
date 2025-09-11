@@ -28,20 +28,10 @@ export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 
 // USERS & AUTHENTICATION  
 // ========================
 
-// Session storage table - Required for Replit Auth
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: json("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// Updated users table for Replit Auth compatibility
+// Updated users table for phone authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phoneNumber: varchar("phone_number", { length: 20 }).notNull().unique(),
   email: varchar("email", { length: 100 }).unique(),
   firstName: varchar("first_name", { length: 50 }),
   lastName: varchar("last_name", { length: 50 }),
@@ -56,6 +46,27 @@ export const users = pgTable("users", {
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OTP verification table
+export const otpVerification = pgTable("otp_verification", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User sessions for phone auth
+export const userSessions = pgTable("user_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  device: varchar("device", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // User preferred artists table
@@ -563,8 +574,9 @@ export const insertTrackToSongSchema = insertTrackSchema.transform((data) => ({
   isRemix: false,
 }));
 
-// User Schemas for Replit Auth
+// User Schemas for phone authentication
 export const insertUserSchema = createInsertSchema(users).pick({
+  phoneNumber: true,
   email: true,
   firstName: true,
   lastName: true,
@@ -577,12 +589,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   onboardingCompleted: true,
 });
 
-export const upsertUserSchema = createInsertSchema(users).pick({
+// OTP Schemas
+export const insertOtpSchema = createInsertSchema(otpVerification).omit({
   id: true,
-  email: true,
-  firstName: true,
-  lastName: true,
-  profileImageUrl: true,
+  verified: true,
+  createdAt: true,
+});
+
+// Session Schemas
+export const insertSessionSchema = createInsertSchema(userSessions).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Artist Schemas
@@ -674,9 +691,12 @@ export interface SearchResult {
 }
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type UserPreferredArtist = typeof userPreferredArtists.$inferSelect;
+export type OtpVerification = typeof otpVerification.$inferSelect;
+export type InsertOtp = typeof otpVerification.$inferInsert;
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertSession = typeof userSessions.$inferInsert;
 
 export type InsertArtist = z.infer<typeof insertArtistSchema>;
 export type Artist = typeof artists.$inferSelect;

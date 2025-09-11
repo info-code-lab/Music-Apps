@@ -7,7 +7,8 @@ import { songs, albums, artists, users, genres } from "@shared/schema";
 import { sql, desc } from "drizzle-orm";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
-import { login, register, getCurrentUser, authenticateToken, requireAdmin, type AuthRequest } from "./auth";
+import { setupPhoneAuth, authenticateToken } from "./phoneAuth";
+import { requireAdmin, type AuthRequest } from "./auth";
 import { streamingService } from "./streaming-service";
 import { searchService } from "./search-service";
 import multer from "multer";
@@ -32,10 +33,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
-  app.post("/api/auth/login", login);
-  app.post("/api/auth/register", register);
-  app.get("/api/auth/me", authenticateToken, getCurrentUser);
+  // Setup phone authentication routes
+  setupPhoneAuth(app);
 
   // SSE endpoint for progress updates
   app.get("/api/upload-progress/:sessionId", (req, res) => {
