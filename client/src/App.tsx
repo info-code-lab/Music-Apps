@@ -16,6 +16,7 @@ import Albums from "@/pages/albums";
 import Playlists from "@/pages/playlists";
 import Songs from "@/pages/songs";
 import Favorites from "@/pages/favorites";
+import MyLibrary from "@/pages/my-library";
 import Profile from "@/pages/profile";
 import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
@@ -54,6 +55,11 @@ function Router() {
       <Route path="/favorites">
         <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Favorites />
+        </MainLayout>
+      </Route>
+      <Route path="/my-library">
+        <MainLayout showSearch={false}>
+          <MyLibrary />
         </MainLayout>
       </Route>
       <Route path="/profile">
