@@ -108,9 +108,11 @@ export default function FloatingSidebar() {
   const [location] = useLocation();
 
   const isActive = (href: string) => {
-    if (href === "/admin" && location === "/admin") return true;
-    if (href !== "/admin" && location.startsWith(href)) return true;
-    return false;
+    // Exact match for home page to prevent it from matching all routes
+    if (href === "/") return location === "/";
+    
+    // For all other routes, use exact match to prevent conflicts
+    return location === href;
   };
 
   return (
