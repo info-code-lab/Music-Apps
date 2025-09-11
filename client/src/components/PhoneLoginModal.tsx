@@ -16,10 +16,30 @@ interface PhoneLoginModalProps {
 export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginModalProps) {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [normalizedPhoneNumber, setNormalizedPhoneNumber] = useState(''); // Store normalized phone number
   const [otp, setOtp] = useState('');
   const [devOtp, setDevOtp] = useState<string>(''); // For development
   
   const { sendOtp, login, sendOtpMutation, verifyOtpMutation } = useAuth();
+
+  // Shared phone normalization function 
+  const normalizePhoneNumber = (phone: string): string => {
+    // Format phone number to E.164 format
+    let cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // If phone doesn't start with +, add country code (default to +1 for US)
+    if (!cleanPhone.startsWith('+')) {
+      if (cleanPhone.length === 10) {
+        cleanPhone = '+1' + cleanPhone; // US phone number
+      } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
+        cleanPhone = '+' + cleanPhone; // US phone with country code
+      } else {
+        cleanPhone = '+1' + cleanPhone; // Default to US
+      }
+    }
+    
+    return cleanPhone;
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,15 +49,20 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
       return;
     }
 
-    // Basic phone number validation
-    const cleanPhone = phoneNumber.replace(/\s+/g, '');
-    if (cleanPhone.length < 10) {
+    // Normalize phone number using shared function
+    const cleanPhone = normalizePhoneNumber(phoneNumber);
+    
+    // Validate E.164 format
+    if (!/^\+?[1-9]\d{1,14}$/.test(cleanPhone)) {
       toast.error("Please enter a valid phone number");
       return;
     }
 
     try {
       const result = await sendOtp(cleanPhone);
+      
+      // Store normalized phone number for verification step
+      setNormalizedPhoneNumber(cleanPhone);
       
       // Store dev OTP for development
       if (result.dev_otp) {
@@ -61,13 +86,15 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
     }
 
     try {
-      await login(phoneNumber.replace(/\s+/g, ''), otp);
+      // Use the same normalized phone number that was used for sending OTP
+      await login(normalizedPhoneNumber, otp);
       
       toast.success("Welcome to Harmony!");
       
       onOpenChange(false);
       setStep('phone');
       setPhoneNumber('');
+      setNormalizedPhoneNumber('');
       setOtp('');
       setDevOtp('');
       
@@ -83,12 +110,14 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
     setStep('phone');
     setOtp('');
     setDevOtp('');
+    setNormalizedPhoneNumber('');
   };
 
   const handleClose = () => {
     onOpenChange(false);
     setStep('phone');
     setPhoneNumber('');
+    setNormalizedPhoneNumber('');
     setOtp('');
     setDevOtp('');
   };
@@ -238,6 +267,7 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
                     setStep('phone');
                     setOtp('');
                     setDevOtp('');
+                    setNormalizedPhoneNumber('');
                     handleSendOtp(new Event('submit') as any);
                   }}
                   disabled={sendOtpMutation.isPending}

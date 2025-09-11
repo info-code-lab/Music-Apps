@@ -183,25 +183,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyOtp(phoneNumber: string, otp: string): Promise<boolean> {
-    const [verification] = await db
-      .select()
-      .from(otpVerification)
-      .where(and(
-        eq(otpVerification.phoneNumber, phoneNumber),
-        eq(otpVerification.otp, otp),
-        eq(otpVerification.verified, false),
-        sql`${otpVerification.expiresAt} > NOW()`
-      ));
-
-    if (verification) {
-      // Mark as verified
-      await db
+    // Use transaction to ensure atomic OTP verification and prevent race conditions
+    return await db.transaction(async (tx) => {
+      // Find and immediately mark as verified in a single atomic operation
+      const [verification] = await tx
         .update(otpVerification)
         .set({ verified: true })
-        .where(eq(otpVerification.id, verification.id));
-      return true;
-    }
-    return false;
+        .where(and(
+          eq(otpVerification.phoneNumber, phoneNumber),
+          eq(otpVerification.otp, otp),
+          eq(otpVerification.verified, false),
+          sql`${otpVerification.expiresAt} > NOW()`
+        ))
+        .returning();
+
+      // Return true if we successfully updated a record, false otherwise
+      return !!verification;
+    });
   }
 
   async cleanExpiredOtps(): Promise<void> {

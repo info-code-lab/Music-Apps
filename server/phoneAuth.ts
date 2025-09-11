@@ -1,4 +1,4 @@
-import type { Express, RequestHandler } from "express";
+import type { Express, RequestHandler, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import crypto from "crypto";
 import { storage } from "./storage";
@@ -23,10 +23,89 @@ function generateSessionToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// Helper to get user from session
+// Rate limiting for OTP endpoints
+function createOtpRateLimit() {
+  const attempts = new Map<string, { count: number; lastAttempt: number }>();
+  const MAX_ATTEMPTS = 3; // Allow 3 OTP requests per window
+  const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+  const RESEND_COOLDOWN = 60 * 1000; // 1 minute between OTP requests
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const record = attempts.get(ip);
+
+    if (record) {
+      if (now - record.lastAttempt > WINDOW_MS) {
+        // Reset after window
+        attempts.set(ip, { count: 1, lastAttempt: now });
+      } else if (record.count >= MAX_ATTEMPTS) {
+        return res.status(429).json({ 
+          error: 'Too many OTP requests. Please try again later.' 
+        });
+      } else if (now - record.lastAttempt < RESEND_COOLDOWN) {
+        return res.status(429).json({ 
+          error: 'Please wait before requesting another OTP.' 
+        });
+      } else {
+        record.count++;
+        record.lastAttempt = now;
+      }
+    } else {
+      attempts.set(ip, { count: 1, lastAttempt: now });
+    }
+
+    next();
+  };
+}
+
+// Rate limiting for OTP verification (more restrictive)
+function createOtpVerifyRateLimit() {
+  const attempts = new Map<string, { count: number; lastAttempt: number }>();
+  const MAX_ATTEMPTS = 5; // Allow 5 verification attempts per window
+  const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+  const ATTEMPT_COOLDOWN = 5 * 1000; // 5 seconds between attempts
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const record = attempts.get(ip);
+
+    if (record) {
+      if (now - record.lastAttempt > WINDOW_MS) {
+        // Reset after window
+        attempts.set(ip, { count: 1, lastAttempt: now });
+      } else if (record.count >= MAX_ATTEMPTS) {
+        return res.status(429).json({ 
+          error: 'Too many verification attempts. Please try again later.' 
+        });
+      } else if (now - record.lastAttempt < ATTEMPT_COOLDOWN) {
+        return res.status(429).json({ 
+          error: 'Please wait before trying again.' 
+        });
+      } else {
+        record.count++;
+        record.lastAttempt = now;
+      }
+    } else {
+      attempts.set(ip, { count: 1, lastAttempt: now });
+    }
+
+    next();
+  };
+}
+
+// Helper to get user from session with expiry check
 export async function getUserFromSession(sessionToken: string) {
   const session = await storage.getSession(sessionToken);
   if (!session) return null;
+  
+  // Check if session has expired
+  if (new Date() > session.expiresAt) {
+    // Clean up expired session
+    await storage.deleteSession(sessionToken);
+    return null;
+  }
   
   const user = await storage.getUser(session.userId);
   return user || null;
@@ -58,8 +137,12 @@ export const authenticateToken: RequestHandler = async (req, res, next) => {
 // Setup phone authentication routes
 export function setupPhoneAuth(app: Express) {
   
-  // Send OTP endpoint
-  app.post("/api/auth/send-otp", async (req, res) => {
+  // Create rate limiting middleware
+  const otpRateLimit = createOtpRateLimit();
+  const otpVerifyRateLimit = createOtpVerifyRateLimit();
+  
+  // Send OTP endpoint with rate limiting
+  app.post("/api/auth/send-otp", otpRateLimit, async (req, res) => {
     try {
       const { phoneNumber } = phoneSchema.parse(req.body);
       
@@ -74,16 +157,22 @@ export function setupPhoneAuth(app: Express) {
         expiresAt,
       });
       
-      // For development: Log OTP to console
-      console.log(`🔐 OTP for ${phoneNumber}: ${otp}`);
-      console.log(`📱 Phone Auth - OTP ${otp} sent to ${phoneNumber} (expires in 10 minutes)`);
+      // Development OTP handling - only in non-production environments
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🔐 Development OTP for ${phoneNumber}: ${otp}`);
+        console.log(`📱 Phone Auth - OTP ${otp} sent to ${phoneNumber} (expires in 10 minutes)`);
+        
+        return res.json({ 
+          success: true, 
+          message: "OTP sent successfully",
+          dev_otp: otp // Only expose in development
+        });
+      }
       
       // In production, this would send SMS via Twilio or similar service
       res.json({ 
         success: true, 
-        message: "OTP sent successfully",
-        // For development only - remove in production
-        dev_otp: otp
+        message: "OTP sent successfully"
       });
       
     } catch (error) {
@@ -95,8 +184,8 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Verify OTP and login endpoint
-  app.post("/api/auth/verify-otp", async (req, res) => {
+  // Verify OTP and login endpoint with rate limiting
+  app.post("/api/auth/verify-otp", otpVerifyRateLimit, async (req, res) => {
     try {
       const { phoneNumber, otp } = verifyOtpSchema.parse(req.body);
       
