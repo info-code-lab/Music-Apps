@@ -20,6 +20,8 @@ import {
   Volume2,
   Zap,
   Tags,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
@@ -96,6 +98,13 @@ export default function MobileDrawer({
     { name: "Playlists", icon: ListMusic, href: "/playlists" },
   ];
 
+  const discoverNavItems = [
+    { name: "New Releases", icon: Sparkles, href: "/new-releases" },
+    { name: "Top Charts", icon: TrendingUp, href: "/top-charts" },
+    { name: "Top Playlists", icon: ListMusic, href: "/top-playlists" },
+    { name: "Top Artists", icon: Users, href: "/top-artists" },
+  ];
+
 
   const handleCategoryClick = (categoryName: string) => {
     onCategorySelect(categoryName);
@@ -167,6 +176,47 @@ export default function MobileDrawer({
                   </Link>
                 );
               })}
+            </div>
+
+            {/* Discover Section */}
+            <div className="p-4 border-t border-border">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+                Discover
+              </h3>
+              <div className="space-y-2">
+                {discoverNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    item.href === "/"
+                      ? location === "/"
+                      : location.startsWith(item.href);
+
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <button
+                        className={cn(
+                          "w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left",
+                          isActive
+                            ? "bg-accent text-accent-foreground"
+                            : "hover:bg-accent text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={onClose}
+                        data-testid={`drawer-discover-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-5 h-5",
+                            isActive
+                              ? "text-accent-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        />
+                        <span className="font-medium">{item.name}</span>
+                      </button>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Categories */}
