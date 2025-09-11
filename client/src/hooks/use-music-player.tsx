@@ -93,7 +93,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     
     // Log listening history when a track starts playing
     try {
-      await apiRequest("POST", `/api/songs/${track.id}/play`);
+      await apiRequest(`/api/songs/${track.id}/play`, "POST");
       console.log("Logged listening history for:", track.title);
     } catch (error) {
       console.log("Failed to log listening history (auth might be required):", error);

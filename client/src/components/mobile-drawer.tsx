@@ -75,7 +75,7 @@ export default function MobileDrawer({
   const { data: genres = [], isLoading } = useQuery({
     queryKey: ["/api/genres"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/genres");
+      const res = await apiRequest("/api/genres", "GET");
       return res.json();
     },
   });

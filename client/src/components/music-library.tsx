@@ -28,7 +28,7 @@ export default function MusicLibrary({
   const { data: genres = [] } = useQuery<{id: string; name: string}[]>({
     queryKey: ["/api/genres"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/genres");
+      const res = await apiRequest("/api/genres", "GET");
       return res.json();
     }
   });
