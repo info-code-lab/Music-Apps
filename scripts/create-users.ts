@@ -2,7 +2,6 @@
 //npx tsx scripts/create-users.ts
 //npx tsx scripts/import-songs.ts
 //npx tsx scripts/populate-database.ts
-import bcrypt from "bcryptjs";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
@@ -23,67 +22,110 @@ async function createUsers() {
   try {
     console.log("Creating users...");
 
-    // Hash passwords
-    const adminPassword = await bcrypt.hash("admin123", 10);
-    const userPassword = await bcrypt.hash("user123", 10);
-
-    // Create admin user
+    // Create admin user with phone authentication
     await db
       .insert(users)
       .values({
-        username: "admin",
+        phoneNumber: "+1234567890",
         email: "admin@example.com",
-        password: adminPassword,
+        firstName: "Admin",
+        lastName: "User",
+        username: "admin",
         role: "admin",
         status: "active",
+        onboardingCompleted: true,
       })
       .onConflictDoUpdate({
-        target: users.username,
+        target: users.phoneNumber,
         set: {
           email: "admin@example.com",
-          password: adminPassword,
+          firstName: "Admin",
+          lastName: "User",
+          username: "admin",
           role: "admin",
           status: "active",
+          onboardingCompleted: true,
         },
       });
 
     console.log("✓ Admin user created/updated");
 
-    // Create regular user
+    // Create regular user with phone authentication
     await db
       .insert(users)
       .values({
+        phoneNumber: "+1234567891",
+        email: "user@example.com", 
+        firstName: "Regular",
+        lastName: "User",
         username: "user",
-        email: "user@example.com",
-        password: userPassword,
         role: "user",
         status: "active",
+        onboardingCompleted: true,
       })
       .onConflictDoUpdate({
-        target: users.username,
+        target: users.phoneNumber,
         set: {
           email: "user@example.com",
-          password: userPassword,
+          firstName: "Regular",
+          lastName: "User", 
+          username: "user",
           role: "user",
           status: "active",
+          onboardingCompleted: true,
         },
       });
 
     console.log("✓ Regular user created/updated");
 
-    console.log("\n=== User Credentials ===");
+    // Create artist user
+    await db
+      .insert(users)
+      .values({
+        phoneNumber: "+1234567892",
+        email: "artist@example.com",
+        firstName: "Music",
+        lastName: "Artist",
+        username: "artist",
+        role: "artist",
+        status: "active",
+        onboardingCompleted: true,
+      })
+      .onConflictDoUpdate({
+        target: users.phoneNumber,
+        set: {
+          email: "artist@example.com",
+          firstName: "Music",
+          lastName: "Artist",
+          username: "artist", 
+          role: "artist",
+          status: "active",
+          onboardingCompleted: true,
+        },
+      });
+
+    console.log("✓ Artist user created/updated");
+
+    console.log("\n=== User Credentials (Phone Authentication) ===");
     console.log("Admin User:");
-    console.log("  Username: admin");
+    console.log("  Phone: +1234567890");
     console.log("  Email: admin@example.com");
-    console.log("  Password: admin123");
+    console.log("  Username: admin");
     console.log("  Role: admin");
     console.log("");
     console.log("Regular User:");
-    console.log("  Username: user");
+    console.log("  Phone: +1234567891");
     console.log("  Email: user@example.com");
-    console.log("  Password: user123");
+    console.log("  Username: user");
     console.log("  Role: user");
-    console.log("========================");
+    console.log("");
+    console.log("Artist User:");
+    console.log("  Phone: +1234567892");
+    console.log("  Email: artist@example.com");
+    console.log("  Username: artist");
+    console.log("  Role: artist");
+    console.log("========================================");
+    console.log("Note: Authentication is done via SMS OTP to phone numbers");
   } catch (error) {
     console.error("Error creating users:", error);
     process.exit(1);
