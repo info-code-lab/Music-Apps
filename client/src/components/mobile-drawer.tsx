@@ -84,7 +84,6 @@ export default function MobileDrawer({
   ];
 
   const libraryNavItems = [
-    { name: "My Library", icon: Library, href: "/my-library" },
     { name: "Favorites", icon: Heart, href: "/favorites" },
   ];
 
