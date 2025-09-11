@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { LegacyTrack } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
 
 interface MusicPlayerContextType {
   currentSong: LegacyTrack | null;
@@ -89,6 +90,14 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     console.log("playTrack called with:", track.title, "userInitiated:", isUserInitiated);
     console.log("Setting currentSong to:", track);
     setCurrentSong(track);
+    
+    // Log listening history when a track starts playing
+    try {
+      await apiRequest("POST", `/api/songs/${track.id}/play`);
+      console.log("Logged listening history for:", track.title);
+    } catch (error) {
+      console.log("Failed to log listening history (auth might be required):", error);
+    }
     
     if (isUserInitiated) {
       // For user-initiated playback, immediately try to play to satisfy browser autoplay policy

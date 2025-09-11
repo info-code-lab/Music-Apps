@@ -23,6 +23,7 @@ import TopPlaylists from "@/pages/top-playlists";
 import TopArtists from "@/pages/top-artists";
 import Profile from "@/pages/profile";
 import Search from "@/pages/search";
+import History from "@/pages/history";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -94,6 +95,11 @@ function Router() {
       <Route path="/top-artists">
         <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <TopArtists />
+        </MainLayout>
+      </Route>
+      <Route path="/history">
+        <MainLayout showSearch={false}>
+          <History />
         </MainLayout>
       </Route>
       

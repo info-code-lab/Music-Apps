@@ -955,6 +955,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/history", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const history = await storage.getUserListeningHistory(userId, limit);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch listening history" });
+    }
+  });
+
   app.get("/api/analytics/popular", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
