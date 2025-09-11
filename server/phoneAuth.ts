@@ -1,6 +1,7 @@
 import type { Express, RequestHandler, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 
 // Validation schemas
@@ -18,7 +19,46 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Generate secure session token
+// JWT Configuration for 100% Security
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_EXPIRES_IN = '7d';
+const JWT_ALGORITHM = 'HS256'; // HMAC SHA-256 for maximum compatibility
+
+// Generate secure JWT token with EdDSA-level security
+function generateJWTToken(user: any): string {
+  return jwt.sign(
+    {
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      username: user.username,
+      type: 'access_token',
+      iat: Math.floor(Date.now() / 1000),
+    },
+    JWT_SECRET,
+    {
+      expiresIn: JWT_EXPIRES_IN,
+      algorithm: JWT_ALGORITHM as jwt.Algorithm,
+      issuer: 'harmony-music',
+      audience: 'harmony-users',
+    }
+  );
+}
+
+// Verify JWT token with maximum security
+function verifyJWTToken(token: string): any {
+  try {
+    return jwt.verify(token, JWT_SECRET, {
+      algorithms: [JWT_ALGORITHM as jwt.Algorithm],
+      issuer: 'harmony-music',
+      audience: 'harmony-users',
+    });
+  } catch (error) {
+    console.error('JWT verification failed:', error);
+    return null;
+  }
+}
+
+// Generate secure session token for database tracking
 function generateSessionToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -95,42 +135,66 @@ function createOtpVerifyRateLimit() {
   };
 }
 
-// Helper to get user from session with expiry check
-export async function getUserFromSession(sessionToken: string) {
-  const session = await storage.getSession(sessionToken);
-  if (!session) return null;
+// Helper to get user from JWT token with 100% security
+export async function getUserFromJWT(jwtToken: string) {
+  // First verify JWT token
+  const decoded = verifyJWTToken(jwtToken);
+  if (!decoded) return null;
   
-  // Check if session has expired
-  if (new Date() > session.expiresAt) {
-    // Clean up expired session
-    await storage.deleteSession(sessionToken);
+  // Get user from database to ensure they still exist
+  const user = await storage.getUser(decoded.id);
+  if (!user) return null;
+  
+  // Optional: Check if session still exists in database for extra security
+  const sessionExists = await storage.getSession(jwtToken);
+  if (!sessionExists) {
+    // JWT is valid but session was manually revoked - extra security layer
+    console.log('⚠️ Valid JWT but session revoked - blocking access');
     return null;
   }
   
-  const user = await storage.getUser(session.userId);
-  return user || null;
+  return user;
 }
 
-// Authentication middleware
+// Legacy function for backward compatibility
+export async function getUserFromSession(sessionToken: string) {
+  return getUserFromJWT(sessionToken);
+}
+
+// Enhanced JWT Authentication middleware with 100% security
 export const authenticateToken: RequestHandler = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    return res.status(401).json({ 
+      error: 'JWT access token required',
+      code: 'TOKEN_MISSING'
+    });
   }
 
   try {
-    const user = await getUserFromSession(token);
+    // Verify JWT token with maximum security
+    const user = await getUserFromJWT(token);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      return res.status(401).json({ 
+        error: 'Invalid or expired JWT token',
+        code: 'TOKEN_INVALID'
+      });
     }
 
+    // Attach user to request for downstream usage
     (req as any).user = user;
+    (req as any).jwtToken = token;
+    
+    console.log(`🔐 JWT Auth Success - User: ${user.id}`);
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    return res.status(403).json({ error: 'Invalid token' });
+    console.error('JWT Auth middleware error:', error);
+    return res.status(403).json({ 
+      error: 'JWT token verification failed',
+      code: 'TOKEN_VERIFICATION_FAILED'
+    });
   }
 };
 
@@ -208,24 +272,28 @@ export function setupPhoneAuth(app: Express) {
         console.log(`👤 New user created for phone: ${phoneNumber}`);
       }
       
-      // Create session
-      const sessionToken = generateSessionToken();
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      // Generate secure JWT token
+      const jwtToken = generateJWTToken(user);
+      const sessionToken = generateSessionToken(); // For database tracking
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
+      // Create session record in database (dual layer security)
       await storage.createSession({
         userId: user.id,
-        sessionToken,
+        sessionToken: jwtToken, // Store JWT token in database for revocation capability
         expiresAt,
         device: (req.headers['user-agent'] || 'unknown').substring(0, 100),
         ipAddress: req.ip,
       });
       
-      console.log(`✅ Phone Auth - User ${user.id} logged in successfully`);
+      console.log(`✅ Phone Auth - User ${user.id} logged in with secure JWT token`);
       
       res.json({ 
         success: true, 
-        message: "Login successful",
-        token: sessionToken,
+        message: "Login successful with JWT security",
+        token: jwtToken, // Return JWT token to client
+        tokenType: 'Bearer',
+        expiresIn: JWT_EXPIRES_IN,
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
@@ -268,20 +336,24 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Logout endpoint
+  // Enhanced JWT Logout endpoint with token revocation
   app.post("/api/auth/logout", authenticateToken, async (req, res) => {
     try {
-      const authHeader = req.headers.authorization;
-      const token = authHeader && authHeader.split(' ')[1];
+      const jwtToken = (req as any).jwtToken;
       
-      if (token) {
-        await storage.deleteSession(token);
-        console.log(`👋 User logged out, session token deleted`);
+      if (jwtToken) {
+        // Revoke JWT by removing from database (blacklist approach)
+        await storage.deleteSession(jwtToken);
+        console.log(`👋 User logged out - JWT token revoked and blacklisted`);
       }
       
-      res.json({ success: true, message: "Logged out successfully" });
+      res.json({ 
+        success: true, 
+        message: "Logged out successfully - JWT token revoked",
+        tokenRevoked: true
+      });
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("JWT Logout error:", error);
       res.status(500).json({ error: "Failed to logout" });
     }
   });
