@@ -19,7 +19,8 @@ import {
   Music,
   Library,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Clock
 } from "lucide-react";
 
 const menuItems = [
@@ -33,6 +34,30 @@ const menuItems = [
     name: "Search",
     href: "/search",
     icon: Search,
+    section: "menu"
+  },
+  {
+    name: "Songs",
+    href: "/songs",
+    icon: Music2,
+    section: "menu"
+  },
+  {
+    name: "Artists",
+    href: "/artists",
+    icon: Users,
+    section: "menu"
+  },
+  {
+    name: "Albums",
+    href: "/albums",
+    icon: Disc,
+    section: "menu"
+  },
+  {
+    name: "Playlists",
+    href: "/playlists",
+    icon: ListMusic,
     section: "menu"
   }
 ];
@@ -72,30 +97,6 @@ const libraryItems = [
     section: "library"
   },
   {
-    name: "Songs",
-    href: "/songs",
-    icon: Music2,
-    section: "menu"
-  },
-  {
-    name: "Artists",
-    href: "/artists",
-    icon: Users,
-    section: "menu"
-  },
-  {
-    name: "Albums",
-    href: "/albums",
-    icon: Disc,
-    section: "menu"
-  },
-  {
-    name: "Playlists",
-    href: "/playlists",
-    icon: ListMusic,
-    section: "menu"
-  },
-  {
     name: "Favorites",
     href: "/favorites",
     icon: Heart,
@@ -117,15 +118,9 @@ const generalItems = [
     section: "general"
   },
   {
-    name: "Help", 
+    name: "Help",
     href: "/help",
     icon: HelpCircle,
-    section: "general"
-  },
-  {
-    name: "Logout",
-    href: "/logout",
-    icon: LogOut,
     section: "general"
   }
 ];
@@ -134,9 +129,8 @@ export default function FloatingSidebar() {
   const [location] = useLocation();
 
   const isActive = (href: string) => {
-    if (href === "/admin" && location === "/admin") return true;
-    if (href !== "/admin" && location.startsWith(href)) return true;
-    return false;
+    if (href === "/") return location === "/";
+    return location.startsWith(href);
   };
 
   return (
@@ -284,21 +278,19 @@ export default function FloatingSidebar() {
               <Music className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <h4 className="font-medium text-sm mb-1">Discover new</h4>
-              <h4 className="font-medium text-sm">Music</h4>
-              <p className="text-xs text-purple-100 mt-1">
-                Explore our music library
+              <h4 className="font-semibold text-sm mb-1">
+                Premium Music Experience
+              </h4>
+              <p className="text-xs text-purple-100 leading-relaxed">
+                Get unlimited access to millions of songs
               </p>
             </div>
           </div>
           <Button 
             size="sm" 
-            className="w-full bg-white/20 hover:bg-white/30 text-white border-0"
-            data-testid="button-explore-music"
-            onClick={() => window.location.href = '/search'}
+            className="w-full bg-white hover:bg-gray-100 text-purple-600 font-medium"
           >
-            <Search className="w-4 h-4 mr-2" />
-            Explore
+            Upgrade Now
           </Button>
         </div>
       </div>
