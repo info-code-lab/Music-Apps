@@ -965,6 +965,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========================
+  // USER PREFERRED ARTISTS ROUTES
+  // ========================
+
+  // Get user's preferred artists
+  app.get("/api/user/preferred-artists", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const preferredArtists = await storage.getUserPreferredArtists(user.id);
+      res.json(preferredArtists);
+    } catch (error) {
+      console.error("Failed to fetch user preferred artists:", error);
+      res.status(500).json({ message: "Failed to fetch preferred artists" });
+    }
+  });
+
+  // Add preferred artist for user
+  app.post("/api/user/preferred-artists", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const { artistId } = req.body;
+      
+      if (!artistId) {
+        return res.status(400).json({ message: "Artist ID is required" });
+      }
+
+      await storage.addUserPreferredArtist(user.id, artistId);
+      res.status(201).json({ message: "Artist added to preferences" });
+    } catch (error) {
+      console.error("Failed to add preferred artist:", error);
+      res.status(500).json({ message: "Failed to add preferred artist" });
+    }
+  });
+
+  // Remove preferred artist for user
+  app.delete("/api/user/preferred-artists/:artistId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const { artistId } = req.params;
+      
+      const removed = await storage.removeUserPreferredArtist(user.id, artistId);
+      
+      if (!removed) {
+        return res.status(404).json({ message: "Preferred artist not found" });
+      }
+
+      res.json({ message: "Artist removed from preferences" });
+    } catch (error) {
+      console.error("Failed to remove preferred artist:", error);
+      res.status(500).json({ message: "Failed to remove preferred artist" });
+    }
+  });
+
   app.get("/api/analytics/popular", async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;

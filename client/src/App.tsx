@@ -24,6 +24,8 @@ import TopArtists from "@/pages/top-artists";
 import Profile from "@/pages/profile";
 import Search from "@/pages/search";
 import History from "@/pages/history";
+import OnboardingLanguage from "@/pages/onboarding-language";
+import OnboardingArtists from "@/pages/onboarding-artists";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -102,6 +104,10 @@ function Router() {
           <History />
         </MainLayout>
       </Route>
+      
+      {/* Onboarding routes without main layout */}
+      <Route path="/onboarding/language" component={OnboardingLanguage} />
+      <Route path="/onboarding/artists" component={OnboardingArtists} />
       
       {/* Admin routes without floating sidebar */}
       <Route path="/admin/login" component={AdminLogin} />

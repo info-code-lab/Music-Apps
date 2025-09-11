@@ -87,9 +87,24 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
 
     try {
       // Use the same normalized phone number that was used for sending OTP
-      await login(normalizedPhoneNumber, otp);
+      const result = await login(normalizedPhoneNumber, otp);
       
-      toast.success("Welcome to Harmony!");
+      // Check if user needs onboarding
+      if (result.user && !result.user.onboardingCompleted) {
+        toast.success("Welcome to Harmony! Let's set up your preferences.");
+        onOpenChange(false);
+        setStep('phone');
+        setPhoneNumber('');
+        setNormalizedPhoneNumber('');
+        setOtp('');
+        setDevOtp('');
+        
+        // Redirect to onboarding
+        window.location.href = "/onboarding/language";
+        return;
+      }
+      
+      toast.success("Welcome back to Harmony!");
       
       onOpenChange(false);
       setStep('phone');
