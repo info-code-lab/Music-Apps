@@ -216,7 +216,7 @@ export function setupPhoneAuth(app: Express) {
         userId: user.id,
         sessionToken,
         expiresAt,
-        device: req.headers['user-agent'] || 'unknown',
+        device: (req.headers['user-agent'] || 'unknown').substring(0, 100),
         ipAddress: req.ip,
       });
       
