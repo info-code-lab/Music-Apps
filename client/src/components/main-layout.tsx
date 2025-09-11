@@ -61,7 +61,7 @@ export default function MainLayout({
       {/* Main Content */}
       <div className="lg:ml-60">
         <main
-          className={`min-h-screen ${currentSong ? "pb-20" : "pb-4"} md:pb-6 lg:pt-12`}
+          className={`min-h-screen ${currentSong ? "pb-44 lg:pb-6" : "pb-20 lg:pb-6"} lg:pt-12`}
         >
           <div
             className="lg:fixed lg:right-4 lg:bottom-4 lg:left-60 
