@@ -34,19 +34,7 @@ export default function History() {
 
   // Fetch listening history
   const { data: history = [], isLoading, error } = useQuery<HistoryEntry[]>({
-    queryKey: ["/api/history"],
-    queryFn: async () => {
-      const response = await fetch("/api/history", {
-        credentials: "include"
-      });
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Authentication required");
-        }
-        throw new Error("Failed to fetch history");
-      }
-      return response.json();
-    }
+    queryKey: ["/api/history"]
   });
 
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
