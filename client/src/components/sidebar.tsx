@@ -83,7 +83,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           <Link 
             href="/songs" 
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-              location.startsWith("/songs") 
+              location === "/songs" 
                 ? "bg-accent text-accent-foreground" 
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
@@ -95,7 +95,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           <Link 
             href="/artists" 
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-              location.startsWith("/artists") 
+              location === "/artists" 
                 ? "bg-accent text-accent-foreground" 
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
@@ -107,7 +107,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           <Link 
             href="/albums" 
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-              location.startsWith("/albums") 
+              location === "/albums" 
                 ? "bg-accent text-accent-foreground" 
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
@@ -119,7 +119,7 @@ export default function Sidebar({ onCategorySelect, selectedCategory, recentSong
           <Link 
             href="/playlists" 
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-              location.startsWith("/playlists") 
+              location === "/playlists" 
                 ? "bg-accent text-accent-foreground" 
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
