@@ -28,16 +28,42 @@ export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 
 // USERS & AUTHENTICATION  
 // ========================
 
+// Session storage table - Required for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: json("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Updated users table for Replit Auth compatibility
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: varchar("username", { length: 50 }).notNull().unique(),
-  email: varchar("email", { length: 100 }).notNull().unique(),
-  password: varchar("password_hash", { length: 255 }).notNull(),
+  email: varchar("email", { length: 100 }).unique(),
+  firstName: varchar("first_name", { length: 50 }),
+  lastName: varchar("last_name", { length: 50 }),
+  profileImageUrl: varchar("profile_image_url", { length: 255 }),
+  username: varchar("username", { length: 50 }).unique(),
   role: userRoleEnum("role").default('user'),
   status: userStatusEnum("status").default('active'),
-  profilePic: varchar("profile_pic", { length: 255 }).default('default.png'),
   bio: text("bio"),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  // User preferences
+  preferredLanguages: json("preferred_languages"), // Array of language codes
+  favoriteGenres: json("favorite_genres"), // Array of genre IDs
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User preferred artists table
+export const userPreferredArtists = pgTable("user_preferred_artists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  artistId: varchar("artist_id").notNull(),
+  addedAt: timestamp("added_at").defaultNow(),
 });
 
 export const authTokens = pgTable("auth_tokens", {
@@ -537,12 +563,26 @@ export const insertTrackToSongSchema = insertTrackSchema.transform((data) => ({
   isRemix: false,
 }));
 
-// User Schemas
+// User Schemas for Replit Auth
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
   email: true,
-  password: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+  username: true,
   role: true,
+  bio: true,
+  preferredLanguages: true,
+  favoriteGenres: true,
+  onboardingCompleted: true,
+});
+
+export const upsertUserSchema = createInsertSchema(users).pick({
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
 });
 
 // Artist Schemas
@@ -634,7 +674,9 @@ export interface SearchResult {
 }
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type UserPreferredArtist = typeof userPreferredArtists.$inferSelect;
 
 export type InsertArtist = z.infer<typeof insertArtistSchema>;
 export type Artist = typeof artists.$inferSelect;
