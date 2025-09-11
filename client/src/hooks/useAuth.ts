@@ -116,14 +116,14 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('auth_token', data.token);
       queryClient.setQueryData(["/api/auth/user"], data.user);
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       if (token) {
         const response = await fetch('/api/auth/logout', {
           method: 'POST',
@@ -141,7 +141,7 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('auth_token');
       queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
       queryClient.clear();
     },
@@ -149,7 +149,7 @@ export function useAuth() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileRequest) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       
       const response = await fetch('/api/auth/profile', {
         method: 'PUT',
