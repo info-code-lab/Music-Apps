@@ -34,30 +34,6 @@ const menuItems = [
     href: "/search",
     icon: Search,
     section: "menu"
-  },
-  {
-    name: "Songs",
-    href: "/songs",
-    icon: Music2,
-    section: "menu"
-  },
-  {
-    name: "Artists",
-    href: "/artists",
-    icon: Users,
-    section: "menu"
-  },
-  {
-    name: "Albums",
-    href: "/albums",
-    icon: Disc,
-    section: "menu"
-  },
-  {
-    name: "Playlists",
-    href: "/playlists",
-    icon: ListMusic,
-    section: "menu"
   }
 ];
 
@@ -94,6 +70,30 @@ const libraryItems = [
     href: "/my-library",
     icon: Library,
     section: "library"
+  },
+  {
+    name: "Songs",
+    href: "/songs",
+    icon: Music2,
+    section: "menu"
+  },
+  {
+    name: "Artists",
+    href: "/artists",
+    icon: Users,
+    section: "menu"
+  },
+  {
+    name: "Albums",
+    href: "/albums",
+    icon: Disc,
+    section: "menu"
+  },
+  {
+    name: "Playlists",
+    href: "/playlists",
+    icon: ListMusic,
+    section: "menu"
   },
   {
     name: "Favorites",
