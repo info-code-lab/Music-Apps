@@ -119,6 +119,16 @@ export default function FloatingSidebar() {
     return location === href;
   };
 
+  const handleLibraryItemClick = (e: React.MouseEvent, item: any) => {
+    // Check if user is authenticated for library items
+    if (!user) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsLoginModalOpen(true);
+    }
+    // If user is authenticated, the Link will handle navigation normally
+  };
+
   return (
     <div className="fixed left-3 top-3 bottom-3 w-56 bg-white dark:bg-gray-950 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 z-50 flex flex-col overflow-hidden">
       {/* Header with Logo */}
@@ -176,20 +186,36 @@ export default function FloatingSidebar() {
               const active = isActive(item.href);
               
               return (
-                <Link key={item.name} href={item.href}>
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer",
-                      active
-                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
-                    )}
-                    data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span>{item.name}</span>
-                  </div>
-                </Link>
+                <div key={item.name}>
+                  {user ? (
+                    <Link href={item.href}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer",
+                          active
+                            ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                        )}
+                        data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span>{item.name}</span>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div
+                      onClick={(e) => handleLibraryItemClick(e, item)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer",
+                        "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                      )}
+                      data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span>{item.name}</span>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -226,6 +252,14 @@ export default function FloatingSidebar() {
         </div>
       </div>
 
+      {/* Authentication Modal */}
+      <PhoneLoginModal
+        isOpen={isLoginModalOpen}
+        onOpenChange={setIsLoginModalOpen}
+        onSuccess={() => {
+          setIsLoginModalOpen(false);
+        }}
+      />
     </div>
   );
 }
