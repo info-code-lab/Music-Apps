@@ -117,7 +117,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       localStorage.setItem('auth_token', data.token);
-      queryClient.setQueryData(["/api/auth/user"], data.user);
+      queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
 
@@ -142,7 +142,7 @@ export function useAuth() {
     },
     onSuccess: () => {
       localStorage.removeItem('auth_token');
-      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
       queryClient.clear();
     },
   });
