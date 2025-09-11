@@ -62,7 +62,7 @@ export const otpVerification = pgTable("otp_verification", {
 export const userSessions = pgTable("user_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+  sessionToken: text("session_token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   device: varchar("device", { length: 100 }),
   ipAddress: varchar("ip_address", { length: 45 }),
