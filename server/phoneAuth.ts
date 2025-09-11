@@ -33,13 +33,34 @@ let publicKey: any = null;
 // Initialize EdDSA keys with proper formatting
 async function initializeEdDSAKeys() {
   if (!privateKey || !publicKey) {
-    // Ensure proper PEM formatting with newlines
-    const formattedPrivateKey = JWT_PRIVATE_KEY.replace(/\\n/g, '\n');
-    const formattedPublicKey = JWT_PUBLIC_KEY.replace(/\\n/g, '\n');
-    
-    privateKey = await importPKCS8(formattedPrivateKey, JWT_ALGORITHM);
-    publicKey = await importSPKI(formattedPublicKey, JWT_ALGORITHM);
-    console.log('🔐 EdDSA keys initialized successfully');
+    try {
+      // Handle both direct PEM format and escaped newline format
+      let formattedPrivateKey = JWT_PRIVATE_KEY;
+      let formattedPublicKey = JWT_PUBLIC_KEY;
+      
+      // If keys contain literal \n strings, replace with actual newlines
+      if (formattedPrivateKey.includes('\\n')) {
+        formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n');
+      }
+      if (formattedPublicKey.includes('\\n')) {
+        formattedPublicKey = formattedPublicKey.replace(/\\n/g, '\n');
+      }
+      
+      // Ensure proper PEM structure
+      if (!formattedPrivateKey.startsWith('-----BEGIN')) {
+        throw new Error('Invalid private key format - must start with -----BEGIN PRIVATE KEY-----');
+      }
+      if (!formattedPublicKey.startsWith('-----BEGIN')) {
+        throw new Error('Invalid public key format - must start with -----BEGIN PUBLIC KEY-----');
+      }
+      
+      privateKey = await importPKCS8(formattedPrivateKey, JWT_ALGORITHM);
+      publicKey = await importSPKI(formattedPublicKey, JWT_ALGORITHM);
+      console.log('🔐 EdDSA keys initialized successfully');
+    } catch (error) {
+      console.error('❌ EdDSA key initialization failed:', error);
+      throw error;
+    }
   }
 }
 
