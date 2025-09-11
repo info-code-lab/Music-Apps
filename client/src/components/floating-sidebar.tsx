@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import { 
   Home, 
   Music2, 
