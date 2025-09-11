@@ -108,7 +108,7 @@ const generalItems = [
 
 export default function FloatingSidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -187,7 +187,7 @@ export default function FloatingSidebar() {
               
               return (
                 <div key={item.name}>
-                  {user ? (
+                  {user || isLoading ? (
                     <Link href={item.href}>
                       <div
                         className={cn(
