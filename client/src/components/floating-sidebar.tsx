@@ -17,7 +17,9 @@ import {
   LogOut,
   Download,
   Music,
-  Library
+  Library,
+  Sparkles,
+  TrendingUp
 } from "lucide-react";
 
 const menuItems = [
@@ -56,6 +58,33 @@ const menuItems = [
     href: "/playlists",
     icon: ListMusic,
     section: "menu"
+  }
+];
+
+const discoverItems = [
+  {
+    name: "New Releases",
+    href: "/new-releases",
+    icon: Sparkles,
+    section: "discover"
+  },
+  {
+    name: "Top Charts",
+    href: "/top-charts",
+    icon: TrendingUp,
+    section: "discover"
+  },
+  {
+    name: "Top Playlists",
+    href: "/top-playlists",
+    icon: ListMusic,
+    section: "discover"
+  },
+  {
+    name: "Top Artists",
+    href: "/top-artists",
+    icon: Users,
+    section: "discover"
   }
 ];
 
@@ -163,6 +192,36 @@ export default function FloatingSidebar() {
           </h3>
           <nav className="space-y-1">
             {libraryItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <Link key={item.name} href={item.href}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer",
+                      active
+                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                    )}
+                    data-testid={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span>{item.name}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Discover Section */}
+        <div>
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+            DISCOVER
+          </h3>
+          <nav className="space-y-1">
+            {discoverItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               
