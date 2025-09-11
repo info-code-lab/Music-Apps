@@ -19,8 +19,7 @@ import {
   Music,
   Library,
   Sparkles,
-  TrendingUp,
-  Clock
+  TrendingUp
 } from "lucide-react";
 
 const menuItems = [
@@ -56,12 +55,13 @@ const menuItems = [
   }
 ];
 
+
 const libraryItems = [
   {
     name: "History",
-    href: "/history",
-    icon: Clock,
-    section: "library"
+    href: "/History",
+    icon: History,
+    section: "History"
   },
   {
     name: "Favorites",
@@ -188,6 +188,7 @@ export default function FloatingSidebar() {
             })}
           </nav>
         </div>
+
 
         {/* General Section */}
         <div>
