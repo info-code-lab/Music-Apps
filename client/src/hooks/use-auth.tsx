@@ -8,6 +8,29 @@ import { type User } from "@shared/schema";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import toast from "react-hot-toast";
 
+// Phone auth types
+type SendOtpRequest = {
+  phoneNumber: string;
+};
+
+type SendOtpResponse = {
+  success: boolean;
+  message: string;
+  dev_otp?: string;
+};
+
+type VerifyOtpRequest = {
+  phoneNumber: string;
+  otp: string;
+};
+
+type VerifyOtpResponse = {
+  success: boolean;
+  message: string;
+  token: string;
+  user: User;
+};
+
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
@@ -15,6 +38,10 @@ type AuthContextType = {
   loginMutation: UseMutationResult<LoginResponse, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<LoginResponse, Error, RegisterData>;
+  sendOtpMutation: UseMutationResult<SendOtpResponse, Error, SendOtpRequest>;
+  verifyOtpMutation: UseMutationResult<VerifyOtpResponse, Error, VerifyOtpRequest>;
+  sendOtp: (phoneNumber: string) => Promise<SendOtpResponse>;
+  verifyOtp: (phoneNumber: string, otp: string) => Promise<VerifyOtpResponse>;
   isAdmin: boolean;
   token: string | null;
 };
@@ -132,6 +159,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const sendOtpMutation = useMutation({
+    mutationFn: async (data: SendOtpRequest): Promise<SendOtpResponse> => {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send OTP');
+      }
+      
+      return response.json();
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: async (data: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to verify OTP');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setToken(data.token);
+      queryClient.setQueryData(["/api/auth/me"], data.user);
+    },
+  });
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       // No server logout needed for JWT, just clear local storage
@@ -149,6 +218,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = user?.role === 'admin';
 
+  // Helper functions for phone auth
+  const sendOtp = (phoneNumber: string) => {
+    return sendOtpMutation.mutateAsync({ phoneNumber });
+  };
+
+  const verifyOtp = (phoneNumber: string, otp: string) => {
+    return verifyOtpMutation.mutateAsync({ phoneNumber, otp });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -158,6 +236,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        sendOtpMutation,
+        verifyOtpMutation,
+        sendOtp,
+        verifyOtp,
         isAdmin,
         token,
       }}

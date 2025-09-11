@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import toast from "react-hot-toast";
 import { Loader2, Phone, Shield } from "lucide-react";
 
@@ -20,7 +20,7 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
   const [otp, setOtp] = useState('');
   const [devOtp, setDevOtp] = useState<string>(''); // For development
   
-  const { sendOtp, login, sendOtpMutation, verifyOtpMutation } = useAuth();
+  const { sendOtp, verifyOtp, sendOtpMutation, verifyOtpMutation } = useAuth();
 
   // Shared phone normalization function 
   const normalizePhoneNumber = (phone: string): string => {
@@ -87,7 +87,7 @@ export function PhoneLoginModal({ isOpen, onOpenChange, onSuccess }: PhoneLoginM
 
     try {
       // Use the same normalized phone number that was used for sending OTP
-      const result = await login(normalizedPhoneNumber, otp);
+      const result = await verifyOtp(normalizedPhoneNumber, otp);
       
       // Check if user needs onboarding
       if (result.user && !result.user.onboardingCompleted) {
