@@ -17,6 +17,10 @@ import Playlists from "@/pages/playlists";
 import Songs from "@/pages/songs";
 import Favorites from "@/pages/favorites";
 import MyLibrary from "@/pages/my-library";
+import NewReleases from "@/pages/new-releases";
+import TopCharts from "@/pages/top-charts";
+import TopPlaylists from "@/pages/top-playlists";
+import TopArtists from "@/pages/top-artists";
 import Profile from "@/pages/profile";
 import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
@@ -70,6 +74,26 @@ function Router() {
       <Route path="/search">
         <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <Search />
+        </MainLayout>
+      </Route>
+      <Route path="/new-releases">
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
+          <NewReleases />
+        </MainLayout>
+      </Route>
+      <Route path="/top-charts">
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
+          <TopCharts />
+        </MainLayout>
+      </Route>
+      <Route path="/top-playlists">
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
+          <TopPlaylists />
+        </MainLayout>
+      </Route>
+      <Route path="/top-artists">
+        <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
+          <TopArtists />
         </MainLayout>
       </Route>
       
