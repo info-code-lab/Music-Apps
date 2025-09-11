@@ -31,6 +31,18 @@ type VerifyOtpResponse = {
   user: User;
 };
 
+// Update profile types
+type UpdateProfileRequest = {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  bio?: string;
+  preferredLanguages?: string[];
+  favoriteGenres?: string[];
+  onboardingCompleted?: boolean;
+};
+
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
@@ -40,8 +52,10 @@ type AuthContextType = {
   registerMutation: UseMutationResult<LoginResponse, Error, RegisterData>;
   sendOtpMutation: UseMutationResult<SendOtpResponse, Error, SendOtpRequest>;
   verifyOtpMutation: UseMutationResult<VerifyOtpResponse, Error, VerifyOtpRequest>;
+  updateProfileMutation: UseMutationResult<{user: User}, Error, UpdateProfileRequest>;
   sendOtp: (phoneNumber: string) => Promise<SendOtpResponse>;
   verifyOtp: (phoneNumber: string, otp: string) => Promise<VerifyOtpResponse>;
+  updateProfile: (data: UpdateProfileRequest) => Promise<{user: User}>;
   isAdmin: boolean;
   token: string | null;
 };
@@ -66,11 +80,9 @@ type LoginResponse = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    console.log('AuthProvider - Initial token from localStorage:', !!storedToken);
-    return storedToken;
-  });
+  const [token, setToken] = useState<string | null>(() => 
+    localStorage.getItem('auth_token')
+  );
 
   // Set auth header for all requests if token exists
   useEffect(() => {
@@ -216,6 +228,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: UpdateProfileRequest) => {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update profile');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/auth/me"], data.user);
+    },
+  });
+
   const isAdmin = user?.role === 'admin';
 
   // Helper functions for phone auth
@@ -225,6 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyOtp = (phoneNumber: string, otp: string) => {
     return verifyOtpMutation.mutateAsync({ phoneNumber, otp });
+  };
+
+  const updateProfile = (data: UpdateProfileRequest) => {
+    return updateProfileMutation.mutateAsync(data);
   };
 
   return (
@@ -238,8 +277,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         registerMutation,
         sendOtpMutation,
         verifyOtpMutation,
+        updateProfileMutation,
         sendOtp,
         verifyOtp,
+        updateProfile,
         isAdmin,
         token,
       }}
