@@ -39,9 +39,11 @@ type LoginResponse = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => 
-    localStorage.getItem('auth_token')
-  );
+  const [token, setToken] = useState<string | null>(() => {
+    const storedToken = localStorage.getItem('auth_token');
+    console.log('AuthProvider - Initial token from localStorage:', !!storedToken);
+    return storedToken;
+  });
 
   // Set auth header for all requests if token exists
   useEffect(() => {

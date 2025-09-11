@@ -108,8 +108,11 @@ const generalItems = [
 
 export default function FloatingSidebar() {
   const [location] = useLocation();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, token } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Debug logging
+  console.log('FloatingSidebar - Auth State:', { user: !!user, isLoading, token: !!token });
 
   const isActive = (href: string) => {
     // Exact match for home page to prevent it from matching all routes

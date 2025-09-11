@@ -118,6 +118,9 @@ export function useAuth() {
     onSuccess: (data) => {
       localStorage.setItem('auth_token', data.token);
       queryClient.setQueryData(["/api/auth/me"], data.user);
+      
+      // Force page reload to sync with main AuthProvider
+      window.location.reload();
     },
   });
 
