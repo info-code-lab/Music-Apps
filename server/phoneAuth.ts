@@ -358,8 +358,8 @@ export function setupPhoneAuth(app: Express) {
         console.log(`👤 New user created for phone: ${phoneNumber}`);
       }
       
-      // Generate secure database session token (100% database-based security)
-      const sessionToken = generateSessionToken(); // Simple secure session token
+      // Generate secure JWT token with database session tracking (100% database-based security)
+      const sessionToken = await generateJWTToken(user); // JWT token with database validation
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
       // Store session ONLY in database - no JWT, no localStorage
@@ -371,14 +371,14 @@ export function setupPhoneAuth(app: Express) {
         ipAddress: req.ip,
       });
       
-      console.log(`✅ Phone Auth - User ${user.id} logged in with secure database session token`);
+      console.log(`✅ Phone Auth - User ${user.id} logged in with secure JWT database session token`);
       
       res.json({ 
         success: true, 
-        message: "Login successful with database session security",
-        token: sessionToken, // Return database session token to client
+        message: "Login successful with JWT database session security",
+        token: sessionToken, // Return JWT token to client
         tokenType: 'Bearer',
-        algorithm: 'Database-Session',
+        algorithm: 'EdDSA',
         expiresIn: '7d',
         user: {
           id: user.id,
