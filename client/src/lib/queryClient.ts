@@ -19,16 +19,11 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  // Add Authorization header if access token exists
-  const accessToken = localStorage.getItem('accessToken');
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
-  }
-
   const res = await fetch(url, {
     method,
     headers,
     body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
+    credentials: 'include', // Use database session
   });
 
   await throwIfResNotOk(res);
@@ -75,14 +70,9 @@ export const getQueryFn: <T>(options: {
       }
     }
 
-    // Add Authorization header if access token exists
-    const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
-    }
-
     const res = await fetch(url, {
       headers,
+      credentials: 'include', // Use database session
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
