@@ -65,17 +65,6 @@ export const otpVerification = pgTable("otp_verification", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// User sessions for phone auth
-export const userSessions = pgTable("user_sessions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  sessionToken: text("session_token").notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
-  device: varchar("device", { length: 100 }),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // User preferred artists table
 export const userPreferredArtists = pgTable("user_preferred_artists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -628,8 +617,8 @@ export const insertOtpSchema = createInsertSchema(otpVerification).omit({
   createdAt: true,
 });
 
-// Session Schemas
-export const insertSessionSchema = createInsertSchema(userSessions).omit({
+// Auth Token Schemas
+export const insertAuthTokenSchema = createInsertSchema(authTokens).omit({
   id: true,
   createdAt: true,
 });
@@ -727,8 +716,8 @@ export type User = typeof users.$inferSelect;
 export type UserPreferredArtist = typeof userPreferredArtists.$inferSelect;
 export type OtpVerification = typeof otpVerification.$inferSelect;
 export type InsertOtp = typeof otpVerification.$inferInsert;
-export type UserSession = typeof userSessions.$inferSelect;
-export type InsertSession = typeof userSessions.$inferInsert;
+export type AuthToken = typeof authTokens.$inferSelect;
+export type InsertAuthToken = typeof authTokens.$inferInsert;
 
 export type InsertArtist = z.infer<typeof insertArtistSchema>;
 export type Artist = typeof artists.$inferSelect;
