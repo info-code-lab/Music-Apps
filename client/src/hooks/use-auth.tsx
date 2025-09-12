@@ -89,12 +89,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {};
+      
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
       const response = await fetch('/api/auth/me', {
-        credentials: 'include', // Include cookies for session
+        headers,
+        credentials: 'include', // Include cookies for fallback
       });
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
+          // Clear invalid token
+          localStorage.removeItem('auth_token');
           return undefined;
         }
         throw new Error('Failed to fetch user');
@@ -216,13 +226,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
+      // Store the JWT token in localStorage
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+      }
       queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // No server logout needed for JWT, just clear local storage
+      // Clear the auth token
+      localStorage.removeItem('auth_token');
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);
