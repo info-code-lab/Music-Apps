@@ -19,16 +19,11 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  // Add JWT token from localStorage
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   const res = await fetch(url, {
     method,
     headers,
     body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
+    credentials: 'include', // Send HTTP-only cookies automatically
   });
 
   await throwIfResNotOk(res);
@@ -42,12 +37,6 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const headers: Record<string, string> = {};
-    
-    // Add JWT token from localStorage
-    const token = localStorage.getItem('jwt_token');
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
 
     // Construct URL properly handling both path segments and query parameters
     const [base, ...rest] = queryKey;
@@ -83,7 +72,7 @@ export const getQueryFn: <T>(options: {
 
     const res = await fetch(url, {
       headers,
-      credentials: 'include', // Use database session
+      credentials: 'include', // Send HTTP-only cookies automatically
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
