@@ -226,7 +226,7 @@ export async function getUserFromSession(sessionToken: string) {
 }
 
 // Pure Database Session Authentication middleware - 100% secure
-export const authenticateToken: RequestHandler = async (req, res, next) => {
+export const authenticateSession: RequestHandler = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const sessionToken = authHeader && authHeader.split(' ')[1]; // Bearer SESSION_TOKEN
 
@@ -283,6 +283,9 @@ export const authenticateToken: RequestHandler = async (req, res, next) => {
     });
   }
 };
+
+// For backward compatibility - remove after migration
+export const authenticateToken = authenticateSession;
 
 // Setup phone authentication routes
 export function setupPhoneAuth(app: Express) {
@@ -399,8 +402,31 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Get current user endpoint
-  app.get("/api/auth/user", authenticateToken, async (req, res) => {
+  // Get current user endpoint - main endpoint used by frontend
+  app.get("/api/auth/me", authenticateSession, async (req, res) => {
+    try {
+      const user = (req as any).user;
+      res.json({
+        id: user.id,
+        phoneNumber: user.phoneNumber,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        profileImageUrl: user.profileImageUrl,
+        bio: user.bio,
+        preferredLanguages: user.preferredLanguages,
+        favoriteGenres: user.favoriteGenres,
+        onboardingCompleted: user.onboardingCompleted,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  // Alias for backward compatibility
+  app.get("/api/auth/user", authenticateSession, async (req, res) => {
     try {
       const user = (req as any).user;
       res.json({
@@ -423,7 +449,7 @@ export function setupPhoneAuth(app: Express) {
   });
 
   // Database Session Logout endpoint with instant revocation
-  app.post("/api/auth/logout", authenticateToken, async (req, res) => {
+  app.post("/api/auth/logout", authenticateSession, async (req, res) => {
     try {
       const sessionToken = (req as any).sessionToken;
       const user = (req as any).user;
@@ -446,7 +472,7 @@ export function setupPhoneAuth(app: Express) {
   });
 
   // Update user profile endpoint
-  app.put("/api/auth/profile", authenticateToken, async (req, res) => {
+  app.put("/api/auth/profile", authenticateSession, async (req, res) => {
     try {
       const user = (req as any).user;
       const updateSchema = z.object({

@@ -40,7 +40,7 @@ export function verifyToken(token: string): any {
   }
 }
 
-export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authenticateAdminToken(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -89,6 +89,9 @@ export function requireRole(roles: string[]) {
   };
 }
 
+// For backward compatibility - remove after migration
+export const authenticateToken = authenticateAdminToken;
+
 // Rate limiting for auth endpoints
 export function rateLimitAuth() {
   const attempts = new Map<string, { count: number; lastAttempt: number }>();
@@ -133,7 +136,7 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const isValidPassword = await comparePassword(password, user.password);
+    const isValidPassword = await comparePassword(password, user.passwordHash!);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -141,7 +144,7 @@ export async function login(req: Request, res: Response) {
     const token = generateToken(user);
     
     // Return user data without password
-    const { password: _, ...userWithoutPassword } = user;
+    const { passwordHash: _, ...userWithoutPassword } = user;
     
     res.json({
       message: 'Login successful',
@@ -158,24 +161,24 @@ export async function register(req: Request, res: Response) {
     const userData = insertUserSchema.parse(req.body);
     
     // Check if user already exists
-    const existingUser = await storage.getUserByUsername(userData.username);
+    const existingUser = await storage.getUserByUsername(userData.username!);
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(userData.password);
+    const hashedPassword = await hashPassword(userData.passwordHash!);
     
     // Create user
     const newUser = await storage.createUser({
       ...userData,
-      password: hashedPassword
+      passwordHash: hashedPassword
     });
 
     const token = generateToken(newUser);
     
     // Return user data without password
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { passwordHash: _, ...userWithoutPassword } = newUser;
     
     res.status(201).json({
       message: 'Registration successful',
@@ -196,6 +199,6 @@ export function getCurrentUser(req: AuthRequest, res: Response) {
   }
   
   // Return user data without password
-  const { password: _, ...userWithoutPassword } = req.user;
+  const { passwordHash: _, ...userWithoutPassword } = req.user;
   res.json(userWithoutPassword);
 }
