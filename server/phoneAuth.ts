@@ -209,11 +209,11 @@ export async function getUserFromJWT(jwtToken: string) {
   const user = await storage.getUser(decoded.id as string);
   if (!user) return null;
   
-  // Check if session still exists in database for extra security (blacklist approach)
-  const sessionExists = await storage.getSession(jwtToken);
-  if (!sessionExists) {
-    // EdDSA JWT is valid but session was manually revoked - extra security layer
-    console.log('⚠️ Valid EdDSA JWT but session revoked - blocking access');
+  // Check if auth token still exists in database for extra security (blacklist approach)
+  const authTokenExists = await storage.getAuthToken(jwtToken);
+  if (!authTokenExists) {
+    // EdDSA JWT is valid but auth token was manually revoked - extra security layer
+    console.log('⚠️ Valid EdDSA JWT but auth token revoked - blocking access');
     return null;
   }
   
@@ -225,61 +225,61 @@ export async function getUserFromSession(sessionToken: string) {
   return getUserFromJWT(sessionToken);
 }
 
-// Pure Database Session Authentication middleware - 100% secure
+// Pure Database Auth Token Authentication middleware - 100% secure
 export const authenticateSession: RequestHandler = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const sessionToken = authHeader && authHeader.split(' ')[1]; // Bearer SESSION_TOKEN
+  const accessToken = authHeader && authHeader.split(' ')[1]; // Bearer ACCESS_TOKEN
 
-  if (!sessionToken) {
+  if (!accessToken) {
     return res.status(401).json({ 
-      error: 'Database session token required',
+      error: 'Access token required',
       code: 'TOKEN_MISSING'
     });
   }
 
   try {
-    // Get session directly from database - 100% database verification
-    const session = await storage.getSession(sessionToken);
-    if (!session) {
+    // Get auth token directly from database - 100% database verification
+    const authToken = await storage.getAuthToken(accessToken);
+    if (!authToken) {
       return res.status(401).json({ 
-        error: 'Invalid session token',
-        code: 'SESSION_INVALID'
+        error: 'Invalid access token',
+        code: 'TOKEN_INVALID'
       });
     }
 
-    // Check if session is expired
-    if (new Date() > new Date(session.expiresAt)) {
-      // Clean up expired session
-      await storage.deleteSession(sessionToken);
+    // Check if token is expired
+    if (new Date() > new Date(authToken.expiresAt)) {
+      // Clean up expired token
+      await storage.deleteAuthToken(accessToken);
       return res.status(401).json({ 
-        error: 'Session expired',
-        code: 'SESSION_EXPIRED'
+        error: 'Access token expired',
+        code: 'TOKEN_EXPIRED'
       });
     }
 
     // Get user from database
-    const user = await storage.getUser(session.userId);
+    const user = await storage.getUser(authToken.userId);
     if (!user) {
-      // Clean up session for non-existent user
-      await storage.deleteSession(sessionToken);
+      // Clean up token for non-existent user
+      await storage.deleteAuthToken(accessToken);
       return res.status(401).json({ 
         error: 'User not found',
         code: 'USER_NOT_FOUND'
       });
     }
 
-    // Attach user and session to request
+    // Attach user and auth token to request
     (req as any).user = user;
-    (req as any).sessionToken = sessionToken;
-    (req as any).session = session;
+    (req as any).accessToken = accessToken;
+    (req as any).authToken = authToken;
     
-    console.log(`🔐 Database Session Auth Success - User: ${user.id}`);
+    console.log(`🔐 Database Auth Token Success - User: ${user.id}`);
     next();
   } catch (error) {
-    console.error('Database Session Auth error:', error);
+    console.error('Database Auth Token error:', error);
     return res.status(403).json({ 
-      error: 'Session verification failed',
-      code: 'SESSION_VERIFICATION_FAILED'
+      error: 'Token verification failed',
+      code: 'TOKEN_VERIFICATION_FAILED'
     });
   }
 };
@@ -365,10 +365,11 @@ export function setupPhoneAuth(app: Express) {
       const sessionToken = await generateJWTToken(user); // JWT token with database validation
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       
-      // Store session ONLY in database - no JWT, no localStorage
-      await storage.createSession({
+      // Store auth token ONLY in database - no JWT, no localStorage
+      await storage.createAuthToken({
         userId: user.id,
-        sessionToken: sessionToken, // Store simple session token in database
+        accessToken: sessionToken, // Store access token in database
+        refreshToken: sessionToken + '_refresh', // Generate refresh token
         expiresAt,
         device: (req.headers['user-agent'] || 'unknown').substring(0, 100),
         ipAddress: req.ip,
@@ -448,16 +449,16 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Database Session Logout endpoint with instant revocation
+  // Database Auth Token Logout endpoint with instant revocation
   app.post("/api/auth/logout", authenticateSession, async (req, res) => {
     try {
-      const sessionToken = (req as any).sessionToken;
+      const accessToken = (req as any).accessToken;
       const user = (req as any).user;
       
-      if (sessionToken) {
-        // Instantly revoke session by removing from database
-        await storage.deleteSession(sessionToken);
-        console.log(`👋 User ${user.id} logged out - Database session revoked instantly`);
+      if (accessToken) {
+        // Instantly revoke auth token by removing from database
+        await storage.deleteAuthToken(accessToken);
+        console.log(`👋 User ${user.id} logged out - Database auth token revoked instantly`);
       }
       
       res.json({ 
@@ -519,12 +520,12 @@ export function setupPhoneAuth(app: Express) {
     }
   });
 
-  // Clean up expired OTPs and sessions (run periodically)
+  // Clean up expired OTPs and auth tokens (run periodically)
   const cleanup = async () => {
     try {
       await storage.cleanExpiredOtps();
-      await storage.cleanExpiredSessions();
-      console.log("🧹 Cleaned up expired OTPs and sessions");
+      await storage.cleanExpiredAuthTokens();
+      console.log("🧹 Cleaned up expired OTPs and auth tokens");
     } catch (error) {
       console.error("Cleanup error:", error);
     }

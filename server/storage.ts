@@ -214,39 +214,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================
-  // USER SESSION OPERATIONS  
+  // AUTH TOKEN OPERATIONS  
   // ========================
 
-  async createSession(insertSession: InsertSession): Promise<UserSession> {
-    const [session] = await db
-      .insert(userSessions)
-      .values(insertSession)
+  async createAuthToken(insertAuthToken: InsertAuthToken): Promise<AuthToken> {
+    const [authToken] = await db
+      .insert(authTokens)
+      .values(insertAuthToken)
       .returning();
-    return session;
+    return authToken;
   }
 
-  async getSession(sessionToken: string): Promise<UserSession | undefined> {
-    const [session] = await db
+  async getAuthToken(accessToken: string): Promise<AuthToken | undefined> {
+    const [authToken] = await db
       .select()
-      .from(userSessions)
+      .from(authTokens)
       .where(and(
-        eq(userSessions.sessionToken, sessionToken),
-        sql`${userSessions.expiresAt} > NOW()`
+        eq(authTokens.accessToken, accessToken),
+        sql`${authTokens.expiresAt} > NOW()`
       ));
-    return session || undefined;
+    return authToken || undefined;
   }
 
-  async deleteSession(sessionToken: string): Promise<boolean> {
+  async deleteAuthToken(accessToken: string): Promise<boolean> {
     const result = await db
-      .delete(userSessions)
-      .where(eq(userSessions.sessionToken, sessionToken));
+      .delete(authTokens)
+      .where(eq(authTokens.accessToken, accessToken));
     return (result.rowCount || 0) > 0;
   }
 
-  async cleanExpiredSessions(): Promise<void> {
+  async cleanExpiredAuthTokens(): Promise<void> {
     await db
-      .delete(userSessions)
-      .where(sql`${userSessions.expiresAt} < NOW()`);
+      .delete(authTokens)
+      .where(sql`${authTokens.expiresAt} < NOW()`);
   }
 
   // ========================
