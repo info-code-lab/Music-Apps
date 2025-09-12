@@ -10,7 +10,7 @@ import { Music, Shield, Upload, Users, Lock } from "lucide-react";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
-  const { user, loginMutation } = useAuth();
+  const { user, adminLoginMutation } = useAuth();
   
   const [loginForm, setLoginForm] = useState({
     username: "",
@@ -38,7 +38,7 @@ export default function AdminLogin() {
     }
 
     try {
-      const response = await loginMutation.mutateAsync(loginForm);
+      const response = await adminLoginMutation.mutateAsync(loginForm);
       // Check if user is admin after login
       if (response.user.role === 'admin') {
         setLocation("/admin");
@@ -136,10 +136,10 @@ export default function AdminLogin() {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold text-base shadow-lg" 
-                disabled={loginMutation.isPending}
+                disabled={adminLoginMutation.isPending}
                 data-testid="button-login"
               >
-                {loginMutation.isPending ? (
+                {adminLoginMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Authenticating...

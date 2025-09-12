@@ -48,6 +48,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<LoginResponse, Error, LoginData>;
+  adminLoginMutation: UseMutationResult<LoginResponse, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<LoginResponse, Error, RegisterData>;
   sendOtpMutation: UseMutationResult<SendOtpResponse, Error, SendOtpRequest>;
@@ -122,6 +123,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (response: LoginResponse) => {
 
+      queryClient.setQueryData(["/api/auth/me"], response.user);
+    },
+    onError: () => {
+      // Error handling is done by the promise toast
+    },
+  });
+
+  const adminLoginMutation = useMutation({
+    mutationFn: async (credentials: LoginData): Promise<LoginResponse> => {
+      const loginPromise = async () => {
+        const res = await apiRequest("/api/admin/login", "POST", credentials);
+        return await res.json();
+      };
+
+      return toast.promise(
+        loginPromise(),
+        {
+          loading: 'Authenticating admin...',
+          success: <b>Admin login successful!</b>,
+          error: <b>Admin login failed.</b>,
+        }
+      );
+    },
+    onSuccess: (response: LoginResponse) => {
       queryClient.setQueryData(["/api/auth/me"], response.user);
     },
     onError: () => {
@@ -254,6 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         loginMutation,
+        adminLoginMutation,
         logoutMutation,
         registerMutation,
         sendOtpMutation,
