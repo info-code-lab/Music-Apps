@@ -55,66 +55,73 @@ export default function History() {
     playTrack(track, true);
   };
 
-  const HistoryItem = ({ entry }: { entry: HistoryEntry }) => (
-    <div className="flex items-center space-x-4 p-4 hover:bg-accent/50 rounded-lg transition-colors group">
-      {/* Album Art */}
-      <div className="relative flex-shrink-0">
-        <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden">
-          {entry.song.coverArt ? (
-            <img 
-              src={entry.song.coverArt} 
-              alt={entry.song.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <Clock className="w-6 h-6 text-muted-foreground" />
-            </div>
+  const HistoryItem = ({ entry }: { entry: HistoryEntry }) => {
+    // Add safety check for entry.song
+    if (!entry.song) {
+      return null; // Skip rendering if song data is missing
+    }
+
+    return (
+      <div className="flex items-center space-x-4 p-4 hover:bg-accent/50 rounded-lg transition-colors group">
+        {/* Album Art */}
+        <div className="relative flex-shrink-0">
+          <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden">
+            {entry.song?.coverArt ? (
+              <img 
+                src={entry.song.coverArt} 
+                alt={entry.song.title || 'Song'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Clock className="w-6 h-6 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/50 hover:bg-black/60 transition-opacity"
+            onClick={() => handlePlaySong(entry.song)}
+            data-testid={`button-play-history-${entry.id}`}
+          >
+            <Play className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Song Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-foreground truncate">{entry.song?.title || 'Unknown Song'}</h3>
+          <p className="text-sm text-muted-foreground truncate">
+            Unknown Artist
+            {entry.song?.duration && (
+              <>
+                <span className="mx-1">•</span>
+                {formatDuration(entry.song.duration)}
+              </>
+            )}
+          </p>
+        </div>
+
+        {/* Play Time */}
+        <div className="text-sm text-muted-foreground text-right">
+          <p className="whitespace-nowrap">
+            {entry.playedAt ? formatDistanceToNow(new Date(entry.playedAt), { addSuffix: true }) : 'Unknown time'}
+          </p>
+          {entry.device && (
+            <p className="text-xs text-muted-foreground/70 capitalize">
+              {entry.device}
+            </p>
           )}
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/50 hover:bg-black/60 transition-opacity"
-          onClick={() => handlePlaySong(entry.song)}
-          data-testid={`button-play-history-${entry.id}`}
-        >
-          <Play className="w-4 h-4" />
+
+        {/* Actions */}
+        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <MoreHorizontal className="w-4 h-4" />
         </Button>
       </div>
-
-      {/* Song Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-foreground truncate">{entry.song.title}</h3>
-        <p className="text-sm text-muted-foreground truncate">
-          Unknown Artist
-          {entry.song.duration && (
-            <>
-              <span className="mx-1">•</span>
-              {formatDuration(entry.song.duration)}
-            </>
-          )}
-        </p>
-      </div>
-
-      {/* Play Time */}
-      <div className="text-sm text-muted-foreground text-right">
-        <p className="whitespace-nowrap">
-          {entry.playedAt ? formatDistanceToNow(new Date(entry.playedAt), { addSuffix: true }) : 'Unknown time'}
-        </p>
-        {entry.device && (
-          <p className="text-xs text-muted-foreground/70 capitalize">
-            {entry.device}
-          </p>
-        )}
-      </div>
-
-      {/* Actions */}
-      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-        <MoreHorizontal className="w-4 h-4" />
-      </Button>
-    </div>
-  );
+    );
+  };
 
   if (isLoading) {
     return (
