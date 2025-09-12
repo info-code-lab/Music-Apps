@@ -31,12 +31,13 @@ export const streamingRegionEnum = pgEnum('streaming_region', ['north_america', 
 // Updated users table for phone authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  phoneNumber: varchar("phone_number", { length: 20 }).notNull().unique(),
+  phoneNumber: varchar("phone_number", { length: 20 }).unique(),
   email: varchar("email", { length: 100 }).unique(),
   firstName: varchar("first_name", { length: 50 }),
   lastName: varchar("last_name", { length: 50 }),
   profileImageUrl: varchar("profile_image_url", { length: 255 }),
   username: varchar("username", { length: 50 }).unique(),
+  passwordHash: varchar("password_hash", { length: 255 }), // For admin authentication  
   role: userRoleEnum("role").default('user'),
   status: userStatusEnum("status").default('active'),
   bio: text("bio"),
@@ -46,7 +47,13 @@ export const users = pgTable("users", {
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  // Ensure users have at least one valid credential set
+  credentialCheck: sql`CONSTRAINT valid_credentials CHECK (
+    (phone_number IS NOT NULL) OR 
+    (username IS NOT NULL AND password_hash IS NOT NULL)
+  )`
+}));
 
 // OTP verification table
 export const otpVerification = pgTable("otp_verification", {
@@ -575,6 +582,31 @@ export const insertTrackToSongSchema = insertTrackSchema.transform((data) => ({
 }));
 
 // User Schemas for phone authentication
+// Separate schemas for different authentication methods
+export const insertPhoneUserSchema = createInsertSchema(users).pick({
+  phoneNumber: true, // Required for phone users
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+  bio: true,
+  preferredLanguages: true,
+  favoriteGenres: true,
+  onboardingCompleted: true,
+}).required({ phoneNumber: true });
+
+export const insertAdminUserSchema = createInsertSchema(users).pick({
+  username: true, // Required for admin users
+  passwordHash: true, // Required for admin users
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+  role: true,
+  bio: true,
+}).required({ username: true, passwordHash: true });
+
+// Legacy schema - kept for backward compatibility
 export const insertUserSchema = createInsertSchema(users).pick({
   phoneNumber: true,
   email: true,
