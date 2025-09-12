@@ -185,10 +185,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Toggle favorite
-  app.patch("/api/songs/:id/favorite", async (req, res) => {
+  app.patch("/api/songs/:id/favorite", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
-      const song = await storage.toggleFavorite(id);
+      const userId = req.user!.id;
+      const song = await storage.toggleFavorite(id, userId);
       
       if (!song) {
         res.status(404).json({ message: "Song not found" });
@@ -635,9 +636,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PLAYLIST ROUTES
   // ========================
 
-  app.get("/api/playlists/user/:userId", async (req, res) => {
+  app.get("/api/playlists/user/:userId", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Users can only access their own playlists
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only access your own playlists." });
+      }
+      
       const playlists = await storage.getPlaylistsByUser(userId);
       res.json(playlists);
     } catch (error) {
@@ -764,9 +772,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // FAVORITES ROUTES
   // ========================
 
-  app.get("/api/favorites/:userId", async (req, res) => {
+  app.get("/api/favorites/:userId", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Users can only access their own favorites
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only access your own favorites." });
+      }
+      
       const favorites = await storage.getUserFavorites(userId);
       res.json(favorites);
     } catch (error) {
@@ -808,9 +823,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/favorites/:userId/:songId", async (req, res) => {
+  app.get("/api/favorites/:userId/:songId", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId, songId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Users can only check their own favorite status
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only check your own favorite status." });
+      }
+      
       const isFavorite = await storage.isFavorite(userId, songId);
       res.json({ isFavorite });
     } catch (error) {
@@ -856,9 +878,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/followers", async (req, res) => {
+  app.get("/api/users/:userId/followers", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Users can only view their own followers for privacy
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only view your own followers." });
+      }
+      
       const followers = await storage.getUserFollowers(userId);
       res.json(followers);
     } catch (error) {
@@ -866,9 +895,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/following", async (req, res) => {
+  app.get("/api/users/:userId/following", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Users can only view their own following list for privacy
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only view your own following list." });
+      }
+      
       const following = await storage.getUserFollowing(userId);
       res.json(following);
     } catch (error) {
@@ -1035,9 +1071,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recommendations/:userId", async (req, res) => {
+  app.get("/api/recommendations/:userId", authenticateSession, async (req: AuthRequest, res) => {
     try {
       const { userId } = req.params;
+      const authenticatedUserId = req.user!.id;
+      
+      // Ensure users can only access their own recommendations
+      if (userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Access denied. You can only access your own recommendations." });
+      }
+      
       const limit = parseInt(req.query.limit as string) || 10;
       const recommendations = await storage.getRecommendations(userId, limit);
       res.json(recommendations);

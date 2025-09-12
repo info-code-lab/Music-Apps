@@ -44,7 +44,7 @@ export interface IStorage {
   deleteTrack(id: string): Promise<boolean>;
   searchTracks(query: string): Promise<Track[]>;
   getTracksByCategory(category: string): Promise<Track[]>;
-  toggleFavorite(id: string): Promise<Track | undefined>;
+  toggleFavorite(id: string, userId: string): Promise<Track | undefined>;
 
   // Artist operations
   getAllArtists(): Promise<Artist[]>;
@@ -401,11 +401,31 @@ export class DatabaseStorage implements IStorage {
     return songsData.map(song => this.songToLegacyTrack(song));
   }
 
-  async toggleFavorite(id: string): Promise<Track | undefined> {
-    // Note: This is a simplified implementation
-    // In a full implementation, this would manage the favorites table
+  async toggleFavorite(id: string, userId: string): Promise<Track | undefined> {
+    // Check if song exists first
     const [song] = await db.select().from(songs).where(eq(songs.id, id));
-    return song ? this.songToLegacyTrack(song) : undefined;
+    if (!song) return undefined;
+
+    // Check if favorite already exists
+    const [existingFavorite] = await db
+      .select()
+      .from(favorites)
+      .where(and(eq(favorites.songId, id), eq(favorites.userId, userId)));
+
+    if (existingFavorite) {
+      // Remove favorite (toggle off)
+      await db
+        .delete(favorites)
+        .where(and(eq(favorites.songId, id), eq(favorites.userId, userId)));
+    } else {
+      // Add favorite (toggle on)
+      await db.insert(favorites).values({
+        userId,
+        songId: id,
+      });
+    }
+
+    return this.songToLegacyTrack(song);
   }
 
   // ========================
