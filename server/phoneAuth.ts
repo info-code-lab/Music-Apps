@@ -227,8 +227,9 @@ export async function getUserFromSession(sessionToken: string) {
 
 // Pure Database Auth Token Authentication middleware - 100% secure
 export const authenticateSession: RequestHandler = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const accessToken = authHeader && authHeader.split(' ')[1]; // Bearer ACCESS_TOKEN
+  // Try to get token from cookie first, then Authorization header as fallback
+  const accessToken = (req as any).cookies?.auth_token || 
+                      (req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
   if (!accessToken) {
     return res.status(401).json({ 
@@ -375,15 +376,19 @@ export function setupPhoneAuth(app: Express) {
         ipAddress: req.ip,
       });
       
-      console.log(`✅ Phone Auth - User ${user.id} logged in with secure JWT database session token`);
+      console.log(`✅ Phone Auth - User ${user.id} logged in with secure database session`);
+      
+      // Set HTTP-only secure cookie with the session token
+      res.cookie('auth_token', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // HTTPS in production
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      });
       
       res.json({ 
         success: true, 
-        message: "Login successful with JWT database session security",
-        token: sessionToken, // Return JWT token to client
-        tokenType: 'Bearer',
-        algorithm: 'EdDSA',
-        expiresIn: '7d',
+        message: "Login successful with database session security",
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
@@ -460,6 +465,13 @@ export function setupPhoneAuth(app: Express) {
         await storage.deleteAuthToken(accessToken);
         console.log(`👋 User ${user.id} logged out - Database auth token revoked instantly`);
       }
+      
+      // Clear the HTTP-only cookie
+      res.clearCookie('auth_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+      });
       
       res.json({ 
         success: true, 

@@ -89,22 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = {};
-      
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-      
       const response = await fetch('/api/auth/me', {
-        headers,
-        credentials: 'include', // Include cookies for fallback
+        credentials: 'include', // Use database-only authentication
       });
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          // Clear invalid token
-          localStorage.removeItem('auth_token');
           return undefined;
         }
         throw new Error('Failed to fetch user');
@@ -226,18 +216,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      // Store the JWT token in localStorage
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token);
-      }
+      // Token is stored in database, no client-side storage needed
       queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Clear the auth token
-      localStorage.removeItem('auth_token');
+      // Call backend logout to revoke database auth token
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok && response.status !== 401) {
+        throw new Error('Logout failed');
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);

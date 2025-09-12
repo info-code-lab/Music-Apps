@@ -19,17 +19,11 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  // Add Bearer token if available
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   const res = await fetch(url, {
     method,
     headers,
     body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
-    credentials: 'include', // Use database session as fallback
+    credentials: 'include', // Use database-only authentication
   });
 
   await throwIfResNotOk(res);
@@ -43,12 +37,6 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const headers: Record<string, string> = {};
-    
-    // Add Bearer token if available
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
 
     // Construct URL properly handling both path segments and query parameters
     const [base, ...rest] = queryKey;
