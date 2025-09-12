@@ -216,6 +216,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
+      // Store access token in localStorage
+      if (data.token) {
+        localStorage.setItem('accessToken', data.token);
+      }
       queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
@@ -236,14 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileRequest) => {
-      const response = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        credentials: 'include', // Use database session
-      });
+      return apiRequest('/api/auth/profile', 'PUT', data).then(res => res.json());
       
       if (!response.ok) {
         const error = await response.json();
