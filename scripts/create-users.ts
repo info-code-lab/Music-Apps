@@ -5,6 +5,7 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
+import bcrypt from "bcryptjs";
 import { users } from "../shared/schema";
 
 neonConfig.webSocketConstructor = ws;
@@ -22,7 +23,11 @@ async function createUsers() {
   try {
     console.log("Creating users...");
 
-    // Create admin user with phone authentication
+    // Hash password for admin user
+    const adminPassword = "adminpass123";
+    const hashedAdminPassword = await bcrypt.hash(adminPassword, 12);
+
+    // Create admin user with username/password authentication
     await db
       .insert(users)
       .values({
@@ -31,17 +36,19 @@ async function createUsers() {
         firstName: "Admin",
         lastName: "User",
         username: "admin",
+        passwordHash: hashedAdminPassword,
         role: "admin",
         status: "active",
         onboardingCompleted: true,
       })
       .onConflictDoUpdate({
-        target: users.phoneNumber,
+        target: users.username,
         set: {
           email: "admin@example.com",
           firstName: "Admin",
           lastName: "User",
-          username: "admin",
+          phoneNumber: "+1234567890",
+          passwordHash: hashedAdminPassword,
           role: "admin",
           status: "active",
           onboardingCompleted: true,
@@ -106,26 +113,30 @@ async function createUsers() {
 
     console.log("✓ Artist user created/updated");
 
-    console.log("\n=== User Credentials (Phone Authentication) ===");
-    console.log("Admin User:");
-    console.log("  Phone: +1234567890");
-    console.log("  Email: admin@example.com");
+    console.log("\n=== User Credentials ===");
+    console.log("Admin User (Username/Password Auth):");
     console.log("  Username: admin");
+    console.log("  Password: adminpass123");
+    console.log("  Email: admin@example.com");
+    console.log("  Phone: +1234567890");
     console.log("  Role: admin");
+    console.log("  Login via: POST /api/admin/login");
     console.log("");
-    console.log("Regular User:");
+    console.log("Regular User (Phone Auth):");
     console.log("  Phone: +1234567891");
     console.log("  Email: user@example.com");
     console.log("  Username: user");
     console.log("  Role: user");
+    console.log("  Login via: POST /api/auth/send-otp");
     console.log("");
-    console.log("Artist User:");
+    console.log("Artist User (Phone Auth):");
     console.log("  Phone: +1234567892");
     console.log("  Email: artist@example.com");
     console.log("  Username: artist");
     console.log("  Role: artist");
+    console.log("  Login via: POST /api/auth/send-otp");
     console.log("========================================");
-    console.log("Note: Authentication is done via SMS OTP to phone numbers");
+    console.log("Note: Admin uses username/password, Users/Artists use SMS OTP");
   } catch (error) {
     console.error("Error creating users:", error);
     process.exit(1);
