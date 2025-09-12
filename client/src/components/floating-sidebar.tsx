@@ -108,7 +108,7 @@ const generalItems = [
 
 export default function FloatingSidebar() {
   const [location] = useLocation();
-  const { user, isLoading, token } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const isActive = (href: string) => {

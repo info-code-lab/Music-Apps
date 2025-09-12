@@ -57,7 +57,6 @@ type AuthContextType = {
   verifyOtp: (phoneNumber: string, otp: string) => Promise<VerifyOtpResponse>;
   updateProfile: (data: UpdateProfileRequest) => Promise<{user: User}>;
   isAdmin: boolean;
-  token: string | null;
 };
 
 type LoginData = {
@@ -80,18 +79,7 @@ type LoginResponse = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => 
-    localStorage.getItem('auth_token')
-  );
-
-  // Set auth header for all requests if token exists
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('auth_token', token);
-    } else {
-      localStorage.removeItem('auth_token');
-    }
-  }, [token]);
+  // Remove token state - use database-only authentication
 
   const {
     data: user,
@@ -100,17 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
-      if (!token) return undefined;
-      
       const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Include cookies for session
       });
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          setToken(null);
           return undefined;
         }
         throw new Error('Failed to fetch user');
@@ -118,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return response.json();
     },
-    enabled: !!token,
+    retry: false,
   });
 
   const loginMutation = useMutation({
@@ -138,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
     },
     onSuccess: (response: LoginResponse) => {
-      setToken(response.token);
+
       queryClient.setQueryData(["/api/auth/me"], response.user);
     },
     onError: () => {
@@ -163,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
     },
     onSuccess: (response: LoginResponse) => {
-      setToken(response.token);
+
       queryClient.setQueryData(["/api/auth/me"], response.user);
     },
     onError: () => {
@@ -208,7 +191,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      setToken(data.token);
       queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
@@ -218,7 +200,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // No server logout needed for JWT, just clear local storage
     },
     onSuccess: () => {
-      setToken(null);
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear(); // Clear all cached data
       toast.success('Successfully logged out!');
@@ -234,9 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(data),
+        credentials: 'include', // Use database session
       });
       
       if (!response.ok) {
@@ -282,7 +263,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyOtp,
         updateProfile,
         isAdmin,
-        token,
       }}
     >
       {children}

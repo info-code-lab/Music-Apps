@@ -57,17 +57,10 @@ export default function UploadSection() {
 
   const fileUploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = {};
-      
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const response = await fetch("/api/songs/upload-file", {
         method: "POST",
-        headers,
         body: formData,
+        credentials: 'include', // Use database session
       });
       if (!response.ok) {
         const error = await response.json();

@@ -12,22 +12,18 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const token = localStorage.getItem('auth_token');
   const headers: Record<string, string> = {};
   
   // Only set Content-Type for non-FormData requests
   if (data && !(data instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   const res = await fetch(url, {
     method,
     headers,
     body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
+    credentials: 'include', // Use database session
   });
 
   await throwIfResNotOk(res);
@@ -40,12 +36,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const token = localStorage.getItem('auth_token');
     const headers: Record<string, string> = {};
-    
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
 
     // Construct URL properly handling both path segments and query parameters
     const [base, ...rest] = queryKey;
@@ -81,6 +72,7 @@ export const getQueryFn: <T>(options: {
 
     const res = await fetch(url, {
       headers,
+      credentials: 'include', // Use database session
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
