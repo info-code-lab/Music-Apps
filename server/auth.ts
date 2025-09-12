@@ -133,15 +133,13 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const isValidPassword = await comparePassword(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    // Note: This legacy auth system is deprecated - use phone authentication instead
+    return res.status(400).json({ error: 'Username/password login is deprecated. Use phone authentication instead.' });
 
-    const token = generateToken(user);
+    // This code path is no longer reached
     
-    // Return user data without password
-    const { password: _, ...userWithoutPassword } = user;
+    // Return user data
+    const userWithoutPassword = user;
     
     res.json({
       message: 'Login successful',
@@ -157,25 +155,14 @@ export async function register(req: Request, res: Response) {
   try {
     const userData = insertUserSchema.parse(req.body);
     
-    // Check if user already exists
-    const existingUser = await storage.getUserByUsername(userData.username);
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
+    // Note: This legacy registration system is deprecated - use phone authentication instead
+    return res.status(400).json({ error: 'Registration is deprecated. Use phone authentication instead.' });
 
-    // Hash password
-    const hashedPassword = await hashPassword(userData.password);
+    // This code path is no longer reached
+    const token = "";
     
-    // Create user
-    const newUser = await storage.createUser({
-      ...userData,
-      password: hashedPassword
-    });
-
-    const token = generateToken(newUser);
-    
-    // Return user data without password
-    const { password: _, ...userWithoutPassword } = newUser;
+    // This code path is no longer reached
+    const userWithoutPassword = {};
     
     res.status(201).json({
       message: 'Registration successful',
@@ -195,7 +182,7 @@ export function getCurrentUser(req: AuthRequest, res: Response) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  // Return user data without password
-  const { password: _, ...userWithoutPassword } = req.user;
+  // Return user data
+  const userWithoutPassword = req.user;
   res.json(userWithoutPassword);
 }
