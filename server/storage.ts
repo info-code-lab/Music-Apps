@@ -1,11 +1,11 @@
 import { 
   users, artists, albums, songs, genres, playlists, playlistSongs, songArtists, songGenres, songAlbums,
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
-  otpVerification, userSessions, userPreferredArtists,
+  otpVerification, authTokens, userPreferredArtists,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
   type Album, type InsertAlbum, type Song, type InsertSong, type Playlist, type InsertPlaylist,
   type Comment, type InsertComment, type Rating, type InsertRating, type Genre, type InsertGenre,
-  type OtpVerification, type InsertOtp, type UserSession, type InsertSession
+  type OtpVerification, type InsertOtp, type AuthToken, type InsertAuthToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, ilike, or, desc, and, inArray } from "drizzle-orm";
@@ -25,11 +25,11 @@ export interface IStorage {
   verifyOtp(phoneNumber: string, otp: string): Promise<boolean>;
   cleanExpiredOtps(): Promise<void>;
   
-  // User Sessions
-  createSession(session: InsertSession): Promise<UserSession>;
-  getSession(sessionToken: string): Promise<UserSession | undefined>;
-  deleteSession(sessionToken: string): Promise<boolean>;
-  cleanExpiredSessions(): Promise<void>;
+  // Auth Tokens
+  createAuthToken(authToken: InsertAuthToken): Promise<AuthToken>;
+  getAuthToken(accessToken: string): Promise<AuthToken | undefined>;
+  deleteAuthToken(accessToken: string): Promise<boolean>;
+  cleanExpiredAuthTokens(): Promise<void>;
   
   // User Preferences
   getUserPreferredArtists(userId: string): Promise<Artist[]>;
