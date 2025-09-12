@@ -25,14 +25,26 @@ async function ensureAuthTokensSchema() {
       CREATE TABLE IF NOT EXISTS auth_tokens (
         id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id varchar NOT NULL,
-        access_token varchar(255) UNIQUE NOT NULL,
-        refresh_token varchar(255) UNIQUE NOT NULL,
+        access_token text UNIQUE NOT NULL,
+        refresh_token text UNIQUE NOT NULL,
         expires_at timestamp NOT NULL,
         device varchar(100),
         ip_address varchar(45),
         created_at timestamp DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    // Alter existing columns to support longer JWT tokens (safe operation)
+    try {
+      await db.execute(sql`ALTER TABLE auth_tokens ALTER COLUMN access_token TYPE text;`);
+      await db.execute(sql`ALTER TABLE auth_tokens ALTER COLUMN refresh_token TYPE text;`);
+      console.log('✅ Updated auth_tokens columns to support longer JWT tokens');
+    } catch (error: any) {
+      // Ignore if columns are already text type or table doesn't exist yet
+      if (!error.message?.includes('already exists') && !error.message?.includes('does not exist')) {
+        console.warn('⚠️ Column type update warning (likely safe):', error.message);
+      }
+    }
     
     // Create indexes if they don't exist
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_id ON auth_tokens (user_id);`);
