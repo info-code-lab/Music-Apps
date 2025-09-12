@@ -8,6 +8,21 @@ import { type User } from "@shared/schema";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import toast from "react-hot-toast";
 
+// Token storage helpers
+const TOKEN_KEY = 'harmony_auth_token';
+
+function getStoredToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setStoredToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+function removeStoredToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 // Phone auth types
 type SendOtpRequest = {
   phoneNumber: string;
@@ -80,7 +95,7 @@ type LoginResponse = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Remove token state - use database-only authentication
+  const [token, setToken] = useState<string | null>(getStoredToken);
 
   const {
     data: user,
@@ -89,12 +104,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
+      const currentToken = getStoredToken();
+      if (!currentToken) {
+        return undefined;
+      }
+
       const response = await fetch('/api/auth/me', {
-        credentials: 'include', // Include cookies for session
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json',
+        },
       });
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
+          // Token is invalid, remove it
+          removeStoredToken();
+          setToken(null);
           return undefined;
         }
         throw new Error('Failed to fetch user');
@@ -103,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     retry: false,
+    enabled: !!token, // Only run query if we have a token
   });
 
   const loginMutation = useMutation({
