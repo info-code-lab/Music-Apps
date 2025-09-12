@@ -9,6 +9,7 @@ import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
 import { setupPhoneAuth, authenticateToken } from "./phoneAuth";
 import { requireAdmin, type AuthRequest } from "./auth";
+import { adminLogin, adminRegister, rateLimitAdminAuth } from "./adminAuth";
 import { streamingService } from "./streaming-service";
 import { searchService } from "./search-service";
 import multer from "multer";
@@ -33,8 +34,14 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup phone authentication routes
+  // Setup phone authentication routes for users
   setupPhoneAuth(app);
+  
+  // Setup admin authentication routes
+  const adminAuthRateLimit = rateLimitAdminAuth();
+  app.post("/api/admin/login", adminAuthRateLimit, adminLogin);
+  app.post("/api/admin/register", adminAuthRateLimit, adminRegister);
+  console.log('🔐 Admin authentication routes setup complete');
 
   // SSE endpoint for progress updates
   app.get("/api/upload-progress/:sessionId", (req, res) => {
