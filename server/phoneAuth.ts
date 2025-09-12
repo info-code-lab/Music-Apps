@@ -225,15 +225,14 @@ export async function getUserFromSession(sessionToken: string) {
   return getUserFromJWT(sessionToken);
 }
 
-// Pure Database Auth Token Authentication middleware - 100% secure
+// Pure Database JWT Authentication middleware - 100% secure
 export const authenticateSession: RequestHandler = async (req, res, next) => {
-  // Try to get token from cookie first, then Authorization header as fallback
-  const accessToken = (req as any).cookies?.auth_token || 
-                      (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  const authHeader = req.headers.authorization;
+  const accessToken = authHeader && authHeader.split(' ')[1]; // Bearer JWT_TOKEN
 
   if (!accessToken) {
     return res.status(401).json({ 
-      error: 'Access token required',
+      error: 'JWT access token required',
       code: 'TOKEN_MISSING'
     });
   }
@@ -376,19 +375,13 @@ export function setupPhoneAuth(app: Express) {
         ipAddress: req.ip,
       });
       
-      console.log(`✅ Phone Auth - User ${user.id} logged in with secure database session`);
-      
-      // Set HTTP-only secure cookie with the session token
-      res.cookie('auth_token', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS in production
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-      });
+      console.log(`✅ Phone Auth - User ${user.id} logged in with JWT database token`);
       
       res.json({ 
         success: true, 
-        message: "Login successful with database session security",
+        message: "Login successful with JWT database token",
+        token: sessionToken, // Return JWT token to client
+        tokenType: 'Bearer',
         user: {
           id: user.id,
           phoneNumber: user.phoneNumber,
@@ -463,20 +456,13 @@ export function setupPhoneAuth(app: Express) {
       if (accessToken) {
         // Instantly revoke auth token by removing from database
         await storage.deleteAuthToken(accessToken);
-        console.log(`👋 User ${user.id} logged out - Database auth token revoked instantly`);
+        console.log(`👋 User ${user.id} logged out - Database JWT token revoked instantly`);
       }
-      
-      // Clear the HTTP-only cookie
-      res.clearCookie('auth_token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-      });
       
       res.json({ 
         success: true, 
-        message: "Logged out successfully - Session revoked",
-        sessionRevoked: true
+        message: "Logged out successfully - JWT token revoked",
+        tokenRevoked: true
       });
     } catch (error) {
       console.error("Session Logout error:", error);

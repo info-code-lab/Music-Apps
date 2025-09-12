@@ -89,12 +89,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) {
+        return undefined;
+      }
+      
       const response = await fetch('/api/auth/me', {
-        credentials: 'include', // Use database-only authentication
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
+          // Clear invalid token
+          localStorage.removeItem('jwt_token');
           return undefined;
         }
         throw new Error('Failed to fetch user');
@@ -216,22 +225,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      // Token is stored in database, no client-side storage needed
+      // Store JWT token in localStorage for API requests
+      if (data.token) {
+        localStorage.setItem('jwt_token', data.token);
+      }
       queryClient.setQueryData(["/api/auth/me"], data.user);
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Call backend logout to revoke database auth token
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
-      if (!response.ok && response.status !== 401) {
-        throw new Error('Logout failed');
+      const token = localStorage.getItem('jwt_token');
+      if (token) {
+        // Call backend logout to revoke database JWT token
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok && response.status !== 401) {
+          throw new Error('Logout failed');
+        }
       }
+      
+      // Clear JWT token from localStorage
+      localStorage.removeItem('jwt_token');
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);
