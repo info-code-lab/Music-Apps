@@ -30,7 +30,7 @@ interface LegacyTrack {
 }
 
 export default function History() {
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, currentSong, isPlaying } = useMusicPlayer();
 
   // Fetch listening history
   const { data: history = [], isLoading, error } = useQuery<HistoryEntry[]>({
@@ -55,17 +55,46 @@ export default function History() {
     playTrack(track, true);
   };
 
+  // Music Visualizer Component
+  const MusicVisualizer = ({ isCurrentlyPlaying }: { isCurrentlyPlaying: boolean }) => {
+    return (
+      <div className="flex items-center space-x-0.5 h-4">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className={`w-0.5 bg-emerald-500 rounded-full transition-all duration-200 ${
+              isCurrentlyPlaying 
+                ? 'animate-pulse h-3 opacity-100' 
+                : 'h-1 opacity-60'
+            }`}
+            style={{
+              animationDelay: isCurrentlyPlaying ? `${i * 150}ms` : '0ms',
+              animationDuration: isCurrentlyPlaying ? '600ms' : '0ms'
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const HistoryItem = ({ entry, index }: { entry: HistoryEntry; index: number }) => {
     // Add safety check for entry.song
     if (!entry.song) {
       return null; // Skip rendering if song data is missing
     }
 
+    // Check if this song is currently playing
+    const isCurrentlyPlaying = currentSong?.id === entry.song.id && isPlaying;
+
     return (
       <div className="flex items-center py-2 px-4 hover:bg-accent/30 group transition-colors">
-        {/* Number */}
-        <div className="w-8 text-center text-sm text-muted-foreground font-medium">
-          {index + 1}
+        {/* Number or Music Visualizer */}
+        <div className="w-8 text-center text-sm text-muted-foreground font-medium flex items-center justify-center">
+          {isCurrentlyPlaying ? (
+            <MusicVisualizer isCurrentlyPlaying={true} />
+          ) : (
+            <span>{index + 1}</span>
+          )}
         </div>
 
         {/* Cover Art with Play Button */}
