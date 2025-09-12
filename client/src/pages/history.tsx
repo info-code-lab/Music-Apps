@@ -100,7 +100,7 @@ export default function History() {
       {/* Play Time */}
       <div className="text-sm text-muted-foreground text-right">
         <p className="whitespace-nowrap">
-          {formatDistanceToNow(new Date(entry.playedAt), { addSuffix: true })}
+          {entry.playedAt ? formatDistanceToNow(new Date(entry.playedAt), { addSuffix: true }) : 'Unknown time'}
         </p>
         {entry.device && (
           <p className="text-xs text-muted-foreground/70 capitalize">
@@ -202,7 +202,7 @@ export default function History() {
           {/* Stats */}
           <div className="flex items-center space-x-6 mb-8 text-sm text-muted-foreground">
             <span>{history.length} songs played</span>
-            {history.length > 0 && (
+            {history.length > 0 && history[0]?.playedAt && (
               <>
                 <span>•</span>
                 <span>

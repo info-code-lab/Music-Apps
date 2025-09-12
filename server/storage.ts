@@ -123,7 +123,7 @@ export interface IStorage {
 
   // Analytics operations
   logListening(userId: string, songId: string, device?: string, ipAddress?: string): Promise<void>;
-  getUserListeningHistory(userId: string, limit?: number): Promise<Song[]>;
+  getUserListeningHistory(userId: string, limit?: number): Promise<any[]>;
   getPopularSongs(limit?: number): Promise<Song[]>;
   logSearch(userId: string, query: string): Promise<void>;
   getRecommendations(userId: string, limit?: number): Promise<Song[]>;
@@ -1019,15 +1019,23 @@ export class DatabaseStorage implements IStorage {
     await this.incrementPlayCount(songId);
   }
 
-  async getUserListeningHistory(userId: string, limit: number = 50): Promise<Song[]> {
+  async getUserListeningHistory(userId: string, limit: number = 50): Promise<any[]> {
     const result = await db
-      .select({ song: songs })
+      .select({
+        id: listeningHistory.id,
+        userId: listeningHistory.userId,
+        songId: listeningHistory.songId,
+        device: listeningHistory.device,
+        ipAddress: listeningHistory.ipAddress,
+        playedAt: listeningHistory.playedAt,
+        song: songs
+      })
       .from(listeningHistory)
       .innerJoin(songs, eq(listeningHistory.songId, songs.id))
       .where(eq(listeningHistory.userId, userId))
       .orderBy(desc(listeningHistory.playedAt))
       .limit(limit);
-    return result.map(r => r.song);
+    return result;
   }
 
   async getPopularSongs(limit: number = 20): Promise<Song[]> {
