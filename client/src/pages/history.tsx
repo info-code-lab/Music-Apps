@@ -72,7 +72,7 @@ export default function History() {
         <Button
           size="sm"
           variant="ghost"
-          className="w-10 h-10 rounded-full bg-muted hover:bg-accent p-0 ml-4 mr-4 flex-shrink-0"
+          className="w-10 h-10 rounded-full bg-muted hover:bg-accent p-0 ml-4 mr-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={() => handlePlaySong(entry.song)}
           data-testid={`button-play-history-${entry.id}`}
         >
