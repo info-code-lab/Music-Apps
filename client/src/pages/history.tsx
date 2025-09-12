@@ -68,16 +68,31 @@ export default function History() {
           {index + 1}
         </div>
 
-        {/* Play Button */}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="w-10 h-10 rounded-full bg-muted hover:bg-accent p-0 ml-4 mr-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => handlePlaySong(entry.song)}
-          data-testid={`button-play-history-${entry.id}`}
-        >
-          <Play className="w-4 h-4 fill-current" />
-        </Button>
+        {/* Cover Art with Play Button */}
+        <div className="relative ml-4 mr-4 flex-shrink-0">
+          <div className="w-10 h-10 rounded overflow-hidden bg-muted">
+            {entry.song?.coverArt ? (
+              <img 
+                src={entry.song.coverArt} 
+                alt={entry.song.title || 'Song'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="absolute inset-0 w-10 h-10 rounded bg-black/50 hover:bg-black/60 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => handlePlaySong(entry.song)}
+            data-testid={`button-play-history-${entry.id}`}
+          >
+            <Play className="w-3 h-3 fill-current text-white" />
+          </Button>
+        </div>
 
         {/* Song Info */}
         <div className="flex-1 min-w-0">
