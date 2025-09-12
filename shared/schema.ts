@@ -84,6 +84,16 @@ export const userPreferredArtists = pgTable("user_preferred_artists", {
   addedAt: timestamp("added_at").defaultNow(),
 });
 
+export const authTokens = pgTable("auth_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  accessToken: varchar("access_token", { length: 255 }).notNull().unique(),
+  refreshToken: varchar("refresh_token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  device: varchar("device", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
 
 export const devices = pgTable("devices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
