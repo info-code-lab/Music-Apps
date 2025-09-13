@@ -55,27 +55,6 @@ export default function History() {
     playTrack(track, true);
   };
 
-  // Music Visualizer Component
-  const MusicVisualizer = ({ isCurrentlyPlaying }: { isCurrentlyPlaying: boolean }) => {
-    return (
-      <div className="flex items-center space-x-0.5 h-4">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className={`w-0.5 bg-emerald-500 rounded-full transition-all duration-200 ${
-              isCurrentlyPlaying 
-                ? 'animate-pulse h-3 opacity-100' 
-                : 'h-1 opacity-60'
-            }`}
-            style={{
-              animationDelay: isCurrentlyPlaying ? `${i * 150}ms` : '0ms',
-              animationDuration: isCurrentlyPlaying ? '600ms' : '0ms'
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
 
   const HistoryItem = ({ entry, index }: { entry: HistoryEntry; index: number }) => {
     // Add safety check for entry.song
@@ -88,13 +67,9 @@ export default function History() {
 
     return (
       <div className="flex items-center py-2 px-4 hover:bg-accent/30 group transition-colors">
-        {/* Number or Music Visualizer */}
-        <div className="w-8 text-center text-sm text-muted-foreground font-medium flex items-center justify-center">
-          {isCurrentlyPlaying ? (
-            <MusicVisualizer isCurrentlyPlaying={true} />
-          ) : (
-            <span>{index + 1}</span>
-          )}
+        {/* Number */}
+        <div className="w-8 text-center text-sm text-muted-foreground font-medium">
+          {index + 1}
         </div>
 
         {/* Cover Art with Play Button */}
@@ -110,25 +85,6 @@ export default function History() {
               <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
                 <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              </div>
-            )}
-            
-            {/* Music Visualizer Bars Overlay when playing */}
-            {isCurrentlyPlaying && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <div className="flex items-end space-x-0.5">
-                  {[...Array(4)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-0.5 bg-pink-500 rounded-full animate-pulse"
-                      style={{
-                        height: `${12 + (i % 2) * 4}px`,
-                        animationDelay: `${i * 200}ms`,
-                        animationDuration: '0.8s'
-                      }}
-                    />
-                  ))}
                 </div>
               </div>
             )}
