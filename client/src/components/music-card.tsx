@@ -34,6 +34,12 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   // Optimistic favorite state for instant UI updates
   const [optimisticIsFavorite, setOptimisticIsFavorite] = useState(song.isFavorite);
+  
+  // Sync optimistic state when song data changes
+  useEffect(() => {
+    setOptimisticIsFavorite(song.isFavorite);
+  }, [song.id, song.isFavorite]);
+  
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { 
@@ -54,19 +60,18 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       return response.json();
     },
     onMutate: () => {
-      // Optimistically update the UI immediately
-      setOptimisticIsFavorite(!optimisticIsFavorite);
+      // Optimistically update the UI immediately with functional update
+      setOptimisticIsFavorite(prev => !prev);
     },
     onSuccess: () => {
       // Use centralized function to invalidate all song-related queries
       invalidateAllSongQueries();
-      toast.success(
-        optimisticIsFavorite ? "Added to favorites" : "Removed from favorites"
-      );
+      // Don't use optimistic state for toast since onSuccess runs after the actual update
+      toast.success("Favorite updated");
     },
     onError: () => {
-      // Revert optimistic update on error
-      setOptimisticIsFavorite(!optimisticIsFavorite);
+      // Revert optimistic update on error with functional update
+      setOptimisticIsFavorite(prev => !prev);
       toast.error("Couldn't update favorites");
     },
   });
