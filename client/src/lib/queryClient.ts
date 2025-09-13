@@ -97,3 +97,33 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Centralized function to invalidate all song-related queries
+// Use this when song data (including favorite status) changes
+export function invalidateAllSongQueries() {
+  // Invalidate all song lists
+  queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+  
+  // Invalidate favorites
+  queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+  
+  // Invalidate search results that might contain songs
+  queryClient.invalidateQueries({ 
+    predicate: (query) => {
+      const key = query.queryKey[0];
+      return typeof key === 'string' && key.startsWith('/api/songs/search');
+    }
+  });
+  
+  // Invalidate any other song-related queries
+  queryClient.invalidateQueries({ 
+    predicate: (query) => {
+      const key = query.queryKey[0];
+      return typeof key === 'string' && (
+        key.includes('/api/songs') || 
+        key.includes('/favorites') ||
+        key.includes('/search')
+      );
+    }
+  });
+}
