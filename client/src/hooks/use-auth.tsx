@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<User | undefined, Error>({
+  } = useQuery<User | null, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
       const response = await fetch('/api/auth/me', {
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          return undefined;
+          return null;
         }
         throw new Error('Failed to fetch user');
       }
@@ -103,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     retry: false,
+    initialData: null,
   });
 
   const loginMutation = useMutation({

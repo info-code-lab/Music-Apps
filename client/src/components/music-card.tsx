@@ -7,6 +7,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
 import { useDownload } from "@/hooks/use-download";
 import { useOffline } from "@/hooks/use-offline";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import toast from "react-hot-toast";
 import type { LegacyTrack as Track } from "@shared/schema";
 
@@ -29,7 +31,9 @@ const getCategoryColor = (category: string) => {
 
 export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { 
     downloadSong, 
     deleteSong, 
@@ -57,6 +61,25 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       toast.error("Couldn't update favorites");
     },
   });
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Check if user is authenticated
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    // User is authenticated, proceed with favorite action
+    favoriteMutation.mutate();
+  };
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // After successful login, automatically perform the favorite action
+    favoriteMutation.mutate();
+  };
 
   return (
     <div 
@@ -189,10 +212,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
               <Button 
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  favoriteMutation.mutate();
-                }}
+                onClick={handleFavoriteClick}
                 disabled={favoriteMutation.isPending}
                 className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 data-testid={`button-favorite-mobile-${song.id}`}
@@ -278,10 +298,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
               <Button 
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  favoriteMutation.mutate();
-                }}
+                onClick={handleFavoriteClick}
                 disabled={favoriteMutation.isPending}
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 data-testid={`button-favorite-${song.id}`}
@@ -302,6 +319,13 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
           </Button>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <PhoneLoginModal 
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }
