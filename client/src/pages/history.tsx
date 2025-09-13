@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Play, Clock, MoreHorizontal, Trash2, Heart } from "lucide-react";
+import { Play, Pause, Clock, MoreHorizontal, Trash2, Heart } from "lucide-react";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import { formatDistanceToNow } from "date-fns";
@@ -30,7 +30,7 @@ interface LegacyTrack {
 }
 
 export default function History() {
-  const { playTrack, currentSong, isPlaying } = useMusicPlayer();
+  const { playTrack, currentSong, isPlaying, togglePlayPause } = useMusicPlayer();
 
   // Fetch listening history
   const { data: history = [], isLoading, error } = useQuery<HistoryEntry[]>({
@@ -113,15 +113,32 @@ export default function History() {
                 </div>
               </div>
             )}
+            
+            {/* Music Visualizer GIF Overlay when playing */}
+            {isCurrentlyPlaying && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <img 
+                  src={musicVisualizerGif}
+                  alt="Music playing"
+                  className="w-6 h-6 object-contain"
+                />
+              </div>
+            )}
           </div>
+          
+          {/* Play/Pause Button */}
           <Button
             size="sm"
             variant="ghost"
             className="absolute inset-0 w-10 h-10 rounded bg-black/50 hover:bg-black/60 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => handlePlaySong(entry.song)}
+            onClick={() => isCurrentlyPlaying ? togglePlayPause() : handlePlaySong(entry.song)}
             data-testid={`button-play-history-${entry.id}`}
           >
-            <Play className="w-3 h-3 fill-current text-white" />
+            {isCurrentlyPlaying ? (
+              <Pause className="w-3 h-3 fill-current text-white" />
+            ) : (
+              <Play className="w-3 h-3 fill-current text-white" />
+            )}
           </Button>
         </div>
 
