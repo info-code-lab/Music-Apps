@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizontal } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +32,8 @@ const getCategoryColor = (category: string) => {
 export default function MusicCard({ song, onPlay }: MusicCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  // Optimistic favorite state for instant UI updates
+  const [optimisticIsFavorite, setOptimisticIsFavorite] = useState(song.isFavorite);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { 
@@ -51,14 +53,20 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       const response = await apiRequest(`/api/songs/${song.id}/favorite`, "PATCH");
       return response.json();
     },
+    onMutate: () => {
+      // Optimistically update the UI immediately
+      setOptimisticIsFavorite(!optimisticIsFavorite);
+    },
     onSuccess: () => {
       // Use centralized function to invalidate all song-related queries
       invalidateAllSongQueries();
       toast.success(
-        song.isFavorite ? "Removed from favorites" : "Added to favorites"
+        optimisticIsFavorite ? "Added to favorites" : "Removed from favorites"
       );
     },
     onError: () => {
+      // Revert optimistic update on error
+      setOptimisticIsFavorite(!optimisticIsFavorite);
       toast.error("Couldn't update favorites");
     },
   });
@@ -222,7 +230,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 data-testid={`button-favorite-mobile-${song.id}`}
               >
-                <Heart className={`w-3 h-3 ${song.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`w-3 h-3 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
             
@@ -308,7 +316,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 data-testid={`button-favorite-${song.id}`}
               >
-                <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`w-4 h-4 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
           </div>
