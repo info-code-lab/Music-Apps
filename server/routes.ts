@@ -399,7 +399,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/songs", async (req, res) => {
     try {
-      const tracks = await storage.getAllTracks();
+      // Check if user is authenticated to include favorite status
+      const authHeader = req.headers.authorization;
+      const sessionCookie = req.cookies?.session;
+      let userId: string | undefined;
+      
+      if (authHeader?.startsWith('Bearer ') || sessionCookie) {
+        try {
+          // Try to get user from session without requiring authentication
+          const tempReq = req as AuthRequest;
+          const authToken = tempReq.headers.authorization?.replace('Bearer ', '') || tempReq.cookies?.session;
+          if (authToken) {
+            const token = await storage.getAuthToken(authToken);
+            if (token && token.expiresAt > new Date()) {
+              const user = await storage.getUser(token.userId);
+              userId = user?.id;
+            }
+          }
+          userId = user?.id;
+        } catch {
+          // User not authenticated, continue without favorite status
+        }
+      }
+      
+      const tracks = userId 
+        ? await storage.getAllTracksWithFavorites(userId)
+        : await storage.getAllTracks();
+      
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch songs" });
@@ -772,6 +798,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================
   // FAVORITES ROUTES
   // ========================
+
+  // Get current user's favorites (simplified endpoint)
+  app.get("/api/favorites", authenticateSession, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const favorites = await storage.getUserFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch favorites" });
+    }
+  });
 
   app.get("/api/favorites/:userId", authenticateSession, async (req: AuthRequest, res) => {
     try {

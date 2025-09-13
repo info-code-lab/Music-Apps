@@ -197,7 +197,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 data-testid={`button-favorite-mobile-${song.id}`}
               >
-                <Heart className={`w-3 h-3 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
+                <Heart className={`w-3 h-3 ${song.isFavorite ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
             
@@ -286,7 +286,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 data-testid={`button-favorite-${song.id}`}
               >
-                <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-destructive' : ''}`} />
+                <Heart className={`w-4 h-4 ${song.isFavorite ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
           </div>

@@ -291,7 +291,7 @@ export class DatabaseStorage implements IStorage {
   // ========================
   
   // Helper function to transform Song to legacy Track format
-  private songToLegacyTrack(song: Song): Track {
+  private songToLegacyTrack(song: Song, isFavorite: boolean = false): Track {
     return {
       // Map song fields to track format, avoiding duplicates
       ...song, // Spread all Song properties first
@@ -300,7 +300,7 @@ export class DatabaseStorage implements IStorage {
       category: 'Music', // Will be populated from genre relationship
       url: song.filePath || '',
       artwork: song.coverArt,
-      isFavorite: false, // Will be determined from favorites table
+      isFavorite,
       uploadType: 'file',
     } as Track;
   }
@@ -308,6 +308,18 @@ export class DatabaseStorage implements IStorage {
   async getAllTracks(): Promise<Track[]> {
     const songsData = await db.select().from(songs);
     return songsData.map(song => this.songToLegacyTrack(song));
+  }
+
+  // New method to get tracks with favorite status for a specific user
+  async getAllTracksWithFavorites(userId: string): Promise<Track[]> {
+    const songsData = await db.select().from(songs);
+    const tracks = await Promise.all(
+      songsData.map(async (song) => {
+        const isFavorite = await this.isFavorite(userId, song.id);
+        return this.songToLegacyTrack(song, isFavorite);
+      })
+    );
+    return tracks;
   }
 
   async getTrack(id: string): Promise<Track | undefined> {
