@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,10 +10,19 @@ import type { Song, LegacyTrack } from "@shared/schema";
 export default function NewReleases() {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentSong, playTrack } = useMusicPlayer();
+  const { user } = useAuth();
 
   const { data: songs = [], isLoading } = useQuery<Song[]>({
     queryKey: ["/api/songs"],
   });
+
+  // Fetch user's favorites to determine isFavorite status
+  const { data: favorites = [] } = useQuery<{id: string}[]>({
+    queryKey: ["/api/favorites"],
+    enabled: !!user,
+  });
+
+  const favoriteIds = new Set(favorites.map(fav => fav.id));
 
   // Sort by creation date to show newest first
   const newReleases = songs.sort((a, b) => {
@@ -30,7 +40,7 @@ export default function NewReleases() {
     duration: song.duration,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt,
-    isFavorite: false, // TODO: Get from favorites table
+    isFavorite: favoriteIds.has(song.id),
     uploadType: "file",
     createdAt: song.createdAt || undefined,
   });

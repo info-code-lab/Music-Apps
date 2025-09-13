@@ -5,6 +5,7 @@ import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import type { Track, LegacyTrack } from "@shared/schema";
 
 interface MusicLibraryProps {
@@ -24,6 +25,8 @@ export default function MusicLibrary({
   onPlaySong,
   searchQuery 
 }: MusicLibraryProps) {
+  const { user } = useAuth();
+
   // Fetch categories from database
   const { data: genres = [] } = useQuery<{id: string; name: string}[]>({
     queryKey: ["/api/genres"],
@@ -32,6 +35,14 @@ export default function MusicLibrary({
       return res.json();
     }
   });
+
+  // Fetch user's favorites to determine isFavorite status
+  const { data: favorites = [] } = useQuery<{id: string}[]>({
+    queryKey: ["/api/favorites"],
+    enabled: !!user,
+  });
+
+  const favoriteIds = new Set(favorites.map(fav => fav.id));
 
   // Create categories from database genres, adding "All Categories" at the beginning
   const categories = ["All Categories", ...genres.map(genre => genre.name)];
@@ -146,7 +157,7 @@ export default function MusicLibrary({
               duration: song.duration || 0,
               url: song.filePath ? encodeURI(song.filePath) : "",
               artwork: song.coverArt || null,
-              isFavorite: false, // TODO: Get from favorites table
+              isFavorite: favoriteIds.has(song.id),
               uploadType: "file",
               createdAt: song.createdAt || undefined,
             };

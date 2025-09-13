@@ -4,6 +4,7 @@ import MusicLibrary from "@/components/music-library";
 import UnifiedSearchResults from "@/components/unified-search-results";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
@@ -21,6 +22,7 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
   const [filterBy, setFilterBy] = useState<{type: 'none' | 'artist' | 'album' | 'genre', id?: string}>({type: 'none'});
   const { currentSong, playTrack } = useMusicPlayer();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
 
   // Use external search if provided, otherwise use internal
   const searchQuery = externalSearchQuery || internalSearchQuery;
@@ -33,6 +35,14 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
   const { data: songs = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/songs"],
   });
+
+  // Fetch user's favorites to determine isFavorite status
+  const { data: favorites = [] } = useQuery<{id: string}[]>({
+    queryKey: ["/api/favorites"],
+    enabled: !!user,
+  });
+
+  const favoriteIds = new Set(favorites.map(fav => fav.id));
 
   const { data: filteredSongs = [] } = useQuery<Track[]>({
     queryKey: ["/api/songs/genre", selectedCategory],
@@ -84,7 +94,7 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
     duration: song.duration || 0,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || null,
-    isFavorite: false, // TODO: Get from favorites table
+    isFavorite: favoriteIds.has(song.id),
     uploadType: "file",
     createdAt: song.createdAt || undefined,
   });
