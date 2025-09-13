@@ -114,14 +114,22 @@ export default function History() {
               </div>
             )}
             
-            {/* Music Visualizer GIF Overlay when playing */}
+            {/* Music Visualizer Bars Overlay when playing */}
             {isCurrentlyPlaying && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <img 
-                  src={musicVisualizerGif}
-                  alt="Music playing"
-                  className="w-6 h-6 object-contain"
-                />
+                <div className="flex items-end space-x-0.5">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-0.5 bg-pink-500 rounded-full animate-pulse"
+                      style={{
+                        height: `${12 + (i % 2) * 4}px`,
+                        animationDelay: `${i * 200}ms`,
+                        animationDuration: '0.8s'
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
