@@ -107,22 +107,27 @@ export function invalidateAllSongQueries() {
   // Invalidate favorites
   queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
   
-  // Invalidate search results that might contain songs
+  // Invalidate all queries that might contain songs with favorite status
   queryClient.invalidateQueries({ 
     predicate: (query) => {
       const key = query.queryKey[0];
-      return typeof key === 'string' && key.startsWith('/api/songs/search');
-    }
-  });
-  
-  // Invalidate any other song-related queries
-  queryClient.invalidateQueries({ 
-    predicate: (query) => {
-      const key = query.queryKey[0];
-      return typeof key === 'string' && (
+      if (typeof key !== 'string') return false;
+      
+      return (
+        // Song-related endpoints
         key.includes('/api/songs') || 
         key.includes('/favorites') ||
-        key.includes('/search')
+        key.includes('/search') ||
+        // Artist endpoints that return songs
+        key.includes('/api/artists') ||
+        // Album endpoints that might return songs  
+        key.includes('/api/albums') ||
+        // Playlist endpoints that contain songs
+        key.includes('/api/playlists') ||
+        // History endpoints that show songs
+        key.includes('/api/history') ||
+        // Dashboard/stats that might cache song counts
+        key.includes('/api/dashboard')
       );
     }
   });
