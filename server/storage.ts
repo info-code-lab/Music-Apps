@@ -1011,11 +1011,37 @@ export class DatabaseStorage implements IStorage {
   // ========================
 
   async logListening(userId: string, songId: string, device?: string, ipAddress?: string): Promise<void> {
-    await db
-      .insert(listeningHistory)
-      .values({ userId, songId, device, ipAddress });
+    // Check if this user already has this song in their listening history
+    const existingRecord = await db
+      .select()
+      .from(listeningHistory)
+      .where(and(
+        eq(listeningHistory.userId, userId),
+        eq(listeningHistory.songId, songId)
+      ))
+      .limit(1);
+
+    if (existingRecord.length > 0) {
+      // Update the existing record's timestamp
+      await db
+        .update(listeningHistory)
+        .set({ 
+          playedAt: new Date().toISOString(),
+          device,
+          ipAddress 
+        })
+        .where(and(
+          eq(listeningHistory.userId, userId),
+          eq(listeningHistory.songId, songId)
+        ));
+    } else {
+      // Insert new record if it doesn't exist
+      await db
+        .insert(listeningHistory)
+        .values({ userId, songId, device, ipAddress });
+    }
     
-    // Also increment song play count
+    // Always increment song play count
     await this.incrementPlayCount(songId);
   }
 
