@@ -591,7 +591,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(200).json({ message: "Play logged successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to log play" });
+      console.error("Error logging play:", error);
+      res.status(500).json({ message: "Failed to log play", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
