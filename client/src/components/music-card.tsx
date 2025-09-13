@@ -64,6 +64,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
     // Check if user is authenticated
     if (!user) {
@@ -86,8 +87,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       className="bg-card rounded-lg border border-border overflow-hidden floating-card gentle-float group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => {
-        console.log("MusicCard clicked for:", song.title);
+      onClick={(e) => {
+        // Don't play if clicked element is a button or inside a button
+        if ((e.target as Element).closest('button')) {
+          return;
+        }
         onPlay();
       }}
       data-testid={`card-song-${song.id}`}
