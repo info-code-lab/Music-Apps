@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Heart, Download, Check, X, Wifi, WifiOff, HardDrive, MoreHorizontal } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, invalidateAllSongQueries } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
 import { useDownload } from "@/hooks/use-download";
 import { useOffline } from "@/hooks/use-offline";
@@ -52,7 +52,8 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      // Use centralized function to invalidate all song-related queries
+      invalidateAllSongQueries();
       toast.success(
         song.isFavorite ? "Removed from favorites" : "Added to favorites"
       );

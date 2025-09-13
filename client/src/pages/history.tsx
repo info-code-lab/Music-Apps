@@ -4,7 +4,7 @@ import { Play, Pause, Clock, MoreHorizontal, Trash2, Heart } from "lucide-react"
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import { formatDistanceToNow } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, invalidateAllSongQueries } from "@/lib/queryClient";
 import toast from "react-hot-toast";
 import type { Song } from "@shared/schema";
 
@@ -52,8 +52,8 @@ export default function History() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      // Use centralized function to invalidate all song-related queries
+      invalidateAllSongQueries();
       toast.success("Favorites updated");
     },
     onError: () => {
