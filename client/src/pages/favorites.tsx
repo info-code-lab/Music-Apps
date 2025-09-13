@@ -10,13 +10,10 @@ export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentSong, playTrack } = useMusicPlayer();
 
-  // Get all songs and filter favorites locally (temporary until favorites API is implemented)
-  const { data: allSongs = [], isLoading } = useQuery<Song[]>({
-    queryKey: ["/api/songs"],
+  // Get user's actual favorites from API
+  const { data: favoriteSongs = [], isLoading } = useQuery<Song[]>({
+    queryKey: ["/api/favorites"],
   });
-
-  // For now, show some songs as favorites (can be toggled by user later)
-  const favoriteSongs = allSongs.slice(0, 4); // Show first 4 songs as favorites
 
   // Convert Song to LegacyTrack format for MusicCard compatibility
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({

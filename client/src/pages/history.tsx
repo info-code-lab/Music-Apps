@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Clock, MoreHorizontal, Trash2, Heart } from "lucide-react";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { formatDuration } from "@/lib/audio-utils";
 import { formatDistanceToNow } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
+import toast from "react-hot-toast";
 import type { Song } from "@shared/schema";
 
 interface HistoryEntry {
@@ -31,10 +33,32 @@ interface LegacyTrack {
 
 export default function History() {
   const { playTrack, currentSong, isPlaying, togglePlayPause } = useMusicPlayer();
+  const queryClient = useQueryClient();
 
   // Fetch listening history
   const { data: history = [], isLoading, error } = useQuery<HistoryEntry[]>({
     queryKey: ["/api/history"]
+  });
+
+  // Get user's favorites to show correct heart icon state
+  const { data: userFavorites = [] } = useQuery<Song[]>({
+    queryKey: ["/api/favorites"],
+  });
+
+  // Favorite toggle mutation
+  const favoriteMutation = useMutation({
+    mutationFn: async (song: Song) => {
+      const response = await apiRequest(`/api/songs/${song.id}/favorite`, "PATCH");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      toast.success("Favorites updated");
+    },
+    onError: () => {
+      toast.error("Couldn't update favorites");
+    },
   });
 
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
@@ -45,7 +69,7 @@ export default function History() {
     duration: song.duration,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || undefined,
-    isFavorite: false,
+    isFavorite: userFavorites.some(fav => fav.id === song.id),
     uploadType: "file",
     createdAt: song.createdAt || undefined,
   });
@@ -123,8 +147,18 @@ export default function History() {
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0">
-            <Heart className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              favoriteMutation.mutate(entry.song);
+            }}
+            data-testid={`button-favorite-history-${entry.id}`}
+            disabled={favoriteMutation.isPending}
+          >
+            <Heart className={`w-4 h-4 ${userFavorites.some(fav => fav.id === entry.song.id) ? 'fill-current text-red-500' : ''}`} />
           </Button>
           <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0">
             <MoreHorizontal className="w-4 h-4" />
