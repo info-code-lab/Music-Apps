@@ -93,17 +93,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include', // Send HTTP-only cookies automatically
       });
       
+      // Only return null for actual authentication failures (401/403)
+      if (response.status === 401 || response.status === 403) {
+        return null;
+      }
+      
+      // Throw for all other non-OK responses so React Query can retry
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          return null;
-        }
-        throw new Error('Failed to fetch user');
+        throw new Error(`Auth check failed with status ${response.status}`);
       }
       
       return response.json();
     },
-    retry: false,
-    initialData: null,
+    retry: (failureCount) => {
+      // Retry up to 3 times for network/server errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: true, // Refetch when window gains focus for faster recovery
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnReconnect: true, // Refetch when network reconnects
+    placeholderData: (previousData) => previousData, // Keep last known user to avoid flicker
   });
 
   const loginMutation = useMutation({
