@@ -110,7 +110,12 @@ export default function UploadProgressModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+        resetState();
+      }
+    }}>
       <DialogContent className="sm:max-w-md" data-testid="upload-progress-modal">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 font-sans">
