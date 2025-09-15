@@ -78,10 +78,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const progressStats = progressEmitter.getUploadStatistics();
       const totalSongs = await storage.getAllSongs();
       
+      // Total uploads = all songs in DB + currently processing + failed uploads
+      // (completed uploads are already in the database)
       const stats = {
-        totalUploads: progressStats.processing + progressStats.completed + progressStats.failed,
+        totalUploads: totalSongs.length + progressStats.processing + progressStats.failed,
         processing: progressStats.processing,
-        completed: progressStats.completed,
+        completed: totalSongs.length, // All songs in DB are completed
         failed: progressStats.failed
       };
       
