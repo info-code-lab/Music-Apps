@@ -65,8 +65,7 @@ export default function Playlists() {
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate all playlist-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/playlists/public"] });
+      // Invalidate playlist-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/playlists/user", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/playlists/liked"] });
       setShowCreateDialog(false);
@@ -124,7 +123,7 @@ export default function Playlists() {
             {/* Playlist Tabs */}
             {user ? (
               <Tabs defaultValue="my-playlists" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="my-playlists" data-testid="tab-my-playlists">
                     <User className="w-4 h-4 mr-2" />
                     My Playlists ({myPlaylists.length})
@@ -132,10 +131,6 @@ export default function Playlists() {
                   <TabsTrigger value="liked-playlists" data-testid="tab-liked-playlists">
                     <Heart className="w-4 h-4 mr-2" />
                     Liked ({likedPlaylists.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="discover" data-testid="tab-discover">
-                    <Search className="w-4 h-4 mr-2" />
-                    Discover ({publicPlaylists.length})
                   </TabsTrigger>
                 </TabsList>
                 
@@ -153,16 +148,6 @@ export default function Playlists() {
                   <PlaylistLibrary
                     playlists={likedPlaylists}
                     isLoading={isLoadingLiked}
-                    onViewPlaylist={handleViewPlaylist}
-                    onCreatePlaylist={handleCreatePlaylist}
-                    searchQuery={searchQuery}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="discover" className="mt-6">
-                  <PlaylistLibrary
-                    playlists={publicPlaylists}
-                    isLoading={isLoadingPublic}
                     onViewPlaylist={handleViewPlaylist}
                     onCreatePlaylist={handleCreatePlaylist}
                     searchQuery={searchQuery}
