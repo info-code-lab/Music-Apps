@@ -6,10 +6,7 @@ import {
   Heart, 
   Album, 
   Mic, 
-  Radio, 
-  Download, 
   ListMusic, 
-  Video, 
   Shuffle, 
   ChevronRight, 
   Settings,
@@ -44,10 +41,7 @@ export default function MyLibrary() {
   const likedSongsCount = favorites.length;
   const artistsCount = artists.length;
   const albumsCount = albums.length;
-  const showsCount = 0;
-  const downloadsCount = 0;
   const playlistsCount = 0;
-  const videosCount = 0;
 
   // Get recent songs for history (last 2 songs)
   const recentSongs = songs.slice(0, 2);
@@ -180,20 +174,6 @@ export default function MyLibrary() {
               onClick={() => setLocation("/artists")}
             />
             <LibraryItem
-              icon={Radio}
-              title="Shows"
-              count={showsCount}
-            />
-            <LibraryItem
-              icon={Download}
-              title="Downloads"
-              actionButton={
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1">
-                  Go Pro
-                </Button>
-              }
-            />
-            <LibraryItem
               icon={ListMusic}
               title="Playlists"
               count={playlistsCount}
@@ -202,11 +182,6 @@ export default function MyLibrary() {
                   + New
                 </Button>
               }
-            />
-            <LibraryItem
-              icon={Video}
-              title="Videos"
-              count={videosCount}
             />
           </div>
 
