@@ -1,5 +1,5 @@
 import { 
-  users, artists, albums, songs, genres, playlists, playlistSongs, songArtists, songGenres, songAlbums,
+  users, artists, albums, songs, genres, playlists, playlistSongs, playlistLikes, songArtists, songGenres, songAlbums,
   favorites, follows, comments, ratings, listeningHistory, searchLogs, recommendations,
   otpVerification, authTokens, userPreferredArtists,
   type User, type InsertUser, type Track, type InsertTrack, type Artist, type InsertArtist,
@@ -97,6 +97,12 @@ export interface IStorage {
   addSongToPlaylist(playlistId: string, songId: string): Promise<void>;
   removeSongFromPlaylist(playlistId: string, songId: string): Promise<boolean>;
   getPlaylistSongs(playlistId: string): Promise<Song[]>;
+
+  // Playlist likes operations
+  getUserLikedPlaylists(userId: string): Promise<Playlist[]>;
+  likePlaylist(userId: string, playlistId: string): Promise<void>;
+  unlikePlaylist(userId: string, playlistId: string): Promise<boolean>;
+  isPlaylistLiked(userId: string, playlistId: string): Promise<boolean>;
 
   // Favorites operations
   getUserFavorites(userId: string): Promise<Song[]>;
@@ -853,6 +859,49 @@ export class DatabaseStorage implements IStorage {
       .where(eq(playlistSongs.playlistId, playlistId))
       .orderBy(playlistSongs.addedAt);
     return result.map(r => r.song);
+  }
+
+  // ========================
+  // PLAYLIST LIKES OPERATIONS
+  // ========================
+
+  async getUserLikedPlaylists(userId: string): Promise<Playlist[]> {
+    const result = await db
+      .select({ playlist: playlists })
+      .from(playlistLikes)
+      .innerJoin(playlists, eq(playlistLikes.playlistId, playlists.id))
+      .where(eq(playlistLikes.userId, userId))
+      .orderBy(desc(playlistLikes.createdAt));
+    return result.map(r => r.playlist);
+  }
+
+  async likePlaylist(userId: string, playlistId: string): Promise<void> {
+    await db
+      .insert(playlistLikes)
+      .values({ userId, playlistId })
+      .onConflictDoNothing();
+  }
+
+  async unlikePlaylist(userId: string, playlistId: string): Promise<boolean> {
+    const result = await db
+      .delete(playlistLikes)
+      .where(and(
+        eq(playlistLikes.userId, userId),
+        eq(playlistLikes.playlistId, playlistId)
+      ));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async isPlaylistLiked(userId: string, playlistId: string): Promise<boolean> {
+    const [like] = await db
+      .select()
+      .from(playlistLikes)
+      .where(and(
+        eq(playlistLikes.userId, userId),
+        eq(playlistLikes.playlistId, playlistId)
+      ))
+      .limit(1);
+    return !!like;
   }
 
   // ========================
