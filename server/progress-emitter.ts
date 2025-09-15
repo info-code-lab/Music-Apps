@@ -9,6 +9,7 @@ export interface ProgressUpdate {
 
 class ProgressEmitter {
   private connections = new Map<string, Response>();
+  private cancelledSessions = new Set<string>();
 
   addConnection(sessionId: string, res: Response) {
     this.connections.set(sessionId, res);
@@ -24,6 +25,26 @@ class ProgressEmitter {
 
   removeConnection(sessionId: string) {
     this.connections.delete(sessionId);
+  }
+
+  cancelSession(sessionId: string) {
+    this.cancelledSessions.add(sessionId);
+    this.emit(sessionId, {
+      type: 'error',
+      message: 'Upload cancelled by user',
+      progress: 0,
+      stage: 'cancelled'
+    });
+    this.removeConnection(sessionId);
+  }
+
+  isCancelled(sessionId: string): boolean {
+    return this.cancelledSessions.has(sessionId);
+  }
+
+  cleanupSession(sessionId: string) {
+    this.removeConnection(sessionId);
+    this.cancelledSessions.delete(sessionId);
   }
 
   emit(sessionId: string, update: ProgressUpdate) {
@@ -57,7 +78,7 @@ class ProgressEmitter {
     
     // Clean up connection after a delay
     setTimeout(() => {
-      this.removeConnection(sessionId);
+      this.cleanupSession(sessionId);
     }, 1000);
   }
 }
