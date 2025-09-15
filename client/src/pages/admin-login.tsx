@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -18,27 +18,15 @@ export default function AdminLogin() {
   });
 
   // Redirect to admin panel if already logged in as admin
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      setLocation("/admin");
-    }
-  }, [user?.role, setLocation]);
-
-  // Redirect to home if logged in as regular user
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      toast.error("Admin access required");
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  // Don't render login form if user is already authenticated
   if (user?.role === 'admin') {
+    setLocation("/admin");
     return null;
   }
 
-  // TypeScript workaround: cast role to include admin type
-  if (user && (user.role as 'user' | 'artist' | 'admin') !== 'admin') {
+  // Redirect to home if logged in as regular user
+  if (user && user.role !== 'admin') {
+    toast.error("Admin access required");
+    setLocation("/");
     return null;
   }
 
