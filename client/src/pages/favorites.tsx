@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, Music } from "lucide-react";
@@ -8,7 +10,29 @@ import type { Song, LegacyTrack } from "@shared/schema";
 
 export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
+  const { user } = useAuth();
+
+  // Detect mobile/tablet screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Show login modal for non-authenticated users on mobile/tablet
+  useEffect(() => {
+    if (!user && isMobileOrTablet) {
+      setShowLoginModal(true);
+    }
+  }, [user, isMobileOrTablet]);
 
   // Get user's actual favorites from API
   const { data: favoriteSongs = [], isLoading } = useQuery<Song[]>({
@@ -43,6 +67,14 @@ export default function Favorites() {
 
   return (
     <div className="h-full">
+      {/* Login Modal for Mobile/Tablet */}
+      <PhoneLoginModal
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+        }}
+      />
       {/* Main Content */}
       <main className="h-full">
           <div className="p-4 md:p-8">

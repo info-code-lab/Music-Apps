@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ArtistLibrary from "@/components/artist-library";
 import MusicLibrary from "@/components/music-library";
@@ -7,11 +7,35 @@ import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft } from "lucide-react";
 import type { Artist, Track, LegacyTrack } from "@shared/schema";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
+  const { user } = useAuth();
+
+  // Detect mobile/tablet screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Show login modal for non-authenticated users on mobile/tablet
+  useEffect(() => {
+    if (!user && isMobileOrTablet) {
+      setShowLoginModal(true);
+    }
+  }, [user, isMobileOrTablet]);
 
   const { data: artists = [], isLoading } = useQuery<Artist[]>({
     queryKey: ["/api/artists"],
@@ -60,6 +84,14 @@ export default function Artists() {
 
   return (
     <div className="min-h-screen">
+      {/* Login Modal for Mobile/Tablet */}
+      <PhoneLoginModal
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+        }}
+      />
       <main className="overflow-auto custom-scrollbar">
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">
