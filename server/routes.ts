@@ -79,10 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalSongs = await storage.getAllSongs();
       
       const stats = {
-        totalUploads: totalSongs.length,
+        totalUploads: progressStats.processing + progressStats.completed + progressStats.failed,
         processing: progressStats.processing,
-        completed: totalSongs.length,
-        failed: 0 // Could be enhanced to track failed uploads in the future
+        completed: progressStats.completed,
+        failed: progressStats.failed
       };
       
       res.status(200).json(stats);

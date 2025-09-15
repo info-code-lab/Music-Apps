@@ -11,6 +11,8 @@ class ProgressEmitter {
   private connections = new Map<string, Response>();
   private cancelledSessions = new Set<string>();
   private activeSessions = new Set<string>();
+  private completedSessions = new Set<string>();
+  private failedSessions = new Set<string>();
 
   addConnection(sessionId: string, res: Response) {
     this.connections.set(sessionId, res);
@@ -37,6 +39,7 @@ class ProgressEmitter {
 
   cancelSession(sessionId: string) {
     this.cancelledSessions.add(sessionId);
+    this.failedSessions.add(sessionId); // Cancelled sessions count as failed
     this.emit(sessionId, {
       type: 'error',
       message: 'Upload cancelled by user',
@@ -59,11 +62,14 @@ class ProgressEmitter {
     this.removeConnection(sessionId);
     this.cancelledSessions.delete(sessionId);
     this.activeSessions.delete(sessionId);
+    // Don't remove from completed/failed - keep for statistics
   }
 
   getUploadStatistics() {
     return {
       processing: this.activeSessions.size,
+      completed: this.completedSessions.size,
+      failed: this.failedSessions.size,
       activeConnections: this.connections.size,
       cancelledSessions: this.cancelledSessions.size
     };
@@ -89,7 +95,10 @@ class ProgressEmitter {
       stage: 'error'
     });
     
-    // Clean up session after error, just like successful completion
+    // Mark session as failed
+    this.failedSessions.add(sessionId);
+    
+    // Clean up session after error
     setTimeout(() => {
       this.cleanupSession(sessionId);
     }, 1000);
@@ -102,6 +111,9 @@ class ProgressEmitter {
       progress: 100,
       stage: 'complete'
     });
+    
+    // Mark session as completed
+    this.completedSessions.add(sessionId);
     
     // Clean up connection after a delay
     setTimeout(() => {
