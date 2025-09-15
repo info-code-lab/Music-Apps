@@ -116,6 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process upload asynchronously
       setImmediate(async () => {
         try {
+          // Start tracking this session immediately
+          progressEmitter.startSession(sessionId);
+          
           // Check for cancellation before starting
           if (progressEmitter.isCancelled(sessionId)) {
             return;

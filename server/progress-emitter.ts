@@ -25,9 +25,14 @@ class ProgressEmitter {
     });
   }
 
+  // Start tracking a session for processing without requiring a client connection
+  startSession(sessionId: string) {
+    this.activeSessions.add(sessionId);
+  }
+
   removeConnection(sessionId: string) {
     this.connections.delete(sessionId);
-    this.activeSessions.delete(sessionId);
+    // Don't remove from activeSessions here - let uploads complete naturally
   }
 
   cancelSession(sessionId: string) {
