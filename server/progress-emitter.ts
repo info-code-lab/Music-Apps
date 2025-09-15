@@ -10,9 +10,11 @@ export interface ProgressUpdate {
 class ProgressEmitter {
   private connections = new Map<string, Response>();
   private cancelledSessions = new Set<string>();
+  private activeSessions = new Set<string>();
 
   addConnection(sessionId: string, res: Response) {
     this.connections.set(sessionId, res);
+    this.activeSessions.add(sessionId);
     
     // Send initial connection confirmation
     this.emit(sessionId, {
@@ -25,6 +27,7 @@ class ProgressEmitter {
 
   removeConnection(sessionId: string) {
     this.connections.delete(sessionId);
+    this.activeSessions.delete(sessionId);
   }
 
   cancelSession(sessionId: string) {
@@ -50,6 +53,15 @@ class ProgressEmitter {
   cleanupSession(sessionId: string) {
     this.removeConnection(sessionId);
     this.cancelledSessions.delete(sessionId);
+    this.activeSessions.delete(sessionId);
+  }
+
+  getUploadStatistics() {
+    return {
+      processing: this.activeSessions.size,
+      activeConnections: this.connections.size,
+      cancelledSessions: this.cancelledSessions.size
+    };
   }
 
   emit(sessionId: string, update: ProgressUpdate) {
