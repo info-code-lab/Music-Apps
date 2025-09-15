@@ -22,16 +22,16 @@ export default function PlaylistLibrary({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
-            <Skeleton className="w-full h-32 md:h-48" />
-            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-              <Skeleton className="h-4 md:h-6 w-3/4" />
-              <Skeleton className="h-3 md:h-4 w-1/2" />
+            <Skeleton className="w-full h-48" />
+            <div className="p-4 space-y-2">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
               <div className="flex items-center justify-between">
-                <Skeleton className="h-4 md:h-6 w-12 md:w-16" />
-                <Skeleton className="h-3 md:h-4 w-3 md:w-4" />
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-4 w-4" />
               </div>
             </div>
           </div>
@@ -68,7 +68,7 @@ export default function PlaylistLibrary({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {playlists.map((playlist) => (
             <PlaylistCard
               key={playlist.id}
