@@ -230,6 +230,16 @@ export class DownloadService {
     for (let i = 0; i < attempts.length; i++) {
       const command = attempts[i];
       
+      // Update progress for each attempt
+      if (sessionId) {
+        progressEmitter.emit(sessionId, {
+          type: 'status',
+          message: `Trying download method ${i + 1}/${attempts.length}...`,
+          progress: 25 + (i * 5), // Progress from 25% to 65%
+          stage: 'downloading'
+        });
+      }
+      
       try {
         const result = await new Promise<{success: boolean, stdout?: string, stderr?: string}>((resolve) => {
           exec(command, { timeout: 120000 }, (error, stdout, stderr) => {
@@ -267,6 +277,16 @@ export class DownloadService {
           
           if (downloadedFile) {
             const localPath = path.join(this.uploadsDir, downloadedFile);
+            
+            // Show download completion
+            if (sessionId) {
+              progressEmitter.emit(sessionId, {
+                type: 'status',
+                message: 'Download completed, processing...',
+                progress: 70,
+                stage: 'processing'
+              });
+            }
             
             // Download thumbnail separately using yt-dlp
             let thumbnailFilename = undefined;
@@ -322,7 +342,9 @@ export class DownloadService {
           if (line.startsWith('PROGRESS:')) {
             const progressMatch = line.match(/PROGRESS:(\d+(?:\.\d+)?)/);
             if (progressMatch && sessionId) {
-              const progress = Math.min(95, 20 + (parseFloat(progressMatch[1]) * 0.6));
+              // Map Python progress (0-100%) to download stage (60-90%)
+              const pythonProgress = parseFloat(progressMatch[1]);
+              const progress = Math.min(90, 60 + (pythonProgress * 0.3));
               progressEmitter.emit(sessionId, {
                 type: 'status',
                 message: 'Downloading...',
