@@ -96,6 +96,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process upload asynchronously
       setImmediate(async () => {
         try {
+          // Check for cancellation before starting
+          if (progressEmitter.isCancelled(sessionId)) {
+            return;
+          }
+
           progressEmitter.emit(sessionId, {
             type: 'status',
             message: 'Starting upload...',
@@ -103,8 +108,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             stage: 'starting'
           });
           
+          // Check for cancellation before download
+          if (progressEmitter.isCancelled(sessionId)) {
+            return;
+          }
+          
           // Download file and extract metadata
           const metadata = await downloadService.downloadAndExtractMetadata(url, sessionId);
+          
+          // Check for cancellation after download
+          if (progressEmitter.isCancelled(sessionId)) {
+            return;
+          }
           
           progressEmitter.emit(sessionId, {
             type: 'status',
@@ -133,6 +148,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             filePath: `/uploads/${metadata.filename}`, // Updated field name for songs table
             coverArt: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
           };
+
+          // Check for cancellation before creating song record
+          if (progressEmitter.isCancelled(sessionId)) {
+            return;
+          }
 
           const validatedData = insertSongSchema.parse(songData);
           const song = await storage.createSong(validatedData);
