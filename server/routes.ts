@@ -416,7 +416,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userId = user?.id;
             }
           }
-          userId = user?.id;
         } catch {
           // User not authenticated, continue without favorite status
         }
@@ -792,6 +791,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to remove song from playlist" });
+    }
+  });
+
+  // ========================
+  // PLAYLIST LIKES ROUTES
+  // ========================
+
+  // Get current user's liked playlists
+  app.get("/api/playlists/liked", authenticateSession, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const likedPlaylists = await storage.getUserLikedPlaylists(userId);
+      res.json(likedPlaylists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch liked playlists" });
+    }
+  });
+
+  // Like a playlist
+  app.post("/api/playlists/:id/like", authenticateSession, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.id;
+      
+      // Check if playlist exists
+      const playlist = await storage.getPlaylist(id);
+      if (!playlist) {
+        res.status(404).json({ message: "Playlist not found" });
+        return;
+      }
+      
+      await storage.likePlaylist(userId, id);
+      res.status(201).json({ message: "Playlist liked successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to like playlist" });
+    }
+  });
+
+  // Unlike a playlist
+  app.delete("/api/playlists/:id/like", authenticateSession, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.id;
+      
+      const removed = await storage.unlikePlaylist(userId, id);
+      
+      if (!removed) {
+        res.status(404).json({ message: "Playlist like not found" });
+        return;
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to unlike playlist" });
     }
   });
 
