@@ -13,6 +13,13 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { type Song } from "@shared/schema";
 
+interface UploadStats {
+  totalUploads: number;
+  processing: number;
+  completed: number;
+  failed: number;
+}
+
 export default function UploadManagement() {
   // Fetch recent tracks with real-time updates
   const { data: allSongs = [], isLoading: isLoadingSongs } = useQuery<Song[]>({
@@ -21,6 +28,15 @@ export default function UploadManagement() {
     refetchOnWindowFocus: true, // Refetch when user returns to tab
     refetchOnMount: true, // Always refetch when component mounts
     staleTime: 0 // Consider data stale immediately to ensure fresh data
+  });
+
+  // Fetch upload statistics with real-time updates
+  const { data: uploadStatsData, isLoading: isLoadingStats } = useQuery<UploadStats>({
+    queryKey: ["/api/upload-stats"],
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time processing count
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0
   });
 
   // Process the songs data
@@ -42,10 +58,30 @@ export default function UploadManagement() {
     }));
 
   const uploadStats = [
-    { title: "Total Uploads", value: allSongs.length.toString(), icon: UploadIcon, color: "text-blue-600" },
-    { title: "Processing", value: "0", icon: Loader2, color: "text-yellow-600" },
-    { title: "Completed", value: allSongs.length.toString(), icon: CheckCircle, color: "text-green-600" },
-    { title: "Failed", value: "0", icon: AlertCircle, color: "text-red-600" }
+    { 
+      title: "Total Uploads", 
+      value: uploadStatsData?.totalUploads?.toString() || allSongs.length.toString(), 
+      icon: UploadIcon, 
+      color: "text-blue-600" 
+    },
+    { 
+      title: "Processing", 
+      value: uploadStatsData?.processing?.toString() || "0", 
+      icon: Loader2, 
+      color: "text-yellow-600" 
+    },
+    { 
+      title: "Completed", 
+      value: uploadStatsData?.completed?.toString() || allSongs.length.toString(), 
+      icon: CheckCircle, 
+      color: "text-green-600" 
+    },
+    { 
+      title: "Failed", 
+      value: uploadStatsData?.failed?.toString() || "0", 
+      icon: AlertCircle, 
+      color: "text-red-600" 
+    }
   ];
 
   return (
