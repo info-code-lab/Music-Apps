@@ -36,8 +36,12 @@ export default function MyLibrary() {
     queryKey: ["/api/albums"],
   });
 
-  // Mock data for now - these would come from actual APIs
-  const likedSongsCount = Math.min(4, songs.length);
+  const { data: favorites = [] } = useQuery<Song[]>({
+    queryKey: ["/api/favorites"],
+  });
+
+  // Use actual data instead of mock data
+  const likedSongsCount = favorites.length;
   const artistsCount = artists.length;
   const albumsCount = albums.length;
   const showsCount = 0;
