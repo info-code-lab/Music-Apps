@@ -177,11 +177,24 @@ export default function UploadProgressModal({
           )}
 
           {/* Action Buttons */}
-          {(isComplete || isError) && (
-            <div className="flex justify-end space-x-2 pt-2">
+          <div className="flex justify-end space-x-2 pt-2">
+            {!isComplete && !isError && (
               <Button 
                 onClick={async () => {
                   await cancelUpload();
+                  onClose();
+                  resetState();
+                }}
+                variant="outline"
+                className="font-mono"
+                data-testid="cancel-upload-button"
+              >
+                Cancel
+              </Button>
+            )}
+            {(isComplete || isError) && (
+              <Button 
+                onClick={() => {
                   onClose();
                   resetState();
                 }}
@@ -191,8 +204,8 @@ export default function UploadProgressModal({
               >
                 {isError ? "Close" : "Done"}
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
