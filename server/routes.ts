@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Legacy tracks search endpoint removed
 
   // Upload song via URL (Admin only)  
-  app.post("/api/songs/upload-url", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.post("/api/songs/upload-url", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     const sessionId = randomUUID();
     
     try {
@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload song via file (Admin only)
-  app.post("/api/songs/upload-file", authenticateAdminToken, requireAdmin, upload.single('audio'), async (req: AuthRequest, res) => {
+  app.post("/api/songs/upload-file", authenticateSession, requireAdmin, upload.single('audio'), async (req: AuthRequest, res) => {
     try {
       const multerReq = req as Request & { file?: Express.Multer.File };
       if (!multerReq.file) {
@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete song (Admin only)
-  app.delete("/api/songs/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.delete("/api/songs/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteSong(id);
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/artists", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.post("/api/artists", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertArtistSchema.parse(req.body);
       const artist = await storage.createArtist(validatedData);
@@ -262,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/artists/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.put("/api/artists/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const artist = await storage.updateArtist(id, req.body);
@@ -278,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/artists/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.delete("/api/artists/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteArtist(id);
@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/albums", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.post("/api/albums", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertAlbumSchema.parse(req.body);
       const album = await storage.createAlbum(validatedData);
@@ -361,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/albums/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.put("/api/albums/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const album = await storage.updateAlbum(id, req.body);
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/albums/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.delete("/api/albums/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteAlbum(id);
@@ -432,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced endpoints for admin dashboard
-  app.get("/api/admin/songs", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/admin/songs", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const songs = await storage.getAllSongsWithDetails();
       res.json(songs);
@@ -442,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/albums", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/admin/albums", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const albums = await storage.getAllAlbumsWithDetails();
       res.json(albums);
@@ -452,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/artists", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/admin/artists", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const artists = await storage.getAllArtistsWithDetails();
       res.json(artists);
@@ -536,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/songs", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.post("/api/songs", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertSongSchema.parse(req.body);
       const song = await storage.createSong(validatedData);
@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/songs/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.put("/api/songs/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const { artistIds, genreIds, albumIds, ...songData } = req.body;
@@ -590,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/songs/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.delete("/api/songs/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteSong(id);
@@ -1226,7 +1226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new genre (Admin only)
-  app.post("/api/genres", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.post("/api/genres", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       console.log("Received genre creation request:", req.body);
       const genreData = insertGenreSchema.parse(req.body);
@@ -1244,7 +1244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update genre (Admin only)
-  app.put("/api/genres/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.put("/api/genres/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const genreData = insertGenreSchema.parse(req.body);
@@ -1262,7 +1262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete genre (Admin only)
-  app.delete("/api/genres/:id", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.delete("/api/genres/:id", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteGenre(id);
@@ -1369,7 +1369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ================================
 
   // Process song for streaming (Admin/Artist only)
-  app.post("/api/streaming/process/:songId", authenticateAdminToken, requireAdmin, async (req, res) => {
+  app.post("/api/streaming/process/:songId", authenticateSession, requireAdmin, async (req, res) => {
     try {
       const { songId } = req.params;
       
@@ -1478,7 +1478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Streaming cleanup (Admin only)
-  app.post("/api/streaming/cleanup", authenticateAdminToken, requireAdmin, async (req, res) => {
+  app.post("/api/streaming/cleanup", authenticateSession, requireAdmin, async (req, res) => {
     try {
       const { maxAgeHours = 24 } = req.body;
       await streamingService.cleanupOldFiles(maxAgeHours);
@@ -1548,7 +1548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get search analytics (Admin only)
-  app.get("/api/search/analytics", authenticateAdminToken, requireAdmin, async (req, res) => {
+  app.get("/api/search/analytics", authenticateSession, requireAdmin, async (req, res) => {
     try {
       const analytics = searchService.getSearchAnalytics();
       res.json(analytics);

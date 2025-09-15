@@ -61,8 +61,8 @@ export default function CategoriesPage() {
   // Create genre mutation
   const createGenreMutation = useMutation({
     mutationFn: async (data: GenreFormData) => {
-      const res = await apiRequest("POST", "/api/genres", data);
-      return res.json();
+      await apiRequest("/api/genres", "POST", data);
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });
@@ -78,8 +78,8 @@ export default function CategoriesPage() {
   // Update genre mutation
   const updateGenreMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: GenreFormData }) => {
-      const res = await apiRequest("PUT", `/api/genres/${id}`, data);
-      return res.json();
+      await apiRequest(`/api/genres/${id}`, "PUT", data);
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });
@@ -95,8 +95,8 @@ export default function CategoriesPage() {
   // Delete genre mutation
   const deleteGenreMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest("DELETE", `/api/genres/${id}`);
-      return res.json();
+      await apiRequest(`/api/genres/${id}`, "DELETE");
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/genres'] });

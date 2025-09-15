@@ -71,7 +71,7 @@ export default function UsersManagement() {
 
   const updateUserStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string, status: string }) => {
-      await apiRequest("PATCH", `/api/users/${userId}/status`, { status });
+      await apiRequest(`/api/users/${userId}/status`, "PATCH", { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -84,7 +84,7 @@ export default function UsersManagement() {
 
   const updateUserRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
-      await apiRequest("PATCH", `/api/users/${userId}/role`, { role });
+      await apiRequest(`/api/users/${userId}/role`, "PATCH", { role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -97,7 +97,7 @@ export default function UsersManagement() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      await apiRequest("DELETE", `/api/users/${userId}`);
+      await apiRequest(`/api/users/${userId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -109,8 +109,8 @@ export default function UsersManagement() {
   });
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (user.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (user.email || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesStatus && matchesRole;
@@ -126,7 +126,7 @@ export default function UsersManagement() {
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest("PUT", `/api/users/${id}`, data);
+      await apiRequest(`/api/users/${id}`, "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -153,8 +153,8 @@ export default function UsersManagement() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setEditFormData({
-      username: user.username,
-      email: user.email,
+      username: user.username || '',
+      email: user.email || '',
       role: user.role as "user" | "admin" | "artist"
     });
     setIsEditDialogOpen(true);
@@ -329,10 +329,10 @@ export default function UsersManagement() {
                     <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <TableCell>
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
-                          {user.profilePic && user.profilePic !== "default.png" ? (
+                          {user.profileImageUrl && user.profileImageUrl !== "default.png" ? (
                             <img
-                              src={user.profilePic}
-                              alt={user.username}
+                              src={user.profileImageUrl}
+                              alt={user.username || 'User'}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -342,14 +342,14 @@ export default function UsersManagement() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{user.username}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{user.username || 'No username'}</p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">ID: {user.id}</p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Mail className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm">{user.email}</span>
+                          <span className="text-sm">{user.email || 'No email'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -455,10 +455,10 @@ export default function UsersManagement() {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
-                  {selectedUser.profilePic && selectedUser.profilePic !== "default.png" ? (
+                  {selectedUser.profileImageUrl && selectedUser.profileImageUrl !== "default.png" ? (
                     <img
-                      src={selectedUser.profilePic}
-                      alt={selectedUser.username}
+                      src={selectedUser.profileImageUrl}
+                      alt={selectedUser.username || 'User'}
                       className="w-full h-full object-cover"
                     />
                   ) : (
