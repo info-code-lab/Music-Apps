@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PlaylistLibrary from "@/components/playlist-library";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { z } from "zod";
 import type { Playlist } from "@shared/schema";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 
 const createPlaylistSchema = insertPlaylistSchema.omit({ userId: true });
 type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
@@ -26,15 +27,32 @@ type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const queryClient = useQueryClient();
   const { currentSong } = useMusicPlayer();
   const { user } = useAuth();
 
-  // Get public playlists (for non-authenticated users only)
-  const { data: publicPlaylists = [], isLoading: isLoadingPublic } = useQuery<Playlist[]>({
-    queryKey: ["/api/playlists/public"],
-    enabled: !searchQuery && !user,
-  });
+  // Detect mobile/tablet screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Show login modal for non-authenticated users
+  useEffect(() => {
+    if (!user) {
+      setShowLoginModal(true);
+    }
+  }, [user]);
+
+  // Remove public playlists - only show user's own and liked playlists
 
   // Get user's own playlists
   const { data: myPlaylists = [], isLoading: isLoadingMy } = useQuery<Playlist[]>({
@@ -48,7 +66,7 @@ export default function Playlists() {
     enabled: !!user?.id && !searchQuery,
   });
 
-  const isLoading = (user ? (isLoadingMy || isLoadingLiked) : isLoadingPublic);
+  const isLoading = isLoadingMy || isLoadingLiked;
 
   const form = useForm<CreatePlaylistForm>({
     resolver: zodResolver(createPlaylistSchema),
@@ -65,8 +83,7 @@ export default function Playlists() {
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate all playlist-related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/playlists/public"] });
+      // Invalidate playlist-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/playlists/user", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/playlists/liked"] });
       setShowCreateDialog(false);
@@ -93,6 +110,14 @@ export default function Playlists() {
 
   return (
     <div className="min-h-screen">
+      {/* Login Modal for Non-Authenticated Users */}
+      <PhoneLoginModal
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+        }}
+      />
       <main className="overflow-auto custom-scrollbar">
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">
@@ -106,23 +131,25 @@ export default function Playlists() {
                   Create and discover music playlists
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={handleCreatePlaylist}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4 py-2 text-sm font-medium"
-                  data-testid="button-create-playlist"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  + New
-                </Button>
-                <span className="text-muted-foreground text-sm">
-                  {user ? (myPlaylists.length + likedPlaylists.length) : publicPlaylists.length}
-                </span>
-              </div>
+              {user && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={handleCreatePlaylist}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4 py-2 text-sm font-medium"
+                    data-testid="button-create-playlist"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    + New
+                  </Button>
+                  <span className="text-muted-foreground text-sm">
+                    {myPlaylists.length + likedPlaylists.length}
+                  </span>
+                </div>
+              )}
             </div>
             
-            {/* Playlist Tabs */}
-            {user ? (
+            {/* Playlist Tabs - Only show for authenticated users */}
+            {user && (
               <Tabs defaultValue="my-playlists" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="my-playlists" data-testid="tab-my-playlists">
@@ -156,14 +183,6 @@ export default function Playlists() {
                 </TabsContent>
                 
               </Tabs>
-            ) : (
-              <PlaylistLibrary
-                playlists={publicPlaylists}
-                isLoading={isLoadingPublic}
-                onViewPlaylist={handleViewPlaylist}
-                onCreatePlaylist={handleCreatePlaylist}
-                searchQuery={searchQuery}
-              />
             )}
           </section>
       </main>
