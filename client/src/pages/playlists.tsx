@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Search, Plus, Bell, User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, Bell, User, Heart } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import { insertPlaylistSchema } from "@shared/schema";
 import { z } from "zod";
 import type { Playlist } from "@shared/schema";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
 
 const createPlaylistSchema = insertPlaylistSchema.omit({ userId: true });
 type CreatePlaylistForm = z.infer<typeof createPlaylistSchema>;
@@ -26,14 +28,27 @@ export default function Playlists() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const queryClient = useQueryClient();
   const { currentSong } = useMusicPlayer();
+  const { user } = useAuth();
 
-  const { data: playlists = [], isLoading } = useQuery<Playlist[]>({
+  // Get public playlists (for discover section)
+  const { data: publicPlaylists = [], isLoading: isLoadingPublic } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists/public"],
     enabled: !searchQuery,
   });
 
-  // TODO: Add search for playlists
-  const displayPlaylists = playlists;
+  // Get user's own playlists
+  const { data: myPlaylists = [], isLoading: isLoadingMy } = useQuery<Playlist[]>({
+    queryKey: ["/api/playlists/user", user?.id],
+    enabled: !!user?.id && !searchQuery,
+  });
+
+  // Get user's liked playlists
+  const { data: likedPlaylists = [], isLoading: isLoadingLiked } = useQuery<Playlist[]>({
+    queryKey: ["/api/playlists/liked"],
+    enabled: !!user?.id && !searchQuery,
+  });
+
+  const isLoading = isLoadingPublic || isLoadingMy || isLoadingLiked;
 
   const form = useForm<CreatePlaylistForm>({
     resolver: zodResolver(createPlaylistSchema),
@@ -50,7 +65,10 @@ export default function Playlists() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all playlist-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/playlists/public"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/playlists/user", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/playlists/liked"] });
       setShowCreateDialog(false);
       form.reset();
       toast.success("Your new playlist has been created successfully.");
@@ -97,18 +115,69 @@ export default function Playlists() {
                   <Plus className="w-4 h-4 mr-1" />
                   + New
                 </Button>
-                <span className="text-muted-foreground text-sm">{playlists.length}</span>
+                <span className="text-muted-foreground text-sm">
+                  {user ? (myPlaylists.length + likedPlaylists.length) : publicPlaylists.length}
+                </span>
               </div>
             </div>
             
-            {/* Playlists Library */}
-            <PlaylistLibrary
-              playlists={displayPlaylists}
-              isLoading={isLoading}
-              onViewPlaylist={handleViewPlaylist}
-              onCreatePlaylist={handleCreatePlaylist}
-              searchQuery={searchQuery}
-            />
+            {/* Playlist Tabs */}
+            {user ? (
+              <Tabs defaultValue="my-playlists" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="my-playlists" data-testid="tab-my-playlists">
+                    <User className="w-4 h-4 mr-2" />
+                    My Playlists ({myPlaylists.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="liked-playlists" data-testid="tab-liked-playlists">
+                    <Heart className="w-4 h-4 mr-2" />
+                    Liked ({likedPlaylists.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="discover" data-testid="tab-discover">
+                    <Search className="w-4 h-4 mr-2" />
+                    Discover ({publicPlaylists.length})
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="my-playlists" className="mt-6">
+                  <PlaylistLibrary
+                    playlists={myPlaylists}
+                    isLoading={isLoadingMy}
+                    onViewPlaylist={handleViewPlaylist}
+                    onCreatePlaylist={handleCreatePlaylist}
+                    searchQuery={searchQuery}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="liked-playlists" className="mt-6">
+                  <PlaylistLibrary
+                    playlists={likedPlaylists}
+                    isLoading={isLoadingLiked}
+                    onViewPlaylist={handleViewPlaylist}
+                    onCreatePlaylist={handleCreatePlaylist}
+                    searchQuery={searchQuery}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="discover" className="mt-6">
+                  <PlaylistLibrary
+                    playlists={publicPlaylists}
+                    isLoading={isLoadingPublic}
+                    onViewPlaylist={handleViewPlaylist}
+                    onCreatePlaylist={handleCreatePlaylist}
+                    searchQuery={searchQuery}
+                  />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <PlaylistLibrary
+                playlists={publicPlaylists}
+                isLoading={isLoadingPublic}
+                onViewPlaylist={handleViewPlaylist}
+                onCreatePlaylist={handleCreatePlaylist}
+                searchQuery={searchQuery}
+              />
+            )}
           </section>
       </main>
 

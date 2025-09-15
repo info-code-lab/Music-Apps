@@ -688,6 +688,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's liked playlists (must be before /:id route)
+  app.get("/api/playlists/liked", authenticateSession, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const likedPlaylists = await storage.getUserLikedPlaylists(userId);
+      res.json(likedPlaylists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch liked playlists" });
+    }
+  });
+
   app.get("/api/playlists/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -797,17 +808,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================
   // PLAYLIST LIKES ROUTES
   // ========================
-
-  // Get current user's liked playlists
-  app.get("/api/playlists/liked", authenticateSession, async (req: AuthRequest, res) => {
-    try {
-      const userId = req.user!.id;
-      const likedPlaylists = await storage.getUserLikedPlaylists(userId);
-      res.json(likedPlaylists);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch liked playlists" });
-    }
-  });
 
   // Like a playlist
   app.post("/api/playlists/:id/like", authenticateSession, async (req: AuthRequest, res) => {
