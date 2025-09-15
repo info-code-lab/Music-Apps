@@ -161,6 +161,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           progressEmitter.emitComplete(sessionId, `Successfully added "${song.title}"`);
         } catch (error) {
           console.error("URL upload error:", error);
+          
+          // Check if this was a cancellation
+          if (progressEmitter.isCancelled(sessionId)) {
+            console.log(`Upload ${sessionId} was cancelled`);
+            return;
+          }
+          
           const errorMessage = error instanceof Error ? error.message : "Failed to upload song via URL";
           progressEmitter.emitError(sessionId, errorMessage);
         }

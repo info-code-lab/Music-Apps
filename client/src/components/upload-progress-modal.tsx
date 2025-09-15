@@ -123,9 +123,8 @@ export default function UploadProgressModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={async (open) => {
+    <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        await cancelUpload();
         onClose();
         resetState();
       }

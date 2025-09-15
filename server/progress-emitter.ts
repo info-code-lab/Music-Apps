@@ -36,6 +36,11 @@ class ProgressEmitter {
       stage: 'cancelled'
     });
     this.removeConnection(sessionId);
+    
+    // Clean up cancelled session state after a short delay
+    setTimeout(() => {
+      this.cleanupSession(sessionId);
+    }, 1000);
   }
 
   isCancelled(sessionId: string): boolean {
