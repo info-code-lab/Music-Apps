@@ -78,13 +78,27 @@ export default function Playlists() {
       <main className="overflow-auto custom-scrollbar">
           {/* Page Content */}
           <section className="px-4 md:px-6 pb-6">
-            <div className="mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
-                Playlists
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground font-serif">
-                Create and discover music playlists
-              </p>
+            {/* Header with + New button */}
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
+                  Playlists
+                </h2>
+                <p className="text-sm md:text-base text-muted-foreground font-serif">
+                  Create and discover music playlists
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={handleCreatePlaylist}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4 py-2 text-sm font-medium"
+                  data-testid="button-create-playlist"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  + New
+                </Button>
+                <span className="text-muted-foreground text-sm">{playlists.length}</span>
+              </div>
             </div>
             
             {/* Playlists Library */}
@@ -97,6 +111,103 @@ export default function Playlists() {
             />
           </section>
       </main>
+
+      {/* Create Playlist Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">Create New Playlist</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Playlist Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter playlist name"
+                        {...field}
+                        data-testid="input-playlist-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe your playlist"
+                        rows={3}
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        data-testid="textarea-playlist-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Make playlist public
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Allow others to see and follow your playlist
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        data-testid="switch-playlist-public"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(false)}
+                  data-testid="button-cancel-playlist"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createPlaylistMutation.isPending}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  data-testid="button-save-playlist"
+                >
+                  {createPlaylistMutation.isPending ? "Creating..." : "Create Playlist"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
