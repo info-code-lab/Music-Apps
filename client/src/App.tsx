@@ -20,6 +20,7 @@ import MyLibrary from "@/pages/my-library";
 import NewReleases from "@/pages/new-releases";
 import TopCharts from "@/pages/top-charts";
 import TopPlaylists from "@/pages/top-playlists";
+import PlaylistDetail from "@/pages/playlist-detail";
 import TopArtists from "@/pages/top-artists";
 import Profile from "@/pages/profile";
 import Search from "@/pages/search";
@@ -90,6 +91,11 @@ function Router() {
       <Route path="/top-playlists">
         <MainLayout onSearch={handleSearch} searchQuery={searchQuery}>
           <TopPlaylists />
+        </MainLayout>
+      </Route>
+      <Route path="/playlists/:id">
+        <MainLayout showSearch={false}>
+          <PlaylistDetail />
         </MainLayout>
       </Route>
       <Route path="/top-artists">
