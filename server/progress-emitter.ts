@@ -83,6 +83,11 @@ class ProgressEmitter {
       progress: 0,
       stage: 'error'
     });
+    
+    // Clean up session after error, just like successful completion
+    setTimeout(() => {
+      this.cleanupSession(sessionId);
+    }, 1000);
   }
 
   emitComplete(sessionId: string, message: string = 'Upload completed successfully') {
