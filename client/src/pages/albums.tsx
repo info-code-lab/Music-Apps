@@ -4,7 +4,7 @@ import AlbumLibrary from "@/components/album-library";
 import MusicLibrary from "@/components/music-library";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, User, ArrowLeft } from "lucide-react";
+import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
 import type { Album, Track, LegacyTrack } from "@shared/schema";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,12 +30,7 @@ export default function Albums() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Show login modal for non-authenticated users on mobile/tablet
-  useEffect(() => {
-    if (!user && isMobileOrTablet) {
-      setShowLoginModal(true);
-    }
-  }, [user, isMobileOrTablet]);
+  // Don't automatically show login modal - let user choose to login
 
   const { data: albums = [], isLoading } = useQuery<Album[]>({
     queryKey: ["/api/albums"],
@@ -82,9 +77,40 @@ export default function Albums() {
     createdAt: song.createdAt || undefined,
   });
 
+  // Show not authorized message for mobile/tablet users who are not authenticated
+  if (!user && isMobileOrTablet) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <PhoneLoginModal
+          isOpen={showLoginModal}
+          onOpenChange={setShowLoginModal}
+          onSuccess={() => {
+            setShowLoginModal(false);
+          }}
+        />
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500 flex items-center justify-center">
+            <Music className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-6">
+            You need to be logged in to browse albums and collections.
+          </p>
+          <button
+            onClick={() => setShowLoginModal(true)}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            data-testid="button-login-albums"
+          >
+            Login to Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {/* Login Modal for Mobile/Tablet */}
+      {/* Login Modal for Manual Trigger */}
       <PhoneLoginModal
         isOpen={showLoginModal}
         onOpenChange={setShowLoginModal}

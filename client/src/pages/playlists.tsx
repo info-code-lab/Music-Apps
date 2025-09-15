@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Bell, User, Heart } from "lucide-react";
+import { Search, Plus, Bell, User, Heart, Music } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,12 +45,7 @@ export default function Playlists() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Show login modal for non-authenticated users
-  useEffect(() => {
-    if (!user) {
-      setShowLoginModal(true);
-    }
-  }, [user]);
+  // Don't automatically show login modal - let user choose to login
 
   // Remove public playlists - only show user's own and liked playlists
 
@@ -108,9 +103,40 @@ export default function Playlists() {
     createPlaylistMutation.mutate(data);
   };
 
+  // Show not authorized message for non-authenticated users
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <PhoneLoginModal
+          isOpen={showLoginModal}
+          onOpenChange={setShowLoginModal}
+          onSuccess={() => {
+            setShowLoginModal(false);
+          }}
+        />
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center">
+            <Music className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-6">
+            You need to be logged in to access your playlists.
+          </p>
+          <button
+            onClick={() => setShowLoginModal(true)}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            data-testid="button-login-playlists"
+          >
+            Login to Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {/* Login Modal for Non-Authenticated Users */}
+      {/* Login Modal for Manual Trigger */}
       <PhoneLoginModal
         isOpen={showLoginModal}
         onOpenChange={setShowLoginModal}
