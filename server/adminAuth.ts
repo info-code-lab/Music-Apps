@@ -72,6 +72,35 @@ export async function adminLogin(req: Request, res: Response) {
 
     const token = generateAdminToken(user);
     
+    // Also create a database-stored auth token for session-based authentication
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+    
+    // Generate a refresh token for the database requirement
+    const refreshToken = jwt.sign(
+      { 
+        id: user.id, 
+        type: 'refresh'
+      },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    
+    const authToken = await storage.createAuthToken({
+      accessToken: token,
+      refreshToken: refreshToken,
+      userId: user.id,
+      expiresAt
+    });
+    
+    // Set HTTP-only cookie for session-based authentication
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    
     // Return user data without password hash
     const { passwordHash: _, ...userWithoutPassword } = user;
     

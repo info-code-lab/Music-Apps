@@ -92,18 +92,10 @@ export default function AlbumsManagement() {
 
   const { data: albums = [], isLoading } = useQuery<Album[]>({
     queryKey: ["/api/admin/albums"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/albums");
-      return res.json();
-    }
   });
 
   const { data: artists = [] } = useQuery<{id: string; name: string}[]>({
     queryKey: ["/api/artists"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/artists");
-      return res.json();
-    }
   });
 
   const form = useForm<AlbumFormData>({

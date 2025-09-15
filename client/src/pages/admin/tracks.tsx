@@ -109,37 +109,21 @@ export default function SongsManagement() {
 
   const { data: tracks = [], isLoading } = useQuery<AdminTrack[]>({
     queryKey: ["/api/admin/songs"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/songs");
-      return res.json();
-    }
   });
 
   // Fetch categories from database
   const { data: genres = [] } = useQuery<{id: string; name: string}[]>({
     queryKey: ["/api/genres"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/genres");
-      return res.json();
-    }
   });
 
   // Fetch albums for dropdown
   const { data: albums = [] } = useQuery<{id: string; title: string}[]>({
     queryKey: ["/api/albums"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/albums");
-      return res.json();
-    }
   });
 
   // Fetch artists for multi-select dropdown
   const { data: allArtists = [] } = useQuery<{id: string; name: string}[]>({
     queryKey: ["/api/artists"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/artists");
-      return res.json();
-    }
   });
 
   const deleteTrackMutation = useMutation({

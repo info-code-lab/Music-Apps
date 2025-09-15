@@ -50,19 +50,11 @@ export default function AdminDashboard() {
   // Fetch real dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/dashboard/stats");
-      return res.json();
-    }
   });
 
   // Fetch recent activity
   const { data: recentActivity = [], isLoading: activityLoading } = useQuery<RecentActivity[]>({
     queryKey: ["/api/dashboard/recent-activity"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/dashboard/recent-activity");
-      return res.json();
-    }
   });
 
   // Professional statistics with real data

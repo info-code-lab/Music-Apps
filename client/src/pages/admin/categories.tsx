@@ -56,10 +56,6 @@ export default function CategoriesPage() {
   // Fetch all genres
   const { data: genres = [], isLoading } = useQuery({
     queryKey: ['/api/genres'],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/genres");
-      return res.json();
-    }
   });
 
   // Create genre mutation

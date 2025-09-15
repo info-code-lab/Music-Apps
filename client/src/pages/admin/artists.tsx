@@ -90,10 +90,6 @@ export default function ArtistsManagement() {
 
   const { data: artists = [], isLoading } = useQuery<Artist[]>({
     queryKey: ["/api/admin/artists"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/artists");
-      return res.json();
-    }
   });
 
   const form = useForm<ArtistFormData>({

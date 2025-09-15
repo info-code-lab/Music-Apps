@@ -67,10 +67,6 @@ export default function UsersManagement() {
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/users");
-      return res.json();
-    }
   });
 
   const updateUserStatusMutation = useMutation({

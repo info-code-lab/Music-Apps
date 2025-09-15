@@ -1280,7 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================
 
   // Get dashboard statistics
-  app.get("/api/dashboard/stats", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/dashboard/stats", authenticateSession, async (req: AuthRequest, res) => {
     try {
       // Get counts from database
       const [tracksCount] = await db.select({ count: sql<number>`count(*)` }).from(songs);
@@ -1311,7 +1311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get recent activities
-  app.get("/api/dashboard/recent-activity", authenticateAdminToken, requireAdmin, async (req: AuthRequest, res) => {
+  app.get("/api/dashboard/recent-activity", authenticateSession, async (req: AuthRequest, res) => {
     try {
       // Get recent songs
       const recentSongs = await db
