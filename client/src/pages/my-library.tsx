@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,35 @@ import {
   Play
 } from "lucide-react";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import type { Song, LegacyTrack } from "@shared/schema";
 
 export default function MyLibrary() {
   const [, setLocation] = useLocation();
   const { currentSong, playTrack } = useMusicPlayer();
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+
+  // Detect mobile/tablet screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Show login modal for non-authenticated users on mobile/tablet
+  useEffect(() => {
+    if (!user && isMobileOrTablet) {
+      setShowLoginModal(true);
+    }
+  }, [user, isMobileOrTablet]);
 
   // Get data for counts
   const { data: songs = [] } = useQuery<Song[]>({
@@ -141,6 +165,14 @@ export default function MyLibrary() {
 
   return (
     <div className="h-full">
+      {/* Login Modal for Mobile/Tablet */}
+      <PhoneLoginModal
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+        }}
+      />
       <main className="h-full">
         <div className="p-4 md:p-6">
           {/* Header */}
