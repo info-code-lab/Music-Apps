@@ -177,6 +177,7 @@ export default function MyLibrary() {
               icon={ListMusic}
               title="Playlists"
               count={playlistsCount}
+              onClick={() => setLocation("/playlists")}
               actionButton={
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1">
                   + New
