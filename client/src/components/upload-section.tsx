@@ -304,10 +304,40 @@ export default function UploadSection() {
         isOpen={showProgress}
         onClose={() => {
           setShowProgress(false);
+          // Keep session ID to continue tracking in background
+          // Only clear it when upload actually completes/fails
+        }}
+        onComplete={() => {
+          // Clear session when upload actually completes or fails
           setCurrentSessionId(null);
+          // Invalidate upload stats to refresh processing count
+          queryClient.invalidateQueries({ queryKey: ["/api/upload-stats"] });
         }}
         sessionId={currentSessionId}
       />
+
+      {/* Background Processing Indicator */}
+      {currentSessionId && !showProgress && (
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-blue-700 dark:text-blue-300">
+                Upload processing in background...
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowProgress(true)}
+              className="text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+              data-testid="button-show-progress"
+            >
+              View Progress
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

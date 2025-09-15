@@ -14,12 +14,14 @@ interface ProgressUpdate {
 interface UploadProgressModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
   sessionId: string | null;
 }
 
 export default function UploadProgressModal({ 
   isOpen, 
   onClose, 
+  onComplete,
   sessionId 
 }: UploadProgressModalProps) {
   const [progress, setProgress] = useState(0);
@@ -30,7 +32,7 @@ export default function UploadProgressModal({
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (!sessionId || !isOpen) return;
+    if (!sessionId) return;
 
     const eventSource = new EventSource(`/api/upload-progress/${sessionId}`);
 
@@ -38,25 +40,35 @@ export default function UploadProgressModal({
       try {
         const data: ProgressUpdate = JSON.parse(event.data);
         
-        setStatus(data.message);
-        if (data.progress !== undefined) {
-          setProgress(data.progress);
-        }
-        if (data.stage) {
-          setStage(data.stage);
+        // Only update UI state if modal is open
+        if (isOpen) {
+          setStatus(data.message);
+          if (data.progress !== undefined) {
+            setProgress(data.progress);
+          }
+          if (data.stage) {
+            setStage(data.stage);
+          }
         }
 
         if (data.type === 'complete') {
           setIsComplete(true);
-          setTimeout(() => {
-            onClose();
-            resetState();
-          }, 2000);
+          // Notify parent that upload completed
+          onComplete?.();
+          // Only auto-close if modal is still open
+          if (isOpen) {
+            setTimeout(() => {
+              onClose();
+              resetState();
+            }, 2000);
+          }
         }
 
         if (data.type === 'error') {
           setIsError(true);
           setErrorMessage(data.message);
+          // Notify parent that upload completed (with error)
+          onComplete?.();
         }
       } catch (error) {
         console.error("Error parsing progress data:", error);
@@ -65,15 +77,17 @@ export default function UploadProgressModal({
 
     eventSource.onerror = (error) => {
       console.error("EventSource error:", error);
-      setIsError(true);
-      setErrorMessage("Connection to progress stream lost");
+      if (isOpen) {
+        setIsError(true);
+        setErrorMessage("Connection to progress stream lost");
+      }
       eventSource.close();
     };
 
     return () => {
       eventSource.close();
     };
-  }, [sessionId, isOpen]);
+  }, [sessionId, isOpen, onClose]);
 
   const resetState = () => {
     setProgress(0);
