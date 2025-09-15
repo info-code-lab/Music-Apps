@@ -46,7 +46,7 @@ export default function Playlists() {
 
   const createPlaylistMutation = useMutation({
     mutationFn: async (data: CreatePlaylistForm) => {
-      const response = await apiRequest("POST", "/api/playlists", data);
+      const response = await apiRequest("/api/playlists", "POST", data);
       return response.json();
     },
     onSuccess: () => {
