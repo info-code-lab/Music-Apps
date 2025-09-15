@@ -84,6 +84,19 @@ export default function UploadProgressModal({
     setErrorMessage("");
   };
 
+  const cancelUpload = async () => {
+    if (sessionId && !isComplete && !isError) {
+      try {
+        await fetch(`/api/upload-cancel/${sessionId}`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch (error) {
+        console.error('Failed to cancel upload:', error);
+      }
+    }
+  };
+
   const getStageIcon = () => {
     if (isComplete) return <CheckCircle2 className="w-6 h-6 text-green-500" />;
     if (isError) return <XCircle className="w-6 h-6 text-destructive" />;
@@ -110,8 +123,9 @@ export default function UploadProgressModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
+    <Dialog open={isOpen} onOpenChange={async (open) => {
       if (!open) {
+        await cancelUpload();
         onClose();
         resetState();
       }
@@ -167,7 +181,8 @@ export default function UploadProgressModal({
           {(isComplete || isError) && (
             <div className="flex justify-end space-x-2 pt-2">
               <Button 
-                onClick={() => {
+                onClick={async () => {
+                  await cancelUpload();
                   onClose();
                   resetState();
                 }}

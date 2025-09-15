@@ -63,6 +63,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       progressEmitter.removeConnection(sessionId);
     });
   });
+
+  // Cancel upload endpoint
+  app.post("/api/upload-cancel/:sessionId", authenticateSession, requireAdmin, (req: AuthRequest, res) => {
+    const { sessionId } = req.params;
+    
+    progressEmitter.cancelSession(sessionId);
+    res.status(200).json({ message: "Upload cancelled successfully" });
+  });
   // Legacy tracks endpoint removed - use /api/songs instead
 
   // Legacy tracks by category endpoint removed
