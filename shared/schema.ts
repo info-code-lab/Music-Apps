@@ -231,6 +231,13 @@ export const favorites = pgTable("favorites", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const playlistLikes = pgTable("playlist_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  playlistId: varchar("playlist_id").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // ========================
 // SOCIAL FEATURES
 // ========================
@@ -655,6 +662,11 @@ export const insertPlaylistSchema = createInsertSchema(playlists).omit({
   createdAt: true,
 });
 
+export const insertPlaylistLikeSchema = createInsertSchema(playlistLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Social Schemas
 export const insertCommentSchema = createInsertSchema(comments).omit({
   id: true,
@@ -921,6 +933,18 @@ export const favoritesRelations = relations(favorites, ({ one }) => ({
   song: one(songs, {
     fields: [favorites.songId],
     references: [songs.id],
+  }),
+}));
+
+// Playlist Likes Relations
+export const playlistLikesRelations = relations(playlistLikes, ({ one }) => ({
+  user: one(users, {
+    fields: [playlistLikes.userId],
+    references: [users.id],
+  }),
+  playlist: one(playlists, {
+    fields: [playlistLikes.playlistId],
+    references: [playlists.id],
   }),
 }));
 
