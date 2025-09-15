@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,8 @@ interface RecentActivity {
 }
 
 export default function AdminDashboard() {
+  const [, setLocation] = useLocation();
+
   // Fetch real dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -141,6 +144,7 @@ export default function AdminDashboard() {
       title: "Upload Songs", 
       description: "Add new music to library",
       icon: Upload, 
+      href: "/admin/upload",
       color: "bg-gradient-to-r from-slate-700 to-slate-800",
       hoverColor: "hover:from-slate-800 hover:to-slate-900"
     },
@@ -148,6 +152,7 @@ export default function AdminDashboard() {
       title: "Manage Users", 
       description: "View and edit user accounts",
       icon: Users, 
+      href: "/admin/users",
       color: "bg-gradient-to-r from-slate-700 to-slate-800",
       hoverColor: "hover:from-slate-800 hover:to-slate-900"
     },
@@ -155,6 +160,7 @@ export default function AdminDashboard() {
       title: "Analytics", 
       description: "View detailed reports",
       icon: BarChart3, 
+      href: "/admin/tracks",
       color: "bg-gradient-to-r from-slate-700 to-slate-800",
       hoverColor: "hover:from-slate-800 hover:to-slate-900"
     },
@@ -162,6 +168,7 @@ export default function AdminDashboard() {
       title: "Settings", 
       description: "Configure platform",
       icon: Settings, 
+      href: "/admin/settings",
       color: "bg-gradient-to-r from-slate-700 to-slate-800",
       hoverColor: "hover:from-slate-800 hover:to-slate-900"
     }
@@ -345,6 +352,7 @@ export default function AdminDashboard() {
                   <Button
                     key={action.title}
                     variant="outline"
+                    onClick={() => setLocation(action.href)}
                     className={`w-full p-6 h-auto flex flex-col items-start gap-3 border-2 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg transition-all duration-200 group`}
                     data-testid={`quick-${action.title.toLowerCase().replace(' ', '-')}`}
                   >

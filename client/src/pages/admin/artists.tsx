@@ -103,7 +103,7 @@ export default function ArtistsManagement() {
 
   const createArtistMutation = useMutation({
     mutationFn: async (data: ArtistFormData) => {
-      await apiRequest("POST", "/api/artists", data);
+      await apiRequest("/api/artists", "POST", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
@@ -119,7 +119,7 @@ export default function ArtistsManagement() {
 
   const updateArtistMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: ArtistFormData }) => {
-      await apiRequest("PUT", `/api/artists/${id}`, data);
+      await apiRequest(`/api/artists/${id}`, "PUT", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
@@ -136,7 +136,7 @@ export default function ArtistsManagement() {
 
   const deleteArtistMutation = useMutation({
     mutationFn: async (artistId: string) => {
-      await apiRequest("DELETE", `/api/artists/${artistId}`);
+      await apiRequest(`/api/artists/${artistId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
@@ -180,7 +180,7 @@ export default function ArtistsManagement() {
 
   const handleViewTracks = async (artist: Artist) => {
     try {
-      const response = await apiRequest("GET", `/api/songs?artist=${encodeURIComponent(artist.name)}`);
+      const response = await apiRequest(`/api/songs?artist=${encodeURIComponent(artist.name)}`, "GET");
       const tracks = await response.json();
       setArtistTracks(tracks);
       setSelectedArtist(artist);

@@ -110,7 +110,7 @@ export default function AdminSettings() {
   const updateGeneralMutation = useMutation({
     mutationFn: async (data: GeneralSettingsData) => {
       setIsLoading(true);
-      await apiRequest("PUT", "/api/admin/settings/general", data);
+      await apiRequest("/api/admin/settings/general", "PUT", data);
     },
     onSuccess: () => {
       toast.success("General settings updated successfully");
@@ -125,7 +125,7 @@ export default function AdminSettings() {
   const updateSecurityMutation = useMutation({
     mutationFn: async (data: SecuritySettingsData) => {
       setIsLoading(true);
-      await apiRequest("PUT", "/api/admin/settings/security", data);
+      await apiRequest("/api/admin/settings/security", "PUT", data);
     },
     onSuccess: () => {
       toast.success("Security settings updated successfully");
@@ -140,7 +140,7 @@ export default function AdminSettings() {
   const updateNotificationMutation = useMutation({
     mutationFn: async (data: NotificationSettingsData) => {
       setIsLoading(true);
-      await apiRequest("PUT", "/api/admin/settings/notifications", data);
+      await apiRequest("/api/admin/settings/notifications", "PUT", data);
     },
     onSuccess: () => {
       toast.success("Notification settings updated successfully");

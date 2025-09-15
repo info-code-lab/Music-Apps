@@ -128,7 +128,7 @@ export default function SongsManagement() {
 
   const deleteTrackMutation = useMutation({
     mutationFn: async (trackId: string) => {
-      await apiRequest("DELETE", `/api/songs/${trackId}`);
+      await apiRequest(`/api/songs/${trackId}`, "DELETE");
     },
     onSuccess: () => {
       // Invalidate all song-related caches to show updates immediately
@@ -147,7 +147,7 @@ export default function SongsManagement() {
 
   const toggleFavoriteMutation = useMutation({
     mutationFn: async (trackId: string) => {
-      await apiRequest("PATCH", `/api/songs/${trackId}/favorite`);
+      await apiRequest(`/api/songs/${trackId}/favorite`, "PATCH");
     },
     onSuccess: () => {
       // Invalidate all song-related caches to show updates immediately
@@ -182,7 +182,7 @@ export default function SongsManagement() {
 
   const updateTrackMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await apiRequest("PUT", `/api/songs/${id}`, data);
+      await apiRequest(`/api/songs/${id}`, "PUT", data);
     },
     onSuccess: (data) => {
       console.log('Update successful:', data);
