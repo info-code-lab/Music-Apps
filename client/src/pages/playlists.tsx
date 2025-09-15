@@ -30,10 +30,10 @@ export default function Playlists() {
   const { currentSong } = useMusicPlayer();
   const { user } = useAuth();
 
-  // Get public playlists (for discover section)
+  // Get public playlists (for non-authenticated users only)
   const { data: publicPlaylists = [], isLoading: isLoadingPublic } = useQuery<Playlist[]>({
     queryKey: ["/api/playlists/public"],
-    enabled: !searchQuery,
+    enabled: !searchQuery && !user,
   });
 
   // Get user's own playlists
@@ -48,7 +48,7 @@ export default function Playlists() {
     enabled: !!user?.id && !searchQuery,
   });
 
-  const isLoading = isLoadingPublic || isLoadingMy || isLoadingLiked;
+  const isLoading = (user ? (isLoadingMy || isLoadingLiked) : isLoadingPublic);
 
   const form = useForm<CreatePlaylistForm>({
     resolver: zodResolver(createPlaylistSchema),
@@ -124,7 +124,7 @@ export default function Playlists() {
             {/* Playlist Tabs */}
             {user ? (
               <Tabs defaultValue="my-playlists" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="my-playlists" data-testid="tab-my-playlists">
                     <User className="w-4 h-4 mr-2" />
                     My Playlists ({myPlaylists.length})
@@ -132,10 +132,6 @@ export default function Playlists() {
                   <TabsTrigger value="liked-playlists" data-testid="tab-liked-playlists">
                     <Heart className="w-4 h-4 mr-2" />
                     Liked ({likedPlaylists.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="discover" data-testid="tab-discover">
-                    <Search className="w-4 h-4 mr-2" />
-                    Discover ({publicPlaylists.length})
                   </TabsTrigger>
                 </TabsList>
                 
@@ -159,15 +155,6 @@ export default function Playlists() {
                   />
                 </TabsContent>
                 
-                <TabsContent value="discover" className="mt-6">
-                  <PlaylistLibrary
-                    playlists={publicPlaylists}
-                    isLoading={isLoadingPublic}
-                    onViewPlaylist={handleViewPlaylist}
-                    onCreatePlaylist={handleCreatePlaylist}
-                    searchQuery={searchQuery}
-                  />
-                </TabsContent>
               </Tabs>
             ) : (
               <PlaylistLibrary
