@@ -71,6 +71,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     progressEmitter.cancelSession(sessionId);
     res.status(200).json({ message: "Upload cancelled successfully" });
   });
+
+  // Get upload statistics endpoint
+  app.get("/api/upload-stats", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const progressStats = progressEmitter.getUploadStatistics();
+      const totalSongs = await storage.getAllSongs();
+      
+      const stats = {
+        totalUploads: totalSongs.length,
+        processing: progressStats.processing,
+        completed: totalSongs.length,
+        failed: 0 // Could be enhanced to track failed uploads in the future
+      };
+      
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error("Error fetching upload stats:", error);
+      res.status(500).json({ message: "Failed to fetch upload statistics" });
+    }
+  });
   // Legacy tracks endpoint removed - use /api/songs instead
 
   // Legacy tracks by category endpoint removed
