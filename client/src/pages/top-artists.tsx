@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Play, Heart } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import toast from "react-hot-toast";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 
 interface Artist {
   id: string;
@@ -15,10 +19,47 @@ interface Artist {
 
 export default function TopArtists() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: artists = [], isLoading } = useQuery<Artist[]>({
     queryKey: ["/api/artists"],
+  });
+
+  // Fetch user's preferred artists (only if authenticated)
+  const { data: preferredArtists = [] } = useQuery<Artist[]>({
+    queryKey: ["/api/user/preferred-artists"],
+    enabled: !!user,
+  });
+
+  // Mutation to add artist to preferences
+  const addPreferredArtistMutation = useMutation({
+    mutationFn: async (artistId: string) => {
+      await apiRequest("/api/user/preferred-artists", "POST", { artistId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/preferred-artists"] });
+      toast.success("Artist added to favorites");
+    },
+    onError: () => {
+      toast.error("Failed to add artist to favorites");
+    },
+  });
+
+  // Mutation to remove artist from preferences
+  const removePreferredArtistMutation = useMutation({
+    mutationFn: async (artistId: string) => {
+      await apiRequest(`/api/user/preferred-artists/${artistId}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/preferred-artists"] });
+      toast.success("Artist removed from favorites");
+    },
+    onError: () => {
+      toast.error("Failed to remove artist from favorites");
+    },
   });
 
   const filteredArtists = searchQuery 
@@ -27,7 +68,27 @@ export default function TopArtists() {
       )
     : artists;
 
-  const ArtistCard = ({ artist }: { artist: Artist }) => (
+  // Check if artist is in user's preferred list
+  const isArtistPreferred = (artistId: string) => {
+    return preferredArtists.some(preferred => preferred.id === artistId);
+  };
+
+  // Handle heart button click
+  const handleHeartClick = (artist: Artist) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    const isPreferred = isArtistPreferred(artist.id);
+    if (isPreferred) {
+      removePreferredArtistMutation.mutate(artist.id);
+    } else {
+      addPreferredArtistMutation.mutate(artist.id);
+    }
+  };
+
+  const ArtistCard = ({ artist }: { artist: Artist }) => {
     <div className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative group">
         <div className="w-full h-32 md:h-48 bg-muted flex items-center justify-center overflow-hidden">
@@ -65,8 +126,19 @@ export default function TopArtists() {
           <span className="text-xs md:text-sm text-muted-foreground">
             Artist
           </span>
-          <Button variant="ghost" size="sm" className="p-1 hover:text-red-500">
-            <Heart className="w-3 h-3 md:w-4 md:h-4" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`p-1 hover:text-red-500 transition-colors ${
+              user && isArtistPreferred(artist.id) ? 'text-red-500' : 'text-muted-foreground'
+            }`}
+            onClick={() => handleHeartClick(artist)}
+            disabled={addPreferredArtistMutation.isPending || removePreferredArtistMutation.isPending}
+            data-testid={`button-heart-artist-${artist.id}`}
+          >
+            <Heart className={`w-3 h-3 md:w-4 md:h-4 ${
+              user && isArtistPreferred(artist.id) ? 'fill-current' : ''
+            }`} />
           </Button>
         </div>
       </div>
@@ -75,6 +147,15 @@ export default function TopArtists() {
 
   return (
     <div className="h-full">
+      {/* Login Modal */}
+      <PhoneLoginModal
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+          toast.success("Welcome! You can now favorite artists.");
+        }}
+      />
       <main className="h-full">
         <div className="p-4 md:p-8">
           <div className="flex items-center space-x-3 mb-6">
