@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ArtistLibrary from "@/components/artist-library";
 import MusicLibrary from "@/components/music-library";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
 import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import PageBack from "@/components/page-back";
+import { apiRequest } from "@/lib/queryClient";
+import toast from "react-hot-toast";
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +20,7 @@ export default function Artists() {
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const { currentSong, playTrack } = useMusicPlayer();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Detect mobile/tablet screen size
   useEffect(() => {
@@ -37,6 +40,20 @@ export default function Artists() {
   const { data: artists = [], isLoading } = useQuery<Artist[]>({
     queryKey: ["/api/user/preferred-artists"],
     enabled: !!user,
+  });
+
+  // Mutation to remove artist from preferences
+  const removePreferredArtistMutation = useMutation({
+    mutationFn: async (artistId: string) => {
+      await apiRequest(`/api/user/preferred-artists/${artistId}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/preferred-artists"] });
+      toast.success("Artist unfollowed successfully");
+    },
+    onError: () => {
+      toast.error("Failed to unfollow artist");
+    },
   });
 
   // For search, filter the preferred artists locally
@@ -61,6 +78,11 @@ export default function Artists() {
 
   const handleBackToArtists = () => {
     setSelectedArtist(null);
+  };
+
+  // Handle unfollowing an artist
+  const handleUnfollowArtist = (artist: Artist) => {
+    removePreferredArtistMutation.mutate(artist.id);
   };
 
   const handlePlaySong = (song: LegacyTrack) => {
@@ -184,6 +206,7 @@ export default function Artists() {
                   onViewArtist={handleViewArtist}
                   searchQuery={searchQuery}
                   isFollowingPage={true}
+                  onUnfollow={handleUnfollowArtist}
                 />
               </>
             )}

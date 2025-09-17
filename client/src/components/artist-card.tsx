@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Music, Users, Play } from "lucide-react";
+import { Music, Users, Play, Heart } from "lucide-react";
 import type { Artist } from "@shared/schema";
 
 interface ArtistCardProps {
   artist: Artist;
   onViewArtist: (artist: Artist) => void;
+  onUnfollow?: (artist: Artist) => void;
+  showUnfollowButton?: boolean;
 }
 
-export default function ArtistCard({ artist, onViewArtist }: ArtistCardProps) {
+export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfollowButton = false }: ArtistCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -58,14 +60,29 @@ export default function ArtistCard({ artist, onViewArtist }: ArtistCardProps) {
                 <span>Artist</span>
               </div>
             </div>
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid={`button-follow-artist-${artist.id}`}
-            >
-              <Users className="w-4 h-4" />
-            </Button>
+            {showUnfollowButton && onUnfollow ? (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="p-1 hover:text-red-500 transition-colors text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnfollow(artist);
+                }}
+                data-testid={`button-unfollow-artist-${artist.id}`}
+              >
+                <Heart className="w-4 h-4 fill-current" />
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                data-testid={`button-follow-artist-${artist.id}`}
+              >
+                <Users className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

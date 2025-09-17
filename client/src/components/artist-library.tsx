@@ -10,6 +10,7 @@ interface ArtistLibraryProps {
   onViewArtist: (artist: Artist) => void;
   searchQuery: string;
   isFollowingPage?: boolean;
+  onUnfollow?: (artist: Artist) => void;
 }
 
 export default function ArtistLibrary({ 
@@ -17,7 +18,8 @@ export default function ArtistLibrary({
   isLoading, 
   onViewArtist,
   searchQuery,
-  isFollowingPage = false
+  isFollowingPage = false,
+  onUnfollow
 }: ArtistLibraryProps) {
 
   if (isLoading) {
@@ -66,6 +68,8 @@ export default function ArtistLibrary({
               key={artist.id}
               artist={artist}
               onViewArtist={() => onViewArtist(artist)}
+              onUnfollow={onUnfollow}
+              showUnfollowButton={isFollowingPage}
             />
           ))}
         </div>
