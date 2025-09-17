@@ -4,10 +4,12 @@ import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Play, Heart } from "lucide-react";
+import { Users, Play, Heart, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
 import { PhoneLoginModal } from "@/components/PhoneLoginModal";
+import MusicLibrary from "@/components/music-library";
+import type { Track, LegacyTrack } from "@shared/schema";
 
 interface Artist {
   id: string;
@@ -20,6 +22,7 @@ interface Artist {
 export default function TopArtists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
   const { currentSong, playTrack } = useMusicPlayer();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -32,6 +35,12 @@ export default function TopArtists() {
   const { data: preferredArtists = [] } = useQuery<Artist[]>({
     queryKey: ["/api/user/preferred-artists"],
     enabled: !!user,
+  });
+
+  // Query for artist's songs when an artist is selected
+  const { data: artistSongs = [], isLoading: isLoadingSongs } = useQuery<Track[]>({
+    queryKey: ["/api/songs/artist", selectedArtist?.id],
+    enabled: !!selectedArtist,
   });
 
   // Mutation to add artist to preferences
@@ -73,6 +82,15 @@ export default function TopArtists() {
     return preferredArtists.some(preferred => preferred.id === artistId);
   };
 
+  // Handle artist card click to view songs  
+  const handleArtistClick = (artist: Artist) => {
+    setSelectedArtist(artist);
+  };
+  
+  const handleBackToArtists = () => {
+    setSelectedArtist(null);
+  };
+
   // Handle heart button click
   const handleHeartClick = (artist: Artist) => {
     if (!user) {
@@ -88,9 +106,32 @@ export default function TopArtists() {
     }
   };
 
+  // Handle playing a song
+  const handlePlaySong = (song: LegacyTrack) => {
+    playTrack(song);
+  };
+
+  // Convert Track to LegacyTrack format for compatibility
+  const convertToLegacyTrack = (song: Track): LegacyTrack => ({
+    id: song.id,
+    title: song.title,
+    artist: selectedArtist?.name || "Unknown Artist",
+    category: "Music", 
+    duration: song.duration || 0,
+    url: song.filePath ? encodeURI(song.filePath) : "",
+    artwork: song.coverArt || null,
+    isFavorite: false, 
+    uploadType: "file",
+    createdAt: song.createdAt || undefined,
+  });
+
   const ArtistCard = ({ artist }: { artist: Artist }) => {
     return (
-      <div className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow">
+      <div 
+        className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+        onClick={() => handleArtistClick(artist)}
+        data-testid={`card-artist-${artist.id}`}
+      >
       <div className="relative group">
         <div className="w-full h-32 md:h-48 bg-muted flex items-center justify-center overflow-hidden">
           {artist.profileImage ? (
@@ -106,6 +147,10 @@ export default function TopArtists() {
         <Button
           size="sm"
           className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary hover:bg-primary/90"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleArtistClick(artist);
+          }}
           data-testid={`button-play-artist-${artist.id}`}
         >
           <Play className="w-4 h-4" />
@@ -133,7 +178,10 @@ export default function TopArtists() {
             className={`p-1 hover:text-red-500 transition-colors ${
               user && isArtistPreferred(artist.id) ? 'text-red-500' : 'text-muted-foreground'
             }`}
-            onClick={() => handleHeartClick(artist)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHeartClick(artist);
+            }}
             disabled={addPreferredArtistMutation.isPending || removePreferredArtistMutation.isPending}
             data-testid={`button-heart-artist-${artist.id}`}
           >
@@ -174,7 +222,55 @@ export default function TopArtists() {
             </div>
           </div>
 
-          {isLoading ? (
+          {selectedArtist ? (
+            // Show selected artist's songs
+            <>
+              <div className="mb-4 md:mb-6">
+                <Button 
+                  variant="ghost" 
+                  onClick={handleBackToArtists}
+                  className="mb-4 p-2 hover:bg-accent"
+                  data-testid="button-back-to-top-artists"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Top Artists
+                </Button>
+                <div className="flex items-center gap-4 mb-4">
+                  {selectedArtist.profileImage ? (
+                    <img 
+                      src={selectedArtist.profileImage} 
+                      alt={selectedArtist.name}
+                      className="w-20 h-20 rounded-full object-cover" 
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                      <Users className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 font-sans flex items-center">
+                      {selectedArtist.name}
+                      {selectedArtist.isVerified && (
+                        <span className="ml-2 text-blue-500">✓</span>
+                      )}
+                    </h2>
+                    <p className="text-sm md:text-base text-muted-foreground font-serif">
+                      {artistSongs.length} songs
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <MusicLibrary
+                songs={artistSongs}
+                isLoading={isLoadingSongs}
+                selectedCategory="All Categories"
+                onCategoryChange={() => {}}
+                onPlaySong={(song) => handlePlaySong(convertToLegacyTrack(song))}
+                searchQuery=""
+              />
+            </>
+          ) : isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
