@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Menu, Bell, User, X } from "lucide-react";
+import { Search, Menu, Bell, User, X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 interface MobileHeaderProps {
   onSearch?: (query: string) => void;
@@ -19,6 +20,21 @@ export default function MobileHeader({
 }: MobileHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [location, navigate] = useLocation();
+
+  // Determine if we should show back button (not on home page)
+  const shouldShowBackButton = location !== "/";
+
+  // Handle back navigation
+  const handleBackNavigation = () => {
+    // Try to go back in browser history first
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback to home page if no history
+      navigate("/");
+    }
+  };
 
   const handleSearchToggle = () => {
     setIsSearchExpanded(!isSearchExpanded);
@@ -45,16 +61,28 @@ export default function MobileHeader({
         {!isSearchExpanded ? (
           <>
             <div className="flex items-center space-x-3">
-              {onMenuToggle && (
+              {shouldShowBackButton ? (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="p-2 -ml-2" 
-                  onClick={onMenuToggle}
-                  data-testid="button-menu"
+                  onClick={handleBackNavigation}
+                  data-testid="button-back"
                 >
-                  <Menu className="w-5 h-5" />
+                  <ArrowLeft className="w-5 h-5" />
                 </Button>
+              ) : (
+                onMenuToggle && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-2 -ml-2" 
+                    onClick={onMenuToggle}
+                    data-testid="button-menu"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                )
               )}
               <h1 className="text-lg font-bold text-foreground font-sans">
                 Harmony
@@ -85,15 +113,38 @@ export default function MobileHeader({
           </>
         ) : (
           <div className="flex items-center w-full space-x-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2 -ml-2" 
-              onClick={handleSearchToggle}
-              data-testid="button-close-search"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            {shouldShowBackButton ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2 -ml-2" 
+                  onClick={handleBackNavigation}
+                  data-testid="button-back-search"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-2" 
+                  onClick={handleSearchToggle}
+                  data-testid="button-close-search"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 -ml-2" 
+                onClick={handleSearchToggle}
+                data-testid="button-close-search"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            )}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
