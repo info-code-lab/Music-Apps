@@ -24,8 +24,12 @@ export default function TopArtists() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Only fetch user's preferred artists (following list)
-  const { data: preferredArtists = [], isLoading } = useQuery<Artist[]>({
+  const { data: artists = [], isLoading } = useQuery<Artist[]>({
+    queryKey: ["/api/artists"],
+  });
+
+  // Fetch user's preferred artists (only if authenticated)
+  const { data: preferredArtists = [] } = useQuery<Artist[]>({
     queryKey: ["/api/user/preferred-artists"],
     enabled: !!user,
   });
@@ -59,10 +63,10 @@ export default function TopArtists() {
   });
 
   const filteredArtists = searchQuery 
-    ? preferredArtists.filter((artist: Artist) => 
+    ? artists.filter(artist => 
         artist.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : preferredArtists;
+    : artists;
 
   // Check if artist is in user's preferred list
   const isArtistPreferred = (artistId: string) => {
@@ -162,33 +166,15 @@ export default function TopArtists() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground font-sans">
-                Following
+                Top Artists
               </h1>
               <p className="text-muted-foreground font-serif">
-                Artists you're following
+                Most popular artists you should know
               </p>
             </div>
           </div>
 
-          {!user ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Users className="w-12 h-12 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Sign in to see your following
-              </h3>
-              <p className="text-muted-foreground text-center max-w-md mb-4">
-                Sign in to view and manage the artists you're following.
-              </p>
-              <Button 
-                onClick={() => setShowLoginModal(true)}
-                data-testid="button-login"
-              >
-                Sign In
-              </Button>
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
@@ -216,10 +202,10 @@ export default function TopArtists() {
                 <Users className="w-12 h-12 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                No artists followed yet
+                No artists available
               </h3>
               <p className="text-muted-foreground text-center max-w-md">
-                Start following your favorite artists to see them here. Use the heart button to follow artists you like.
+                Popular artists will appear here when music is added to the library.
               </p>
             </div>
           )}
