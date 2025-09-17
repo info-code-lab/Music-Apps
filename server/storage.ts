@@ -48,7 +48,9 @@ export interface IStorage {
 
   // Artist operations
   getAllArtists(): Promise<Artist[]>;
+  getAllArtistsWithDetails(): Promise<(Artist & { trackCount: number; followers: number })[]>;
   getArtist(id: string): Promise<Artist | undefined>;
+  getArtistWithDetails(id: string): Promise<(Artist & { trackCount: number; followers: number }) | undefined>;
   createArtist(artist: InsertArtist): Promise<Artist>;
   updateArtist(id: string, updates: Partial<Artist>): Promise<Artist | undefined>;
   deleteArtist(id: string): Promise<boolean>;
@@ -454,9 +456,49 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(artists).orderBy(artists.name);
   }
 
+  async getAllArtistsWithDetails(): Promise<(Artist & { trackCount: number; followers: number })[]> {
+    const result = await db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        bio: artists.bio,
+        profilePic: artists.profilePic,
+        createdAt: artists.createdAt,
+        trackCount: sql<number>`COUNT(DISTINCT ${songArtists.songId})`.as('trackCount'),
+        followers: sql<number>`COUNT(DISTINCT ${userPreferredArtists.userId})`.as('followers')
+      })
+      .from(artists)
+      .leftJoin(songArtists, eq(artists.id, songArtists.artistId))
+      .leftJoin(userPreferredArtists, eq(artists.id, userPreferredArtists.artistId))
+      .groupBy(artists.id, artists.name, artists.bio, artists.profilePic, artists.createdAt)
+      .orderBy(artists.name);
+    
+    return result;
+  }
+
   async getArtist(id: string): Promise<Artist | undefined> {
     const [artist] = await db.select().from(artists).where(eq(artists.id, id));
     return artist || undefined;
+  }
+
+  async getArtistWithDetails(id: string): Promise<(Artist & { trackCount: number; followers: number }) | undefined> {
+    const [result] = await db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        bio: artists.bio,
+        profilePic: artists.profilePic,
+        createdAt: artists.createdAt,
+        trackCount: sql<number>`COUNT(DISTINCT ${songArtists.songId})`.as('trackCount'),
+        followers: sql<number>`COUNT(DISTINCT ${userPreferredArtists.userId})`.as('followers')
+      })
+      .from(artists)
+      .leftJoin(songArtists, eq(artists.id, songArtists.artistId))
+      .leftJoin(userPreferredArtists, eq(artists.id, userPreferredArtists.artistId))
+      .where(eq(artists.id, id))
+      .groupBy(artists.id, artists.name, artists.bio, artists.profilePic, artists.createdAt);
+    
+    return result || undefined;
   }
 
   async createArtist(insertArtist: InsertArtist): Promise<Artist> {
@@ -601,25 +643,6 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getAllArtistsWithDetails(): Promise<any[]> {
-    const result = await db
-      .select({
-        artist: artists,
-        trackCount: sql<number>`COUNT(DISTINCT ${songs.id})`,
-        followers: sql<number>`0` // TODO: implement followers count
-      })
-      .from(artists)
-      .leftJoin(songArtists, eq(artists.id, songArtists.artistId))
-      .leftJoin(songs, eq(songArtists.songId, songs.id))
-      .groupBy(artists.id)
-      .orderBy(desc(artists.createdAt));
-    
-    return result.map(row => ({
-      ...row.artist,
-      trackCount: Number(row.trackCount) || 0,
-      followers: Number(row.followers) || 0
-    }));
-  }
 
   async getSong(id: string): Promise<Song | undefined> {
     const [song] = await db.select().from(songs).where(eq(songs.id, id));
