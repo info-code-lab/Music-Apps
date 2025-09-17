@@ -176,7 +176,7 @@ export default function ArtistsManagement() {
 
   const handleViewTracks = async (artist: AdminArtist) => {
     try {
-      const response = await apiRequest(`/api/songs?artist=${encodeURIComponent(artist.name)}`, "GET");
+      const response = await apiRequest(`/api/songs/artist/${artist.id}`, "GET");
       const tracks = await response.json();
       setArtistTracks(tracks);
       setSelectedArtist(artist);
