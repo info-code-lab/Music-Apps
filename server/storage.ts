@@ -606,11 +606,12 @@ export class DatabaseStorage implements IStorage {
       .select({
         artist: artists,
         trackCount: sql<number>`COUNT(DISTINCT ${songs.id})`,
-        followers: sql<number>`0` // TODO: implement followers count
+        followers: sql<number>`COUNT(DISTINCT ${userPreferredArtists.userId})`
       })
       .from(artists)
       .leftJoin(songArtists, eq(artists.id, songArtists.artistId))
       .leftJoin(songs, eq(songArtists.songId, songs.id))
+      .leftJoin(userPreferredArtists, eq(artists.id, userPreferredArtists.artistId))
       .groupBy(artists.id)
       .orderBy(desc(artists.createdAt));
     
