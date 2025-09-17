@@ -6,6 +6,7 @@ import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
 import type { Song, LegacyTrack } from "@shared/schema";
+import PageBack from "@/components/page-back";
 
 export default function TopCharts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,6 +56,7 @@ export default function TopCharts() {
 
   return (
     <div className="h-full">
+      <PageBack title="Top Charts" />
       <main className="h-full">
         <div className="p-4 md:p-8">
           <div className="flex items-center space-x-3 mb-6">

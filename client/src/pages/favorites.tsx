@@ -7,6 +7,7 @@ import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, Music } from "lucide-react";
 import type { Song, LegacyTrack } from "@shared/schema";
+import PageBack from "@/components/page-back";
 
 export default function Favorites() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +94,7 @@ export default function Favorites() {
 
   return (
     <div className="h-full">
+      <PageBack title="Favorites" />
       {/* Login Modal for Manual Trigger */}
       <PhoneLoginModal
         isOpen={showLoginModal}

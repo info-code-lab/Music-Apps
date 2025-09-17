@@ -6,6 +6,7 @@ import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 import type { Song, LegacyTrack } from "@shared/schema";
+import PageBack from "@/components/page-back";
 
 export default function NewReleases() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +60,7 @@ export default function NewReleases() {
 
   return (
     <div className="h-full">
+      <PageBack title="New Releases" />
       <main className="h-full">
         <div className="p-4 md:p-8">
           <div className="flex items-center space-x-3 mb-6">

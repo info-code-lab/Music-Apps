@@ -9,6 +9,7 @@ import type { Artist, Track, LegacyTrack } from "@shared/schema";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
 import { PhoneLoginModal } from "@/components/PhoneLoginModal";
+import PageBack from "@/components/page-back";
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -110,6 +111,7 @@ export default function Artists() {
 
   return (
     <div className="min-h-screen">
+      <PageBack title="Artists" />
       {/* Login Modal for Manual Trigger */}
       <PhoneLoginModal
         isOpen={showLoginModal}

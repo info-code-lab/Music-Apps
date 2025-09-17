@@ -5,6 +5,7 @@ import MobileHeader from "./mobile-header";
 import MobileBottomNav from "./mobile-bottom-nav";
 import MobileDrawer from "./mobile-drawer";
 import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useLocation } from "wouter";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -25,6 +26,10 @@ export default function MainLayout({
 }: MainLayoutProps) {
   const { currentSong } = useMusicPlayer();
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [location] = useLocation();
+  
+  // Only show mobile header on home page
+  const isHomePage = location === "/";
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,13 +47,15 @@ export default function MainLayout({
         />
       </div>
 
-      {/* Mobile Header - Only on mobile/tablet (below lg) - Direct child for sticky positioning */}
-      <MobileHeader
-        onSearch={onSearch}
-        searchQuery={searchQuery}
-        showSearch={showSearch}
-        onMenuToggle={() => setIsMobileDrawerOpen(true)}
-      />
+      {/* Mobile Header - Only on home page and mobile/tablet (below lg) */}
+      {isHomePage && (
+        <MobileHeader
+          onSearch={onSearch}
+          searchQuery={searchQuery}
+          showSearch={showSearch}
+          onMenuToggle={() => setIsMobileDrawerOpen(true)}
+        />
+      )}
 
       {/* Mobile Drawer - Only on mobile/tablet (below lg) */}
       <MobileDrawer 
