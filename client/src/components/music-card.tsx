@@ -232,7 +232,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 size="sm"
                 onClick={handleFavoriteClick}
                 disabled={favoriteMutation.isPending}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                className="text-muted-foreground hover:text-foreground hover:bg-accent hover:rounded-full transition-colors p-1"
                 data-testid={`button-favorite-mobile-${song.id}`}
               >
                 <Heart className={`w-3 h-3 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
@@ -318,7 +318,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
                 size="sm"
                 onClick={handleFavoriteClick}
                 disabled={favoriteMutation.isPending}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground hover:bg-accent hover:rounded-full transition-colors"
                 data-testid={`button-favorite-${song.id}`}
               >
                 <Heart className={`w-4 h-4 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
