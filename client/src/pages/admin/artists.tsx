@@ -57,21 +57,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
+import type { Artist } from "@shared/schema";
+import { insertArtistSchema } from "@shared/schema";
 
-// Mock Artist type since we don't have it in shared schema yet
-interface Artist {
-  id: string;
-  name: string;
-  bio?: string;
-  profilePic?: string;
-  createdAt?: string;
+// Extended Artist type with additional admin properties
+interface AdminArtist extends Artist {
   trackCount?: number;
   followers?: number;
 }
 
-const artistFormSchema = z.object({
-  name: z.string().min(1, "Artist name is required"),
-  bio: z.string().optional(),
+// Extend the insert schema for form validation
+const artistFormSchema = insertArtistSchema.extend({
   profilePic: z.string().url().optional().or(z.literal("")),
 });
 
@@ -83,13 +79,13 @@ export default function ArtistsManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isTracksDialogOpen, setIsTracksDialogOpen] = useState(false);
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [selectedArtist, setSelectedArtist] = useState<AdminArtist | null>(null);
   const [artistTracks, setArtistTracks] = useState([]);
   const queryClient = useQueryClient();
 
 
-  const { data: artists = [], isLoading } = useQuery<Artist[]>({
-    queryKey: ["/api/admin/artists"],
+  const { data: artists = [], isLoading } = useQuery<AdminArtist[]>({
+    queryKey: ["/api/artists"],
   });
 
   const form = useForm<ArtistFormData>({
@@ -107,7 +103,6 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist created successfully");
       setIsCreateDialogOpen(false);
       form.reset();
@@ -123,7 +118,6 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist updated successfully");
       setIsEditDialogOpen(false);
       setSelectedArtist(null);
@@ -140,7 +134,6 @@ export default function ArtistsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artists"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/artists"] });
       toast.success("Artist deleted successfully");
     },
     onError: () => {
@@ -163,12 +156,12 @@ export default function ArtistsManagement() {
     }
   };
 
-  const handleViewProfile = (artist: Artist) => {
+  const handleViewProfile = (artist: AdminArtist) => {
     setSelectedArtist(artist);
     setIsProfileDialogOpen(true);
   };
 
-  const handleEditArtist = (artist: Artist) => {
+  const handleEditArtist = (artist: AdminArtist) => {
     setSelectedArtist(artist);
     form.reset({
       name: artist.name,
@@ -178,7 +171,7 @@ export default function ArtistsManagement() {
     setIsEditDialogOpen(true);
   };
 
-  const handleViewTracks = async (artist: Artist) => {
+  const handleViewTracks = async (artist: AdminArtist) => {
     try {
       const response = await apiRequest(`/api/songs?artist=${encodeURIComponent(artist.name)}`, "GET");
       const tracks = await response.json();
@@ -200,7 +193,7 @@ export default function ArtistsManagement() {
     { title: "Total Artists", value: artists.length, icon: UserIcon, color: "text-blue-600" },
     { title: "Total Tracks", value: artists.reduce((acc, a) => acc + (a.trackCount || 0), 0), icon: Music, color: "text-purple-600" },
     { title: "Total Followers", value: artists.reduce((acc, a) => acc + (a.followers || 0), 0).toLocaleString(), icon: Users, color: "text-green-600" },
-    { title: "Top Artist", value: artists.sort((a, b) => (b.followers || 0) - (a.followers || 0))[0]?.name || "-", icon: Star, color: "text-yellow-600" }
+    { title: "Top Artist", value: [...artists].sort((a, b) => (b.followers || 0) - (a.followers || 0))[0]?.name || "-", icon: Star, color: "text-yellow-600" }
   ];
 
   return (
@@ -250,7 +243,7 @@ export default function ArtistsManagement() {
                       <FormItem>
                         <FormLabel>Biography</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter artist biography" {...field} data-testid="artist-bio-input" />
+                          <Textarea placeholder="Enter artist biography" {...field} value={field.value || ""} data-testid="artist-bio-input" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -560,7 +553,7 @@ export default function ArtistsManagement() {
                   <FormItem>
                     <FormLabel>Biography</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter artist biography" {...field} />
+                      <Textarea placeholder="Enter artist biography" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
