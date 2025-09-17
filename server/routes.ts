@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/artists", async (req, res) => {
     try {
-      const artists = await storage.getAllArtistsWithDetails();
+      const artists = await storage.getAllArtists();
       res.json(artists);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch artists" });
@@ -351,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/artists/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const artist = await storage.getArtistWithDetails(id);
+      const artist = await storage.getArtist(id);
       
       if (!artist) {
         res.status(404).json({ message: "Artist not found" });

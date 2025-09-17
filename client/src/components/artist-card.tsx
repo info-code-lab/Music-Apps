@@ -4,16 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Music, Users, Play, Heart } from "lucide-react";
 import type { Artist } from "@shared/schema";
 
-// Enhanced Artist type with additional details
-type ArtistWithDetails = Artist & {
-  trackCount?: number;
-  followers?: number;
-};
-
 interface ArtistCardProps {
-  artist: ArtistWithDetails;
-  onViewArtist: (artist: ArtistWithDetails) => void;
-  onUnfollow?: (artist: ArtistWithDetails) => void;
+  artist: Artist;
+  onViewArtist: (artist: Artist) => void;
+  onUnfollow?: (artist: Artist) => void;
   showUnfollowButton?: boolean;
 }
 
@@ -63,11 +57,7 @@ export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfol
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Music className="w-4 h-4" />
-                <span>{(artist.trackCount ?? 0).toLocaleString()} tracks</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Users className="w-3 h-3" />
-                <span data-testid={`text-followers-${artist.id}`}>{(artist.followers ?? 0).toLocaleString()}</span>
+                <span>Artist</span>
               </div>
             </div>
             {showUnfollowButton && onUnfollow ? (
