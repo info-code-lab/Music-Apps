@@ -89,7 +89,8 @@ export default function TopArtists() {
   };
 
   const ArtistCard = ({ artist }: { artist: Artist }) => {
-    <div className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow">
+    return (
+      <div className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative group">
         <div className="w-full h-32 md:h-48 bg-muted flex items-center justify-center overflow-hidden">
           {artist.profileImage ? (
@@ -142,8 +143,9 @@ export default function TopArtists() {
           </Button>
         </div>
       </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="h-full">
