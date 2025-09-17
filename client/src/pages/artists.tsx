@@ -33,15 +33,18 @@ export default function Artists() {
 
   // Don't automatically show login modal - let user choose to login
 
+  // Fetch user's preferred/followed artists only
   const { data: artists = [], isLoading } = useQuery<Artist[]>({
-    queryKey: ["/api/artists"],
-    enabled: !searchQuery,
+    queryKey: ["/api/user/preferred-artists"],
+    enabled: !!user,
   });
 
-  const { data: searchResults = [] } = useQuery<Artist[]>({
-    queryKey: ["/api/artists/search", { q: searchQuery }],
-    enabled: !!searchQuery,
-  });
+  // For search, filter the preferred artists locally
+  const searchResults = searchQuery 
+    ? artists.filter(artist => 
+        artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   // Query for artist's songs when an artist is selected
   const { data: artistSongs = [], isLoading: isLoadingSongs } = useQuery<Track[]>({
@@ -111,7 +114,7 @@ export default function Artists() {
 
   return (
     <div className="min-h-screen">
-      <PageBack title="Artists" />
+      <PageBack title="Following" />
       {/* Login Modal for Manual Trigger */}
       <PhoneLoginModal
         isOpen={showLoginModal}
@@ -134,7 +137,7 @@ export default function Artists() {
                     data-testid="button-back-to-artists"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Artists
+                    Back to Following
                   </Button>
                   <div className="flex items-center gap-4 mb-4">
                     <img 
@@ -167,10 +170,10 @@ export default function Artists() {
               <>
                 <div className="mb-4 md:mb-6">
                   <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
-                    Artists
+                    Following
                   </h2>
                   <p className="text-sm md:text-base text-muted-foreground font-serif">
-                    Discover amazing music artists
+                    Artists you're following
                   </p>
                 </div>
                 
@@ -180,6 +183,7 @@ export default function Artists() {
                   isLoading={isLoading}
                   onViewArtist={handleViewArtist}
                   searchQuery={searchQuery}
+                  isFollowingPage={true}
                 />
               </>
             )}

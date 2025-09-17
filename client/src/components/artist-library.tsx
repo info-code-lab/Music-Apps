@@ -9,13 +9,15 @@ interface ArtistLibraryProps {
   isLoading: boolean;
   onViewArtist: (artist: Artist) => void;
   searchQuery: string;
+  isFollowingPage?: boolean;
 }
 
 export default function ArtistLibrary({ 
   artists, 
   isLoading, 
   onViewArtist,
-  searchQuery 
+  searchQuery,
+  isFollowingPage = false
 }: ArtistLibraryProps) {
 
   if (isLoading) {
@@ -46,12 +48,14 @@ export default function ArtistLibrary({
             <Grid3X3 className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2 font-sans">
-            {searchQuery ? "No artists found" : "No artists yet"}
+            {searchQuery ? "No artists found" : isFollowingPage ? "No followed artists" : "No artists yet"}
           </h3>
           <p className="text-muted-foreground font-serif">
             {searchQuery 
               ? "Try adjusting your search query"
-              : "Artists will appear here as music is uploaded"
+              : isFollowingPage 
+                ? "Follow artists from the Top Artists page to see them here"
+                : "Artists will appear here as music is uploaded"
             }
           </p>
         </div>
