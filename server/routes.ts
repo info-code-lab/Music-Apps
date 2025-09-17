@@ -72,6 +72,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ message: "Upload cancelled successfully" });
   });
 
+  // Network speed test endpoint
+  app.get("/api/speed-test", async (req, res) => {
+    try {
+      const testResults = {
+        downloadSpeed: 0,
+        uploadSpeed: 0,
+        latency: 0,
+        timestamp: new Date().toISOString()
+      };
+
+      // Test download speed
+      const downloadStart = Date.now();
+      try {
+        const response = await fetch('https://httpbin.org/bytes/1048576'); // 1MB test file
+        if (response.ok) {
+          await response.arrayBuffer(); // Download the data
+          const downloadTime = (Date.now() - downloadStart) / 1000; // seconds
+          testResults.downloadSpeed = Math.round((1 / downloadTime) * 8); // Mbps (1MB = 8Mb)
+        }
+      } catch (error) {
+        console.error('Download speed test failed:', error);
+      }
+
+      // Test latency
+      const latencyStart = Date.now();
+      try {
+        await fetch('https://httpbin.org/status/200');
+        testResults.latency = Date.now() - latencyStart;
+      } catch (error) {
+        console.error('Latency test failed:', error);
+      }
+
+      // Test upload speed (simulated with POST request)
+      const uploadStart = Date.now();
+      try {
+        const testData = 'x'.repeat(524288); // 512KB of data
+        const response = await fetch('https://httpbin.org/post', {
+          method: 'POST',
+          body: testData,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+        if (response.ok) {
+          const uploadTime = (Date.now() - uploadStart) / 1000;
+          testResults.uploadSpeed = Math.round((0.5 / uploadTime) * 8); // Mbps (0.5MB = 4Mb)
+        }
+      } catch (error) {
+        console.error('Upload speed test failed:', error);
+      }
+
+      res.json(testResults);
+    } catch (error) {
+      console.error('Speed test error:', error);
+      res.status(500).json({ message: "Speed test failed" });
+    }
+  });
+
   // Get upload statistics endpoint
   app.get("/api/upload-stats", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
     try {

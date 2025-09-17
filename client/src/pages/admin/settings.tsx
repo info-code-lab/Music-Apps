@@ -33,7 +33,11 @@ import {
   Server,
   Users,
   Music,
-  Globe
+  Globe,
+  Zap,
+  Download,
+  Upload,
+  Timer
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,8 +74,17 @@ type GeneralSettingsData = z.infer<typeof generalSettingsSchema>;
 type SecuritySettingsData = z.infer<typeof securitySettingsSchema>;
 type NotificationSettingsData = z.infer<typeof notificationSettingsSchema>;
 
+interface SpeedTestResult {
+  downloadSpeed: number;
+  uploadSpeed: number;
+  latency: number;
+  timestamp: string;
+}
+
 export default function AdminSettings() {
   const [isLoading, setIsLoading] = useState(false);
+  const [speedTestResult, setSpeedTestResult] = useState<SpeedTestResult | null>(null);
+  const [isTestingSpeed, setIsTestingSpeed] = useState(false);
 
   const generalForm = useForm<GeneralSettingsData>({
     resolver: zodResolver(generalSettingsSchema),
@@ -152,6 +165,21 @@ export default function AdminSettings() {
     },
   });
 
+  const runSpeedTest = async () => {
+    setIsTestingSpeed(true);
+    try {
+      const response = await apiRequest("/api/speed-test", "GET");
+      const result = await response.json();
+      setSpeedTestResult(result);
+      toast.success("Speed test completed successfully");
+    } catch (error) {
+      toast.error("Speed test failed");
+      console.error("Speed test error:", error);
+    } finally {
+      setIsTestingSpeed(false);
+    }
+  };
+
   const systemStatus = [
     { label: "Server Status", value: "Online", icon: Server, color: "text-green-600", status: "healthy" },
     { label: "Database", value: "Connected", icon: Database, color: "text-green-600", status: "healthy" },
@@ -221,7 +249,7 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="general" className="gap-2">
                     <Globe className="h-4 w-4" />
                     General
@@ -233,6 +261,10 @@ export default function AdminSettings() {
                   <TabsTrigger value="notifications" className="gap-2">
                     <Bell className="h-4 w-4" />
                     Notifications
+                  </TabsTrigger>
+                  <TabsTrigger value="performance" className="gap-2">
+                    <Zap className="h-4 w-4" />
+                    Performance
                   </TabsTrigger>
                 </TabsList>
 
@@ -567,6 +599,90 @@ export default function AdminSettings() {
                       </Button>
                     </form>
                   </Form>
+                </TabsContent>
+
+                <TabsContent value="performance" className="space-y-6">
+                  {/* Speed Test Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-lg font-semibold">Network Speed Test</h4>
+                        <p className="text-sm text-muted-foreground">Test your server's network performance</p>
+                      </div>
+                      <Button 
+                        onClick={runSpeedTest} 
+                        disabled={isTestingSpeed}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                        data-testid="run-speed-test"
+                      >
+                        {isTestingSpeed ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="h-4 w-4 mr-2" />
+                            Run Speed Test
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {speedTestResult && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Download Speed</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{speedTestResult.downloadSpeed} Mbps</p>
+                              </div>
+                              <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
+                                <Download className="h-5 w-5 text-green-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Upload Speed</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{speedTestResult.uploadSpeed} Mbps</p>
+                              </div>
+                              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                                <Upload className="h-5 w-5 text-blue-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Latency</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{speedTestResult.latency} ms</p>
+                              </div>
+                              <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
+                                <Timer className="h-5 w-5 text-yellow-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+
+                    {speedTestResult && (
+                      <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <p className="text-sm text-muted-foreground">
+                          Last tested: {new Date(speedTestResult.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
