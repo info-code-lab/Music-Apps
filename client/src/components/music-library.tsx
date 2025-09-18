@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import type { Track, LegacyTrack } from "@shared/schema";
-import { convertToLegacyTrack } from "@/lib/song-utils";
 
 interface MusicLibraryProps {
   songs: Track[];
@@ -148,18 +147,13 @@ export default function MusicLibrary({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-          {songs.map((song) => {
-            const legacyTrack = convertToLegacyTrack(song, {
-              artwork: song.coverArt
-            });
-            return (
-              <MusicCard 
-                key={song.id} 
-                song={legacyTrack} 
-                onPlay={() => onPlaySong(song)}
-              />
-            );
-          })}
+          {songs.map((song) => (
+            <MusicCard 
+              key={song.id} 
+              song={song} 
+              onPlay={() => onPlaySong(song)}
+            />
+          ))}
         </div>
       )}
     </section>
