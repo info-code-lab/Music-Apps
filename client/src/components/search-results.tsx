@@ -37,8 +37,8 @@ export default function SearchResults({
   const convertToLegacyTrack = (song: Track): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from categories table
+    artist: (song as any).artist || "Unknown Artist", // Use artist from API response
+    category: (song as any).category || "Music", // Use category from API response
     duration: song.duration || 0,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || null,

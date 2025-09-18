@@ -32,8 +32,8 @@ export default function SectionedSearchResults({
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from genres table
+    artist: (song as any).artist || "Unknown Artist", // Use artist from API response
+    category: (song as any).category || "Music", // Use category from API response
     duration: song.duration || 0,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || null,
@@ -62,7 +62,7 @@ export default function SectionedSearchResults({
         type: 'song' as const,
         item: topSong,
         title: topSong.title,
-        subtitle: "Unknown Artist", // TODO: Get from artists table
+        subtitle: (topSong as any).artist || "Unknown Artist", // Use artist from API response
         artwork: topSong.coverArt
       };
     }

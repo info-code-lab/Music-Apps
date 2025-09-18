@@ -64,8 +64,8 @@ export default function History() {
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist", // Will be enhanced later with actual artist data
-    category: "Music",
+    artist: (song as any).artist || "Unknown Artist", // Use artist from API response
+    category: (song as any).category || "Music",
     duration: song.duration,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || undefined,
@@ -136,7 +136,7 @@ export default function History() {
             {entry.song?.title || 'Unknown Song'}
           </h3>
           <p className="text-sm text-muted-foreground truncate">
-            Unknown Artist
+            {(entry.song as any).artist || "Unknown Artist"}
           </p>
         </div>
 

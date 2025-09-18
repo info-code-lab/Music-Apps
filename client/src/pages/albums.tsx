@@ -67,8 +67,8 @@ export default function Albums() {
   const convertToLegacyTrack = (song: Track): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", 
+    artist: (song as any).artist || "Unknown Artist", // Use artist from API response
+    category: (song as any).category || "Music", 
     duration: song.duration || 0,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || selectedAlbum?.coverArt || null,

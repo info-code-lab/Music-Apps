@@ -32,8 +32,8 @@ export default function TopCharts() {
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from genres table
+    artist: (song as any).artist || "Unknown Artist", // Use artist from API response
+    category: (song as any).category || "Music", // Use category from API response
     duration: song.duration,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt,

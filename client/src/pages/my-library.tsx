@@ -49,8 +49,8 @@ export default function MyLibrary() {
   const convertToLegacyTrack = (song: Song): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: "Unknown Artist",
-    category: "Music",
+    artist: (song as any).artist || "Unknown Artist",
+    category: (song as any).category || "Music",
     duration: song.duration,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt,
