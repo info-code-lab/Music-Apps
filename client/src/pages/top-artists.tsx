@@ -16,7 +16,7 @@ interface Artist {
   id: string;
   name: string;
   bio?: string;
-  profileImage?: string;
+  profilePic?: string;
   isVerified?: boolean;
 }
 
@@ -127,9 +127,9 @@ export default function TopArtists() {
       >
       <div className="relative group">
         <div className="w-full h-32 md:h-48 bg-muted flex items-center justify-center overflow-hidden">
-          {artist.profileImage ? (
+          {artist.profilePic ? (
             <img 
-              src={artist.profileImage} 
+              src={artist.profilePic} 
               alt={artist.name}
               className="w-full h-full object-cover"
             />
@@ -229,9 +229,9 @@ export default function TopArtists() {
                   Back to Top Artists
                 </Button>
                 <div className="flex items-center gap-4 mb-4">
-                  {selectedArtist.profileImage ? (
+                  {selectedArtist.profilePic ? (
                     <img 
-                      src={selectedArtist.profileImage} 
+                      src={selectedArtist.profilePic} 
                       alt={selectedArtist.name}
                       className="w-20 h-20 rounded-full object-cover" 
                     />
