@@ -13,58 +13,61 @@ interface ArtistCardProps {
 
 export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfollowButton = false }: ArtistCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   return (
     <Card 
-      className="overflow-hidden floating-card gentle-float group cursor-pointer"
+      className="group relative overflow-hidden rounded-xl border-0 bg-card shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onViewArtist(artist)}
       data-testid={`card-artist-${artist.id}`}
     >
       <CardContent className="p-0">
-        <div className="relative">
-          <img 
-            src={artist.profilePic || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300'} 
-            alt={artist.name}
-            className="w-full h-48 object-cover floating-image" 
-          />
-          <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
+        {/* Image Section */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          {!imageError && artist.profilePic ? (
+            <img 
+              src={artist.profilePic} 
+              alt={artist.name}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+              onError={handleImageError}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent flex items-center justify-center">
+              <Music className="w-12 h-12 text-primary/40" />
+            </div>
+          )}
+          
+          {/* Overlay with Play Button */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewArtist(artist);
-              }}
-              className="w-12 h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
-              data-testid={`button-view-artist-${artist.id}`}
-            >
-              <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
-            </Button>
-          </div>
-        </div>
-        <div className="p-4 floating-content">
-          <h3 className="text-lg font-semibold text-foreground mb-1 font-sans" data-testid={`text-artist-name-${artist.id}`}>
-            {artist.name}
-          </h3>
-          {artist.bio && (
-            <p className="text-muted-foreground text-sm mb-3 font-serif line-clamp-2" data-testid={`text-artist-bio-${artist.id}`}>
-              {artist.bio}
-            </p>
-          )}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <Music className="w-4 h-4" />
-                <span>Artist</span>
-              </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewArtist(artist);
+                }}
+                className="w-14 h-14 bg-white/90 text-black rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
+                data-testid={`button-view-artist-${artist.id}`}
+              >
+                <Play className="w-6 h-6 ml-0.5" />
+              </Button>
             </div>
+          </div>
+
+          {/* Heart/Follow Button */}
+          <div className="absolute top-3 right-3">
             {showUnfollowButton && onUnfollow ? (
               <Button 
                 variant="ghost"
                 size="sm"
-                className="p-1 hover:text-red-500 transition-colors text-red-500"
+                className="w-8 h-8 bg-black/20 backdrop-blur-sm text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-all duration-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   onUnfollow(artist);
@@ -77,12 +80,39 @@ export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfol
               <Button 
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="w-8 h-8 bg-black/20 backdrop-blur-sm text-white hover:bg-white/20 rounded-full transition-all duration-200"
                 data-testid={`button-follow-artist-${artist.id}`}
               >
-                <Users className="w-4 h-4" />
+                <Heart className="w-4 h-4" />
               </Button>
             )}
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-4 space-y-2">
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-foreground tracking-tight leading-tight flex items-center gap-2" data-testid={`text-artist-name-${artist.id}`}>
+              {artist.name}
+              {/* Optional verified badge - can be enabled if needed */}
+              {/* <Verified className="w-4 h-4 text-blue-500 fill-current" /> */}
+            </h3>
+            {artist.bio && (
+              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 font-medium" data-testid={`text-artist-bio-${artist.id}`}>
+                {artist.bio}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Music className="w-3.5 h-3.5" />
+              <span>Artist</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              <span className="font-medium">Follow</span>
+            </div>
           </div>
         </div>
       </CardContent>
