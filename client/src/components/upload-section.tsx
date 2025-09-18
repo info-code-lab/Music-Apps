@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import UploadProgressModal from "@/components/upload-progress-modal";
+import SongConfirmationModal from "@/components/song-confirmation-modal";
 
 export default function UploadSection() {
   const [urlData, setUrlData] = useState({
@@ -28,6 +29,8 @@ export default function UploadSection() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [extractedMetadata, setExtractedMetadata] = useState<any>(null);
   
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
@@ -43,12 +46,7 @@ export default function UploadSection() {
         setShowProgress(true);
       }
       setUrlData({ url: "", title: "", artist: "", category: "" });
-      // Invalidate all song-related caches to show updates immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
-      queryClient.invalidateQueries({ predicate: (query) => 
-        query.queryKey[0] === "/api/songs/genre" || 
-        query.queryKey[0] === "/api/songs/search"
-      });
+      // Don't invalidate song caches yet - wait for confirmation
     },
     onError: () => {
       toast.error("URL upload failed");
@@ -313,11 +311,34 @@ export default function UploadSection() {
           // Invalidate upload stats to refresh processing count
           queryClient.invalidateQueries({ queryKey: ["/api/upload-stats"] });
         }}
+        onMetadataReady={(metadata) => {
+          // Show confirmation modal when metadata is extracted
+          setExtractedMetadata(metadata);
+          setShowConfirmation(true);
+          setShowProgress(false);
+        }}
+        sessionId={currentSessionId}
+      />
+
+      <SongConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => {
+          setShowConfirmation(false);
+          setExtractedMetadata(null);
+          setCurrentSessionId(null);
+        }}
+        onConfirm={() => {
+          // Success handling done in modal, just cleanup here
+          setCurrentSessionId(null);
+          setShowConfirmation(false);
+          setExtractedMetadata(null);
+        }}
+        metadata={extractedMetadata}
         sessionId={currentSessionId}
       />
 
       {/* Background Processing Indicator */}
-      {currentSessionId && !showProgress && (
+      {currentSessionId && !showProgress && !showConfirmation && (
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

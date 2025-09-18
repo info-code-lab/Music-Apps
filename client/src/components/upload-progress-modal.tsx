@@ -15,6 +15,7 @@ interface UploadProgressModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: () => void;
+  onMetadataReady?: (metadata: any) => void;
   sessionId: string | null;
 }
 
@@ -22,6 +23,7 @@ export default function UploadProgressModal({
   isOpen, 
   onClose, 
   onComplete,
+  onMetadataReady,
   sessionId 
 }: UploadProgressModalProps) {
   const [progress, setProgress] = useState(0);
@@ -52,15 +54,25 @@ export default function UploadProgressModal({
         }
 
         if (data.type === 'complete') {
-          setIsComplete(true);
-          // Notify parent that upload completed
-          onComplete?.();
-          // Only auto-close if modal is still open
-          if (isOpen) {
-            setTimeout(() => {
-              onClose();
-              resetState();
-            }, 2000);
+          // Check if this is metadata extraction completion
+          if (data.stage === 'awaiting_confirmation' && (data as any).metadata) {
+            // This is metadata ready for confirmation
+            onMetadataReady?.((data as any).metadata);
+            // Close progress modal to show confirmation modal
+            onClose();
+            resetState();
+          } else {
+            // This is final completion
+            setIsComplete(true);
+            // Notify parent that upload completed
+            onComplete?.();
+            // Only auto-close if modal is still open
+            if (isOpen) {
+              setTimeout(() => {
+                onClose();
+                resetState();
+              }, 2000);
+            }
           }
         }
 
