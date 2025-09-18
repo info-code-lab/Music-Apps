@@ -86,8 +86,31 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     console.log("Repeat mode:", isRepeat);
   }, [isRepeat]);
 
+  const resolveSongUrl = (url?: string): string | null => {
+    if (!url || url.trim() === '') {
+      return null;
+    }
+    
+    // If it's already an absolute URL (http/https) or blob URL, use as-is
+    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/uploads/')) {
+      return url;
+    }
+    
+    // Otherwise, prefix with /uploads/
+    return `/uploads/${url}`;
+  };
+
   const playTrack = async (track: LegacyTrack, isUserInitiated = false) => {
     console.log("playTrack called with:", track.title, "userInitiated:", isUserInitiated);
+    
+    // Resolve and validate the song URL first
+    const songUrl = resolveSongUrl(track.url);
+    if (!songUrl) {
+      console.error("Invalid or missing song URL for track:", track.title);
+      // Don't set currentSong or isPlaying for invalid tracks
+      return;
+    }
+    
     console.log("Setting currentSong to:", track);
     setCurrentSong(track);
     
@@ -103,7 +126,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       // For user-initiated playback, immediately try to play to satisfy browser autoplay policy
       console.log("User initiated - attempting immediate playback");
       const { audioService } = await import('@/lib/audio-service');
-      const songUrl = track.url.startsWith('/uploads/') ? track.url : `/uploads/${track.url}`;
       await audioService.setSrc(songUrl, track.id);
       const playSuccess = await audioService.play();
       if (playSuccess) {
