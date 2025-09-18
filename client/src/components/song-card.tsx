@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play, Heart, Star, MessageCircle, MoreHorizontal } from "lucide-react";
+import { Play, Heart, Star, MessageCircle, MoreHorizontal, Plus, Share, Info, Album, Mic2, ListMusic } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDuration } from "@/lib/audio-utils";
+import { useMusicPlayer } from "@/hooks/use-music-player";
+import { useAuth } from "@/hooks/use-auth";
+import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import toast from "react-hot-toast";
-import type { Song } from "@shared/schema";
+import type { Song, LegacyTrack } from "@shared/schema";
 
 interface SongCardProps {
   song: Song;
@@ -17,7 +21,10 @@ interface SongCardProps {
 
 export default function SongCard({ song, onPlay, showArtist = true, showAlbum = true }: SongCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { playTrack } = useMusicPlayer();
 
   const playMutation = useMutation({
     mutationFn: async () => {
@@ -37,6 +44,115 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
   const handlePlay = () => {
     onPlay();
     playMutation.mutate();
+  };
+
+  const handlePlayNow = () => {
+    // Convert Song to LegacyTrack format for playTrack
+    const legacyTrack = {
+      id: song.id,
+      title: song.title,
+      artist: "Unknown Artist", // TODO: Get from artists table
+      category: "Music",
+      duration: song.duration,
+      url: song.filePath ? encodeURI(song.filePath) : "",
+      artwork: song.coverArt,
+      isFavorite: false, // TODO: Get from favorites table
+      uploadType: "file" as const,
+      createdAt: song.createdAt || undefined,
+    };
+    playTrack(legacyTrack, true);
+    onPlay();
+    playMutation.mutate();
+  };
+
+  const handleAddToQueue = () => {
+    // TODO: Implement queue functionality
+    toast.success("Added to queue");
+  };
+
+  const handleAddToPlaylist = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    // TODO: Implement add to playlist functionality
+    toast.success("Add to playlist functionality coming soon");
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: song.title,
+      text: `Check out "${song.title}"`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success("Shared successfully");
+      } catch (error) {
+        // User cancelled sharing or error occurred
+        copyToClipboard();
+      }
+    } else {
+      copyToClipboard();
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(`${song.title} - ${window.location.href}`)
+      .then(() => toast.success("Link copied to clipboard"))
+      .catch(() => toast.error("Failed to copy link"));
+  };
+
+  const handleSongDetails = () => {
+    toast.success("Song details feature coming soon");
+  };
+
+  const handleMoreFromAlbum = () => {
+    toast.success("More from album feature coming soon");
+  };
+
+  const handleMoreFromArtist = () => {
+    toast.success("More from artist feature coming soon");
+  };
+
+  const [optimisticIsFavorite, setOptimisticIsFavorite] = useState(false);
+  
+  const favoriteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", `/api/songs/${song.id}/favorite`);
+      return response.json();
+    },
+    onMutate: () => {
+      // Optimistically update the UI immediately
+      setOptimisticIsFavorite(prev => !prev);
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      toast.success("Favorite updated");
+    },
+    onError: () => {
+      // Revert optimistic update on error
+      setOptimisticIsFavorite(prev => !prev);
+      toast.error("Couldn't update favorites");
+    },
+  });
+
+  const handleFavorite = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    favoriteMutation.mutate();
+  };
+  
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // After successful login, automatically perform the favorite action
+    favoriteMutation.mutate();
   };
 
   return (
@@ -62,7 +178,7 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
               <Button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePlay();
+                  handlePlayNow();
                 }}
                 size="sm"
                 className="w-8 h-8 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
@@ -113,10 +229,12 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
                 <Button 
                   variant="ghost"
                   size="sm"
+                  onClick={handleFavorite}
+                  disabled={favoriteMutation.isPending}
                   className="text-muted-foreground hover:text-red-500 transition-colors p-1.5"
                   data-testid={`button-favorite-song-${song.id}`}
                 >
-                  <Heart className="w-3.5 h-3.5" />
+                  <Heart className={`w-3.5 h-3.5 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
                 </Button>
                 <Button 
                   variant="ghost"
@@ -137,18 +255,75 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
               </div>
               
               {/* Right side: Menu */}
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
-                data-testid={`button-menu-song-${song.id}`}
-              >
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
+                    onClick={(e) => e.stopPropagation()}
+                    data-testid={`button-menu-song-${song.id}`}
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={handleFavorite} data-testid={`menu-save-library-song-${song.id}`}>
+                    <Heart className={`w-4 h-4 mr-2 ${optimisticIsFavorite ? 'fill-current text-red-500' : ''}`} />
+                    {optimisticIsFavorite ? 'Remove from Library' : 'Save to Library'}
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={handlePlayNow} data-testid={`menu-play-now-song-${song.id}`}>
+                    <Play className="w-4 h-4 mr-2" />
+                    Play Song Now
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={handleAddToQueue} data-testid={`menu-add-queue-song-${song.id}`}>
+                    <ListMusic className="w-4 h-4 mr-2" />
+                    Add to Queue
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={handleAddToPlaylist} data-testid={`menu-add-playlist-song-${song.id}`}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add to Playlist
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onClick={handleShare} data-testid={`menu-share-song-${song.id}`}>
+                    <Share className="w-4 h-4 mr-2" />
+                    Share
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={handleSongDetails} data-testid={`menu-details-song-${song.id}`}>
+                    <Info className="w-4 h-4 mr-2" />
+                    Song Details & Lyrics
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onClick={handleMoreFromAlbum} data-testid={`menu-more-album-song-${song.id}`}>
+                    <Album className="w-4 h-4 mr-2" />
+                    More from Album
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={handleMoreFromArtist} data-testid={`menu-more-artist-song-${song.id}`}>
+                    <Mic2 className="w-4 h-4 mr-2" />
+                    More from Artist
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
       </CardContent>
+      
+      {/* Login Modal */}
+      <PhoneLoginModal 
+        isOpen={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={handleLoginSuccess}
+      />
     </Card>
   );
 }
