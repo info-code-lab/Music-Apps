@@ -5,7 +5,8 @@ import MusicLibrary from "@/components/music-library";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft } from "lucide-react";
-import type { Artist, Track, LegacyTrack } from "@shared/schema";
+import type { Artist, Track, LegacyTrack, ApiTrack } from "@shared/schema";
+import { convertApiTrackToLegacy } from "@/lib/song-utils";
 import { useMusicPlayer } from "@/hooks/use-music-player";
 import { useAuth } from "@/hooks/use-auth";
 import { PhoneLoginModal } from "@/components/PhoneLoginModal";
@@ -89,19 +90,11 @@ export default function Artists() {
     playTrack(song);
   };
 
-  // Convert Track to LegacyTrack format for compatibility
-  const convertToLegacyTrack = (song: Track): LegacyTrack => ({
-    id: song.id,
-    title: song.title,
-    artist: (song as any).artist || selectedArtist?.name || "Unknown Artist",
-    category: (song as any).category || "Music", 
-    duration: song.duration || 0,
-    url: song.filePath ? encodeURI(song.filePath) : "",
-    artwork: song.coverArt || null,
-    isFavorite: false, 
-    uploadType: "file",
-    createdAt: song.createdAt || undefined,
-  });
+  // Use centralized conversion function
+  const convertToLegacyTrack = (song: Track): LegacyTrack => 
+    convertApiTrackToLegacy(song as ApiTrack, { 
+      fallbackArtist: selectedArtist?.name 
+    });
 
   // Show not authorized message for mobile/tablet users who are not authenticated
   if (!user && isMobileOrTablet) {

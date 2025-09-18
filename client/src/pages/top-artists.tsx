@@ -9,7 +9,8 @@ import { apiRequest } from "@/lib/queryClient";
 import toast from "react-hot-toast";
 import { PhoneLoginModal } from "@/components/PhoneLoginModal";
 import MusicLibrary from "@/components/music-library";
-import type { Track, LegacyTrack } from "@shared/schema";
+import type { Track, LegacyTrack, ApiTrack } from "@shared/schema";
+import { convertApiTrackToLegacy } from "@/lib/song-utils";
 
 interface Artist {
   id: string;
@@ -111,19 +112,11 @@ export default function TopArtists() {
     playTrack(song);
   };
 
-  // Convert Track to LegacyTrack format for compatibility
-  const convertToLegacyTrack = (song: Track): LegacyTrack => ({
-    id: song.id,
-    title: song.title,
-    artist: (song as any).artist || selectedArtist?.name || "Unknown Artist",
-    category: (song as any).category || "Music", 
-    duration: song.duration || 0,
-    url: song.filePath ? encodeURI(song.filePath) : "",
-    artwork: song.coverArt || null,
-    isFavorite: false, 
-    uploadType: "file",
-    createdAt: song.createdAt || undefined,
-  });
+  // Use centralized conversion function
+  const convertToLegacyTrack = (song: Track): LegacyTrack => 
+    convertApiTrackToLegacy(song as ApiTrack, { 
+      fallbackArtist: selectedArtist?.name 
+    });
 
   const ArtistCard = ({ artist }: { artist: Artist }) => {
     return (
