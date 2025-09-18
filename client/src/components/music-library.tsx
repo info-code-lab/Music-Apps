@@ -52,8 +52,7 @@ export default function MusicLibrary({
       <section className="px-6 pb-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2 font-sans">Your Library</h2>
-            <p className="text-muted-foreground font-serif">Loading your music collection...</p>
+            <p className="text-muted-foreground font-serif">Loading songs...</p>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
@@ -79,15 +78,16 @@ export default function MusicLibrary({
     <section className="px-4 md:px-6 pb-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
         <div className="mb-4 md:mb-0">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
-            {searchQuery ? `Search Results` : "Your Library"}
-          </h2>
-          <p className="text-sm md:text-base text-muted-foreground font-serif">
-            {searchQuery 
-              ? `Found ${songs.length} songs for "${searchQuery}"`
-              : "Browse and organize your music collection"
-            }
-          </p>
+          {searchQuery && (
+            <>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2 font-sans">
+                Search Results
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground font-serif">
+                Found {songs.length} songs for "{searchQuery}"
+              </p>
+            </>
+          )}
         </div>
         <div className="flex items-center justify-between md:justify-end md:space-x-2">
           {/* Mobile: Only show category select */}
