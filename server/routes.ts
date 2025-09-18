@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTrackSchema, insertArtistSchema, insertAlbumSchema, insertSongSchema, insertPlaylistSchema, insertCommentSchema, insertRatingSchema, insertGenreSchema } from "@shared/schema";
 import { db } from "./db";
-import { songs, albums, artists, users, genres } from "@shared/schema";
+import { songs, albums, artists, users, genres, songArtists, songGenres, playlistSongs } from "@shared/schema";
 import { sql, desc } from "drizzle-orm";
 import { downloadService } from "./download-service";
 import { progressEmitter } from "./progress-emitter";
@@ -15,6 +15,29 @@ import { searchService } from "./search-service";
 import multer from "multer";
 import path from "path";
 import { randomUUID } from "crypto";
+
+// Temporary storage for extracted metadata during upload confirmation flow
+const tempMetadataStore = new Map<string, {
+  metadata: any;
+  timestamp: number;
+}>();
+
+// Clean up old metadata every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  const fifteenMinutesAgo = now - (15 * 60 * 1000);
+  
+  const entriesToDelete: string[] = [];
+  tempMetadataStore.forEach((data, sessionId) => {
+    if (data.timestamp < fifteenMinutesAgo) {
+      entriesToDelete.push(sessionId);
+    }
+  });
+  
+  entriesToDelete.forEach(sessionId => {
+    tempMetadataStore.delete(sessionId);
+  });
+}, 10 * 60 * 1000);
 
 // Configure multer for file uploads
 const upload = multer({
@@ -204,42 +227,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           progressEmitter.emit(sessionId, {
             type: 'status',
-            message: 'Creating song record...',
+            message: 'Metadata extracted - Ready for confirmation',
             progress: 90,
-            stage: 'finalizing'
+            stage: 'waiting_confirmation'
           });
           
-          // Smart category detection based on title and artist
-          const detectCategory = (title: string, artist: string): string => {
-            const text = `${title} ${artist}`.toLowerCase();
-            
-            if (text.includes('rock') || text.includes('metal') || text.includes('punk')) return 'Rock';
-            if (text.includes('jazz') || text.includes('blues') || text.includes('swing')) return 'Jazz';
-            if (text.includes('classical') || text.includes('orchestra') || text.includes('symphony')) return 'Classical';
-            if (text.includes('folk') || text.includes('acoustic') || text.includes('country')) return 'Folk';
-            if (text.includes('rap') || text.includes('hip hop') || text.includes('hip-hop')) return 'Hip-Hop';
-            
-            // Default to Electronic for modern/unknown genres
-            return 'Electronic';
-          };
+          // Store metadata temporarily for confirmation
+          tempMetadataStore.set(sessionId, {
+            metadata: {
+              title: metadata.title || "Unknown Title",
+              artist: metadata.artist || "Unknown Artist", 
+              album: metadata.album,
+              duration: metadata.duration,
+              filename: metadata.filename,
+              localPath: metadata.localPath,
+              thumbnail: metadata.thumbnail,
+            },
+            timestamp: Date.now()
+          });
 
-          const songData = {
-            title: title || metadata.title || "Unknown Title",
-            duration: metadata.duration,
-            filePath: `/uploads/${metadata.filename}`, // Updated field name for songs table
-            coverArt: metadata.thumbnail ? `/uploads/${metadata.thumbnail}` : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
-          };
-
-          // Check for cancellation before creating song record
+          // Check for cancellation after storing metadata
           if (progressEmitter.isCancelled(sessionId)) {
             return;
           }
-
-          const validatedData = insertSongSchema.parse(songData);
-          const song = await storage.createSong(validatedData);
           
-          
-          progressEmitter.emitComplete(sessionId, `Successfully added "${song.title}"`);
+          // Send metadata to frontend for confirmation
+          progressEmitter.emit(sessionId, {
+            type: 'complete',
+            message: 'Please review and confirm song details',
+            progress: 100,
+            stage: 'awaiting_confirmation',
+            metadata: {
+              title: metadata.title || "Unknown Title",
+              artist: metadata.artist || "Unknown Artist", 
+              album: metadata.album,
+              duration: metadata.duration,
+              filename: metadata.filename,
+              thumbnail: metadata.thumbnail,
+            }
+          } as any);
         } catch (error) {
           console.error("URL upload error:", error);
           
@@ -257,6 +283,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("URL upload setup error:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to start upload";
       progressEmitter.emitError(sessionId, errorMessage);
+      res.status(500).json({ message: errorMessage });
+    }
+  });
+
+  // Confirm and save song after URL upload (Admin only)
+  app.post("/api/songs/confirm", authenticateSession, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { sessionId, metadata, artistIds, genreIds, playlistIds, isExplicit } = req.body;
+      
+      if (!sessionId || !metadata) {
+        res.status(400).json({ message: "Session ID and metadata are required" });
+        return;
+      }
+
+      // Retrieve temporary metadata
+      const tempData = tempMetadataStore.get(sessionId);
+      if (!tempData) {
+        res.status(400).json({ message: "Session expired or invalid" });
+        return;
+      }
+
+      const originalMetadata = tempData.metadata;
+
+      // Create or find artists
+      const finalArtistIds: string[] = [];
+      if (artistIds && artistIds.length > 0) {
+        for (const artistId of artistIds) {
+          // Check if this is an existing artist ID or a new artist name
+          const existingArtist = await storage.getArtist(artistId);
+          if (existingArtist) {
+            finalArtistIds.push(artistId);
+          } else {
+            // Treat as a new artist name, create it
+            const newArtist = await storage.createArtist({ name: artistId });
+            finalArtistIds.push(newArtist.id);
+          }
+        }
+      }
+
+      // Create album if specified
+      let albumId: string | undefined;
+      if (metadata.album && metadata.album.trim()) {
+        // Check if album already exists
+        const albums = await storage.getAllAlbums();
+        const existingAlbum = albums.find(a => a.title.toLowerCase() === metadata.album.toLowerCase());
+        
+        if (existingAlbum) {
+          albumId = existingAlbum.id;
+        } else if (finalArtistIds.length > 0) {
+          // Create new album with first artist as the album artist
+          const newAlbum = await storage.createAlbum({
+            title: metadata.album,
+            artistId: finalArtistIds[0],
+          });
+          albumId = newAlbum.id;
+        }
+      }
+
+      // Prepare song data
+      const songData = {
+        title: metadata.title,
+        duration: originalMetadata.duration,
+        filePath: `/uploads/${originalMetadata.filename}`,
+        coverArt: originalMetadata.thumbnail 
+          ? `/uploads/${originalMetadata.thumbnail}` 
+          : `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300`,
+        albumId: albumId || null,
+        isExplicit: isExplicit || false,
+      };
+
+      // Validate and create song
+      const validatedData = insertSongSchema.parse(songData);
+      const song = await storage.createSong(validatedData);
+
+      // Link song to artists
+      if (finalArtistIds.length > 0) {
+        for (const artistId of finalArtistIds) {
+          try {
+            await db.insert(songArtists).values({
+              songId: song.id,
+              artistId: artistId,
+            });
+          } catch (error) {
+            // Ignore duplicate key errors
+            console.log("Artist already linked to song:", artistId);
+          }
+        }
+      }
+
+      // Link song to genres
+      if (genreIds && genreIds.length > 0) {
+        for (const genreId of genreIds) {
+          try {
+            await db.insert(songGenres).values({
+              songId: song.id,
+              genreId: genreId,
+            });
+          } catch (error) {
+            // Ignore duplicate key errors
+            console.log("Genre already linked to song:", genreId);
+          }
+        }
+      }
+
+      // Add song to playlists
+      if (playlistIds && playlistIds.length > 0) {
+        for (const playlistId of playlistIds) {
+          try {
+            await db.insert(playlistSongs).values({
+              playlistId: playlistId,
+              songId: song.id,
+            });
+          } catch (error) {
+            // Ignore duplicate key errors
+            console.log("Song already in playlist:", playlistId);
+          }
+        }
+      }
+
+      // Clean up temporary data
+      tempMetadataStore.delete(sessionId);
+
+      res.status(201).json({ 
+        message: "Song created successfully", 
+        song: {
+          id: song.id,
+          title: song.title,
+          duration: song.duration,
+        }
+      });
+    } catch (error) {
+      console.error("Confirm song error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to confirm song";
       res.status(500).json({ message: errorMessage });
     }
   });
