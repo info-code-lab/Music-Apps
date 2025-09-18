@@ -699,6 +699,12 @@ export type LegacyTrack = {
   createdAt?: Date;
 };
 
+// API Track type - includes enriched data returned from backend
+export interface ApiTrack extends Track {
+  artist?: string;
+  category?: string;
+}
+
 // Search interfaces for unified search functionality
 export interface SearchFilters {
   genre?: string;

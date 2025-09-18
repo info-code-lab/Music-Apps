@@ -8,7 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, ArrowLeft, Music } from "lucide-react";
-import type { Track, LegacyTrack, Artist, Album, Genre, SearchResult } from "@shared/schema";
+import type { Track, LegacyTrack, Artist, Album, Genre, SearchResult, ApiTrack } from "@shared/schema";
+import { convertApiTrackToLegacy } from "@/lib/song-utils";
 
 interface HomeProps {
   searchQuery?: string;
@@ -85,19 +86,11 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
     playTrack(song, true); // true = user initiated
   };
 
-  // Convert Track to LegacyTrack format for compatibility
-  const convertToLegacyTrack = (track: Track): LegacyTrack => ({
-    id: track.id,
-    title: track.title,
-    artist: (track as any).artist || "Unknown Artist", // Cast to access dynamic fields
-    category: (track as any).category || "Music",
-    duration: track.duration || 0,
-    url: track.filePath ? encodeURI(track.filePath) : "",
-    artwork: track.coverArt || null,
-    isFavorite: favoriteIds.has(track.id),
-    uploadType: "file",
-    createdAt: track.createdAt || undefined,
-  });
+  // Use centralized conversion function
+  const convertToLegacyTrack = (track: Track): LegacyTrack => 
+    convertApiTrackToLegacy(track as ApiTrack, { 
+      isFavorite: favoriteIds.has(track.id) 
+    });
 
   // Convert songs to legacy format
   const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
