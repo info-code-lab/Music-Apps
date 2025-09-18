@@ -150,7 +150,6 @@ export default function MusicLibrary({
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {songs.map((song) => {
             const legacyTrack = convertToLegacyTrack(song, {
-              artist: "Unknown Artist", // TODO: Get from artists table
               artwork: song.coverArt
             });
             return (
