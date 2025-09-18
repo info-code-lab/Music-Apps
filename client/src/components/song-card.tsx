@@ -29,7 +29,7 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
   const playMutation = useMutation({
     mutationFn: async () => {
       try {
-        await apiRequest("POST", `/api/songs/${song.id}/play`);
+        await apiRequest(`/api/songs/${song.id}/play`, "POST");
       } catch (error) {
         // Ignore auth errors for now - still trigger onPlay callback
         console.log("Play tracking failed (auth required):", error);
@@ -121,7 +121,7 @@ export default function SongCard({ song, onPlay, showArtist = true, showAlbum = 
   
   const favoriteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("PATCH", `/api/songs/${song.id}/favorite`);
+      const response = await apiRequest(`/api/songs/${song.id}/favorite`, "PATCH");
       return response.json();
     },
     onMutate: () => {

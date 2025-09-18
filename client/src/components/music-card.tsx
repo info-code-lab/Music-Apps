@@ -59,7 +59,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
 
   const favoriteMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("PATCH", `/api/songs/${song.id}/favorite`);
+      const response = await apiRequest(`/api/songs/${song.id}/favorite`, "PATCH");
       return response.json();
     },
     onMutate: () => {
