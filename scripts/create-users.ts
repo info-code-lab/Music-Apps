@@ -24,7 +24,7 @@ async function createUsers() {
     console.log("Creating users...");
 
     // Hash password for admin user
-    const adminPassword = "adminpass123";
+    const adminPassword = "adminp";
     const hashedAdminPassword = await bcrypt.hash(adminPassword, 12);
 
     // Create admin user with username/password authentication
