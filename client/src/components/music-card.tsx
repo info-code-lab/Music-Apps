@@ -164,11 +164,8 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
-        // Don't play if clicked element is a button or inside a button
-        if ((e.target as Element).closest('button')) {
-          return;
-        }
-        onPlay();
+        // Prevent any action when clicking the card - only buttons should trigger actions
+        // This removes music playback from card clicks as requested
       }}
       data-testid={`card-song-${song.id}`}
     >
