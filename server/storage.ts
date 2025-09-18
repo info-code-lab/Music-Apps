@@ -297,13 +297,30 @@ export class DatabaseStorage implements IStorage {
   // ========================
   
   // Helper function to transform Song to legacy Track format
-  private songToLegacyTrack(song: Song, isFavorite: boolean = false): Track {
+  private async songToLegacyTrack(song: Song, isFavorite: boolean = false): Promise<Track> {
+    // Get artists for this song
+    const artistData = await db
+      .select({ name: artists.name })
+      .from(songArtists)
+      .innerJoin(artists, eq(songArtists.artistId, artists.id))
+      .where(eq(songArtists.songId, song.id));
+    
+    // Get genre for this song
+    const genreData = await db
+      .select({ name: genres.name })
+      .from(songGenres)
+      .innerJoin(genres, eq(songGenres.genreId, genres.id))
+      .where(eq(songGenres.songId, song.id));
+
+    const artistNames = artistData.map((item: { name: string }) => item.name);
+    const genreNames = genreData.map((item: { name: string }) => item.name);
+
     return {
       // Map song fields to track format, avoiding duplicates
       ...song, // Spread all Song properties first
       // Override with legacy track mappings
-      artist: 'Unknown Artist', // Will be populated from artists relationship
-      category: 'Music', // Will be populated from genre relationship
+      artist: artistNames.length > 0 ? artistNames.join(', ') : 'Unknown Artist',
+      category: genreNames.length > 0 ? genreNames.join(', ') : 'Music',
       url: song.filePath || '',
       artwork: song.coverArt,
       isFavorite,
@@ -313,7 +330,7 @@ export class DatabaseStorage implements IStorage {
   
   async getAllTracks(): Promise<Track[]> {
     const songsData = await db.select().from(songs);
-    return songsData.map(song => this.songToLegacyTrack(song));
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
   // New method to get tracks with favorite status for a specific user
@@ -322,7 +339,7 @@ export class DatabaseStorage implements IStorage {
     const tracks = await Promise.all(
       songsData.map(async (song) => {
         const isFavorite = await this.isFavorite(userId, song.id);
-        return this.songToLegacyTrack(song, isFavorite);
+        return await this.songToLegacyTrack(song, isFavorite);
       })
     );
     return tracks;
@@ -330,7 +347,7 @@ export class DatabaseStorage implements IStorage {
 
   async getTrack(id: string): Promise<Track | undefined> {
     const [song] = await db.select().from(songs).where(eq(songs.id, id));
-    return song ? this.songToLegacyTrack(song) : undefined;
+    return song ? await this.songToLegacyTrack(song) : undefined;
   }
 
   async createTrack(insertTrack: InsertTrack): Promise<Track> {
@@ -375,7 +392,7 @@ export class DatabaseStorage implements IStorage {
       .set(songUpdates)
       .where(eq(songs.id, id))
       .returning();
-    return song ? this.songToLegacyTrack(song) : undefined;
+    return song ? await this.songToLegacyTrack(song) : undefined;
   }
 
   async deleteTrack(id: string): Promise<boolean> {
@@ -396,7 +413,7 @@ export class DatabaseStorage implements IStorage {
       )
     );
     
-    return songsData.map(song => this.songToLegacyTrack(song));
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
   async getSongSuggestions(query: string): Promise<string[]> {
@@ -416,7 +433,7 @@ export class DatabaseStorage implements IStorage {
     }
     // This would need to join with genres table, for now return all
     const songsData = await db.select().from(songs);
-    return songsData.map(song => this.songToLegacyTrack(song));
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
   async toggleFavorite(id: string, userId: string): Promise<Track | undefined> {
@@ -443,7 +460,7 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
-    return this.songToLegacyTrack(song);
+    return await this.songToLegacyTrack(song);
   }
 
   // ========================

@@ -7,19 +7,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Grid3X3, List, Search, Bell, User } from "lucide-react";
 import MusicCard from "@/components/music-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Song, LegacyTrack } from "@shared/schema";
+import type { LegacyTrack } from "@shared/schema";
 
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All Genres");
   const { currentSong, playTrack } = useMusicPlayer();
 
-  const { data: songs = [], isLoading } = useQuery<Song[]>({
+  const { data: songs = [], isLoading } = useQuery<LegacyTrack[]>({
     queryKey: ["/api/songs"],
     enabled: selectedGenre === "All Genres" && !searchQuery,
   });
 
-  const { data: searchResults = [] } = useQuery<Song[]>({
+  const { data: searchResults = [] } = useQuery<LegacyTrack[]>({
     queryKey: ["/api/songs/search", { q: searchQuery }],
     enabled: !!searchQuery,
   });
@@ -28,23 +28,7 @@ export default function Songs() {
     queryKey: ["/api/genres"],
   });
 
-  const displaySongs = searchQuery ? searchResults : songs;
-
-  // Convert Song to LegacyTrack format for MusicCard compatibility
-  const convertToLegacyTrack = (song: Song): LegacyTrack => ({
-    id: song.id,
-    title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from genres table
-    duration: song.duration,
-    url: song.filePath ? encodeURI(song.filePath) : "",
-    artwork: song.coverArt,
-    isFavorite: false, // TODO: Get from favorites table
-    uploadType: "file",
-    createdAt: song.createdAt || undefined,
-  });
-
-  const displayLegacyTracks = displaySongs.map(convertToLegacyTrack);
+  const displayTracks = searchQuery ? searchResults : songs;
 
   const handlePlaySong = (track: LegacyTrack) => {
     playTrack(track);
@@ -123,13 +107,13 @@ export default function Songs() {
               </h2>
               <p className="text-sm md:text-base text-muted-foreground font-serif">
                 {searchQuery 
-                  ? `Found ${displayLegacyTracks.length} songs for "${searchQuery}"`
+                  ? `Found ${displayTracks.length} songs for "${searchQuery}"`
                   : "Discover and play your favorite songs"
                 }
               </p>
             </div>
             
-            {displayLegacyTracks.length === 0 ? (
+            {displayTracks.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                   <Grid3X3 className="w-8 h-8 text-muted-foreground" />
@@ -146,7 +130,7 @@ export default function Songs() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-                {displayLegacyTracks.map((track) => (
+                {displayTracks.map((track) => (
                   <MusicCard key={track.id} song={track} onPlay={() => handlePlaySong(track)} />
                 ))}
               </div>
