@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import PlaylistLibrary from "@/components/playlist-library";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export default function Playlists() {
   const queryClient = useQueryClient();
   const { currentSong } = useMusicPlayer();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   // Detect mobile/tablet screen size
   useEffect(() => {
@@ -95,8 +97,7 @@ export default function Playlists() {
   };
 
   const handleViewPlaylist = (playlist: Playlist) => {
-    // TODO: Navigate to playlist detail page
-    console.log("View playlist:", playlist);
+    setLocation(`/playlists/${playlist.id}`);
   };
 
   const onSubmit = (data: CreatePlaylistForm) => {
