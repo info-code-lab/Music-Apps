@@ -86,17 +86,17 @@ export default function Home({ searchQuery: externalSearchQuery = "", onSearch, 
   };
 
   // Convert Track to LegacyTrack format for compatibility
-  const convertToLegacyTrack = (song: Track): LegacyTrack => ({
-    id: song.id,
-    title: song.title,
-    artist: "Unknown Artist", // TODO: Get from artists table
-    category: "Music", // TODO: Get from categories table
-    duration: song.duration || 0,
-    url: song.filePath ? encodeURI(song.filePath) : "",
-    artwork: song.coverArt || null,
-    isFavorite: favoriteIds.has(song.id),
+  const convertToLegacyTrack = (track: Track): LegacyTrack => ({
+    id: track.id,
+    title: track.title,
+    artist: (track as any).artist || "Unknown Artist", // Cast to access dynamic fields
+    category: (track as any).category || "Music",
+    duration: track.duration || 0,
+    url: track.filePath ? encodeURI(track.filePath) : "",
+    artwork: track.coverArt || null,
+    isFavorite: favoriteIds.has(track.id),
     uploadType: "file",
-    createdAt: song.createdAt || undefined,
+    createdAt: track.createdAt || undefined,
   });
 
   // Convert songs to legacy format

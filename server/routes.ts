@@ -784,8 +784,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/songs/artist/:artistId", async (req, res) => {
     try {
       const { artistId } = req.params;
-      const songs = await storage.getSongsByArtist(artistId);
-      res.json(songs);
+      const tracks = await storage.getSongsByArtist(artistId);
+      res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch songs by artist" });
     }
@@ -794,8 +794,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/songs/album/:albumId", async (req, res) => {
     try {
       const { albumId } = req.params;
-      const songs = await storage.getSongsByAlbum(albumId);
-      res.json(songs);
+      const tracks = await storage.getSongsByAlbum(albumId);
+      res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch songs by album" });
     }
@@ -804,8 +804,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/songs/genre/:genreId", async (req, res) => {
     try {
       const { genreId } = req.params;
-      const songs = await storage.getSongsByGenre(genreId);
-      res.json(songs);
+      const tracks = await storage.getSongsByGenre(genreId);
+      res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch songs by genre" });
     }

@@ -644,22 +644,25 @@ export class DatabaseStorage implements IStorage {
     return song || undefined;
   }
 
-  async getSongsByArtist(artistId: string): Promise<Song[]> {
+  async getSongsByArtist(artistId: string): Promise<Track[]> {
     // Get songs through song_artists relationship
     const result = await db
       .select({ song: songs })
       .from(songs)
       .innerJoin(songArtists, eq(songs.id, songArtists.songId))
       .where(eq(songArtists.artistId, artistId));
-    return result.map(r => r.song);
+    const songsData = result.map(r => r.song);
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
-  async getSongsByAlbum(albumId: string): Promise<Song[]> {
-    return await db.select().from(songs).where(eq(songs.albumId, albumId));
+  async getSongsByAlbum(albumId: string): Promise<Track[]> {
+    const songsData = await db.select().from(songs).where(eq(songs.albumId, albumId));
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
-  async getSongsByGenre(genreId: string): Promise<Song[]> {
-    return await db.select().from(songs).where(eq(songs.genreId, genreId));
+  async getSongsByGenre(genreId: string): Promise<Track[]> {
+    const songsData = await db.select().from(songs).where(eq(songs.genreId, genreId));
+    return Promise.all(songsData.map(song => this.songToLegacyTrack(song)));
   }
 
   async createSong(insertSong: InsertSong): Promise<Song> {

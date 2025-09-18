@@ -115,8 +115,8 @@ export default function TopArtists() {
   const convertToLegacyTrack = (song: Track): LegacyTrack => ({
     id: song.id,
     title: song.title,
-    artist: selectedArtist?.name || "Unknown Artist",
-    category: "Music", 
+    artist: (song as any).artist || selectedArtist?.name || "Unknown Artist",
+    category: (song as any).category || "Music", 
     duration: song.duration || 0,
     url: song.filePath ? encodeURI(song.filePath) : "",
     artwork: song.coverArt || null,
