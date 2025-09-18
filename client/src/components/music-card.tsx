@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Heart, Download, Check, X, WifiOff, HardDrive, MoreHorizontal, Plus, Share, Info, Album, Mic2, ListMusic } from "lucide-react";
+import { Play, Pause, Heart, Download, Check, X, WifiOff, HardDrive, MoreHorizontal, Plus, Share, Info, Album, Mic2, ListMusic } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
@@ -44,7 +44,7 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
   
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { playTrack } = useMusicPlayer();
+  const { playTrack, currentSong, isPlaying, togglePlayPause } = useMusicPlayer();
   const { 
     downloadSong, 
     deleteSong, 
@@ -99,9 +99,18 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
     favoriteMutation.mutate();
   };
 
+  const isCurrentSong = currentSong?.id === song.id;
+  const isCurrentlyPlaying = isCurrentSong && isPlaying;
+
   const handlePlayNow = () => {
-    playTrack(song);
-    onPlay();
+    if (isCurrentSong && isPlaying) {
+      // If this song is currently playing, pause it
+      togglePlayPause();
+    } else {
+      // If this song is not playing, play it
+      playTrack(song, true);
+      onPlay();
+    }
   };
 
   const handleAddToQueue = () => {
@@ -186,7 +195,11 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
             className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
             data-testid={`button-play-${song.id}`}
           >
-            <Play className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground ml-0.5" />
+            {isCurrentlyPlaying ? (
+              <Pause className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
+            ) : (
+              <Play className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground ml-0.5" />
+            )}
           </Button>
         </div>
         <div className="absolute top-2 right-2 flex items-center gap-2">
