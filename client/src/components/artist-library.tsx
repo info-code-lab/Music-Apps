@@ -9,8 +9,8 @@ interface ArtistLibraryProps {
   isLoading: boolean;
   onViewArtist: (artist: Artist) => void;
   searchQuery: string;
-  isFollowingPage?: boolean;
-  onUnfollow?: (artist: Artist) => void;
+  onToggleFollow?: (artist: Artist) => void;
+  isArtistFollowed?: (artistId: string) => boolean;
 }
 
 export default function ArtistLibrary({ 
@@ -18,8 +18,8 @@ export default function ArtistLibrary({
   isLoading, 
   onViewArtist,
   searchQuery,
-  isFollowingPage = false,
-  onUnfollow
+  onToggleFollow,
+  isArtistFollowed
 }: ArtistLibraryProps) {
 
   if (isLoading) {
@@ -50,14 +50,12 @@ export default function ArtistLibrary({
             <Grid3X3 className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2 font-sans">
-            {searchQuery ? "No artists found" : isFollowingPage ? "No followed artists" : "No artists yet"}
+            {searchQuery ? "No artists found" : "No artists yet"}
           </h3>
           <p className="text-muted-foreground font-serif">
             {searchQuery 
               ? "Try adjusting your search query"
-              : isFollowingPage 
-                ? "Follow artists from the Top Artists page to see them here"
-                : "Artists will appear here as music is uploaded"
+              : "Artists will appear here as music is uploaded"
             }
           </p>
         </div>
@@ -68,8 +66,8 @@ export default function ArtistLibrary({
               key={artist.id}
               artist={artist}
               onViewArtist={() => onViewArtist(artist)}
-              onUnfollow={onUnfollow}
-              showUnfollowButton={isFollowingPage}
+              onToggleFollow={onToggleFollow}
+              isFollowed={isArtistFollowed ? isArtistFollowed(artist.id) : false}
             />
           ))}
         </div>

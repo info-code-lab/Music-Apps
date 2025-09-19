@@ -6,11 +6,11 @@ import type { Artist } from "@shared/schema";
 interface ArtistCardProps {
   artist: Artist;
   onViewArtist: (artist: Artist) => void;
-  onUnfollow?: (artist: Artist) => void;
-  showUnfollowButton?: boolean;
+  onToggleFollow?: (artist: Artist) => void;
+  isFollowed?: boolean;
 }
 
-export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfollowButton = false }: ArtistCardProps) {
+export default function ArtistCard({ artist, onViewArtist, onToggleFollow, isFollowed = false }: ArtistCardProps) {
   return (
     <Card 
       className="overflow-hidden cursor-pointer"
@@ -34,29 +34,20 @@ export default function ArtistCard({ artist, onViewArtist, onUnfollow, showUnfol
               <Music className="w-4 h-4" />
               <span>Artist</span>
             </div>
-            {showUnfollowButton && onUnfollow ? (
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="p-1 text-red-500"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUnfollow(artist);
-                }}
-                data-testid={`button-unfollow-artist-${artist.id}`}
-              >
-                <Heart className="w-4 h-4 fill-current" />
-              </Button>
-            ) : (
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                data-testid={`button-follow-artist-${artist.id}`}
-              >
-                <Heart className="w-4 h-4" />
-              </Button>
-            )}
+            <Button 
+              variant="ghost"
+              size="sm"
+              className={isFollowed ? "p-1 text-red-500" : "text-muted-foreground"}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onToggleFollow) {
+                  onToggleFollow(artist);
+                }
+              }}
+              data-testid={`button-${isFollowed ? 'unfollow' : 'follow'}-artist-${artist.id}`}
+            >
+              <Heart className={`w-4 h-4 ${isFollowed ? 'fill-current' : ''}`} />
+            </Button>
           </div>
         </div>
       </CardContent>

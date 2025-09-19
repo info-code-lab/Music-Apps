@@ -190,6 +190,8 @@ export default function TopArtists() {
               isLoading={isLoading}
               onViewArtist={handleArtistClick}
               searchQuery={searchQuery}
+              onToggleFollow={handleHeartClick}
+              isArtistFollowed={isArtistPreferred}
             />
           )}
         </div>
