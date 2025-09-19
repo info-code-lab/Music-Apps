@@ -401,8 +401,8 @@ export default function Artists() {
                   isLoading={isLoading}
                   onViewArtist={handleViewArtist}
                   searchQuery={searchQuery}
-                  isFollowingPage={true}
-                  onUnfollow={handleUnfollowArtist}
+                  onToggleFollow={handleUnfollowArtist}
+                  isArtistFollowed={() => true}
                 />
               </>
             )}
