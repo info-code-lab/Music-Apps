@@ -936,7 +936,20 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(songs, eq(favorites.songId, songs.id))
       .where(eq(favorites.userId, userId))
       .orderBy(desc(favorites.createdAt));
-    return result.map(r => r.song);
+    
+    // Convert songs to legacy tracks with proper artist information
+    const favoriteSongs = await Promise.all(
+      result.map(async (r) => {
+        const track = await this.songToLegacyTrack(r.song, true);
+        // Return as Song object but with artist and category properties added
+        return Object.assign({}, r.song, {
+          artist: track.artist,
+          category: track.category
+        });
+      })
+    );
+    
+    return favoriteSongs;
   }
 
   async addToFavorites(userId: string, songId: string): Promise<void> {
