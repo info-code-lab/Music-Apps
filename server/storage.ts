@@ -1156,7 +1156,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(listeningHistory.userId, userId))
       .orderBy(desc(listeningHistory.playedAt))
       .limit(limit);
-    return result;
+    
+    // Add artist information to song objects in the history
+    const historyWithArtists = await Promise.all(
+      result.map(async (entry) => {
+        const track = await this.songToLegacyTrack(entry.song, false);
+        return {
+          ...entry,
+          song: Object.assign({}, entry.song, {
+            artist: track.artist,
+            category: track.category
+          })
+        };
+      })
+    );
+    
+    return historyWithArtists;
   }
 
   async getPopularSongs(limit: number = 20): Promise<Song[]> {

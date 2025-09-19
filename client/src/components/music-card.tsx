@@ -69,8 +69,8 @@ export default function MusicCard({ song, onPlay }: MusicCardProps) {
     onSuccess: () => {
       // Use centralized function to invalidate all song-related queries
       invalidateAllSongQueries();
-      // Don't use optimistic state for toast since onSuccess runs after the actual update
-      toast.success("Favorite updated");
+      // Show specific message based on the new favorite state
+      toast.success(optimisticIsFavorite ? "Favorite added" : "Favorite removed");
     },
     onError: () => {
       // Revert optimistic update on error with functional update

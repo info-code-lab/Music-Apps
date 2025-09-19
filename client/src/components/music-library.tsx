@@ -74,6 +74,18 @@ export default function MusicLibrary({
     );
   }
 
+  // Convert tracks to legacy format with proper favorite status
+  const songsWithFavoriteStatus = songs.map((song): LegacyTrack => ({
+    ...song,
+    artist: (song as any).artist || 'Unknown Artist',
+    category: (song as any).category || 'Music',
+    url: (song as any).url || song.filePath || '',
+    artwork: (song as any).artwork || song.coverArt,
+    isFavorite: favoriteIds.has(song.id),
+    uploadType: 'file' as const,
+    createdAt: song.createdAt || undefined
+  }));
+
   return (
     <section className="px-4 md:px-6 pb-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
@@ -147,11 +159,11 @@ export default function MusicLibrary({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-          {songs.map((song) => (
+          {songsWithFavoriteStatus.map((song) => (
             <MusicCard 
               key={song.id} 
               song={song} 
-              onPlay={() => onPlaySong(song)}
+              onPlay={() => onPlaySong(song as any)}
             />
           ))}
         </div>
