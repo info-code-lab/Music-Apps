@@ -150,7 +150,7 @@ export default function History() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0"
+            className="w-8 h-8 p-0"
             onClick={(e) => {
               e.stopPropagation();
               favoriteMutation.mutate(entry.song);
@@ -160,7 +160,7 @@ export default function History() {
           >
             <Heart className={`w-4 h-4 ${userFavorites.some(fav => fav.id === entry.song.id) ? 'fill-current text-red-500' : ''}`} />
           </Button>
-          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0">
+          <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
