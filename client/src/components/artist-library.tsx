@@ -7,19 +7,17 @@ import type { Artist } from "@shared/schema";
 interface ArtistLibraryProps {
   artists: Artist[];
   isLoading: boolean;
-  onViewArtist: (artist: Artist) => void;
+  onToggleFollow: (artist: Artist) => void;
   searchQuery: string;
-  isFollowingPage?: boolean;
-  onUnfollow?: (artist: Artist) => void;
+  followedArtistIds?: Set<string>;
 }
 
 export default function ArtistLibrary({ 
   artists, 
   isLoading, 
-  onViewArtist,
+  onToggleFollow,
   searchQuery,
-  isFollowingPage = false,
-  onUnfollow
+  followedArtistIds = new Set()
 }: ArtistLibraryProps) {
 
   if (isLoading) {
@@ -28,14 +26,6 @@ export default function ArtistLibrary({
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-lg border border-border overflow-hidden">
             <Skeleton className="w-full h-32 md:h-48" />
-            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-              <Skeleton className="h-4 md:h-6 w-3/4" />
-              <Skeleton className="h-3 md:h-4 w-1/2" />
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 md:h-6 w-12 md:w-16" />
-                <Skeleton className="h-3 md:h-4 w-3 md:w-4" />
-              </div>
-            </div>
           </div>
         ))}
       </div>
@@ -50,14 +40,12 @@ export default function ArtistLibrary({
             <Grid3X3 className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2 font-sans">
-            {searchQuery ? "No artists found" : isFollowingPage ? "No followed artists" : "No artists yet"}
+            {searchQuery ? "No artists found" : "No artists yet"}
           </h3>
           <p className="text-muted-foreground font-serif">
             {searchQuery 
               ? "Try adjusting your search query"
-              : isFollowingPage 
-                ? "Follow artists from the Top Artists page to see them here"
-                : "Artists will appear here as music is uploaded"
+              : "Artists will appear here as music is uploaded"
             }
           </p>
         </div>
